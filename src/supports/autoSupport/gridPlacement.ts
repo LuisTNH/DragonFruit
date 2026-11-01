@@ -80,6 +80,20 @@ const _surfaceRaycaster = new THREE.Raycaster();
 const DOUBLE_SIDED_SURFACE_MATERIAL = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
 
 /**
+ * The triangle a hit landed on, numbered the way the island scan numbers it:
+ * in triangle-soup order. Building a BVH on a soup (`accelerateGeometry`) gives
+ * it an index in the tree's own order, and a raycast's `faceIndex` counts in
+ * that index, so it is not the soup triangle. A soup's index still points at
+ * the vertex triplet of the original triangle, which recovers it.
+ */
+export function soupTriangleOf(geometry: THREE.BufferGeometry, faceIndex: number): number {
+    const index = geometry.getIndex();
+    const position = geometry.getAttribute('position');
+    if (!index || !position || position.count !== index.count) return faceIndex;
+    return Math.floor(index.getX(faceIndex * 3) / 3);
+}
+
+/**
  * Triangle-accurate surface sampler for one region: an upward raycast from
  * just below the region's base, accepted only when the hit face belongs to
  * that region (`triangleIds`, same indexing as IslandOverhangOverlay).
@@ -100,6 +114,7 @@ export function createTriangleSurfaceAt(
     const ids = island.triangleIds;
     if (!mesh || !ids || ids.length === 0) return null;
     const triSet = new Set(ids);
+    const geometry = mesh.geometry as THREE.BufferGeometry;
     return (x: number, y: number): { z: number; faceIndex?: number } | null => {
         _surfaceRaycaster.set(
             new THREE.Vector3(x, y, island.baseZ - 2),
@@ -109,7 +124,9 @@ export function createTriangleSurfaceAt(
         mesh.material = DOUBLE_SIDED_SURFACE_MATERIAL;
         try {
             for (const hit of _surfaceRaycaster.intersectObject(mesh, false)) {
-                if (hit.faceIndex != null && triSet.has(hit.faceIndex)) {
+                // Membership in scan numbering; the returned face stays the
+                // raycast's own, which `faceNormalAt` and the blockers read.
+                if (hit.faceIndex != null && triSet.has(soupTriangleOf(geometry, hit.faceIndex))) {
                     return { z: hit.point.z, faceIndex: hit.faceIndex };
                 }
             }
@@ -499,6 +516,23 @@ export function shouldUseDensityGrid(
     return Math.max(maxX - minX, maxY - minY) >= ISLAND_TWO_POINT_MAX_MM;
 }
 
+/** Up to nine contact points spread over a footprint, at the surface the
+ *  region's lattice would land on — what the part-start test looks under. */
+function sampleFootprintSurface(
+    voxels: VoxelFootprint,
+    surfaceAt: (x: number, y: number) => { z: number } | null,
+): Array<{ x: number; y: number; z: number }> {
+    const out: Array<{ x: number; y: number; z: number }> = [];
+    const step = Math.max(1, Math.floor(voxels.count / 9));
+    for (let i = 0; i < voxels.count && out.length < 9; i += step) {
+        const x = footprintX(voxels, i);
+        const y = footprintY(voxels, i);
+        const s = surfaceAt(x, y);
+        if (s) out.push({ x, y, z: s.z });
+    }
+    return out;
+}
+
 /**
  * World-space normal of one mesh face. The region carries a SINGLE
  * `surfaceNormal`, but its cells land on a surface that curves or bends across
@@ -552,7 +586,7 @@ export function generateGridCandidates(
         const baseSpacing = computeRegionSpacing(island, settings);
         // An internal ceiling is bridged to the cavity floor, not carried to
         // the plate; the short strut needs far fewer contacts.
-        const spacing = baseSpacing
+        const regionSpacing = baseSpacing
             * steepFlatSpacingMultiplier(island, baseSpacing, partThicknessMm)
             * (island.interior ? INTERIOR_CAVITY_SPACING_SCALE : 1);
 
@@ -563,7 +597,7 @@ export function generateGridCandidates(
         // lazily inside the voxel fallback sampler.
         const bounds = footprintBounds(voxels)!;
         const { minX, minY, maxX, maxY } = bounds;
-        const cellSize = Math.max(spacing, 1.0);
+        const cellSize = Math.max(regionSpacing, 1.0);
 
         const surfaceNormal = island.surfaceNormal ?? { x: 0, y: 0, z: -1 };
 
@@ -575,6 +609,11 @@ export function generateGridCandidates(
         // than the placement that reads it.
         const surfaceAt = createTriangleSurfaceAt(island, mesh)
             ?? createVoxelSurfaceAt(footprintToPoints(voxels), cellSize, island.baseZ);
+        // Part start (partStart.ts): decided before the lattice, so the
+        // region's own density setting spaces the whole surface.
+        const startRegion = Boolean(settings.reinforcePartStart && mesh && !island.interior
+            && isPartStart(sampleFootprintSurface(voxels, surfaceAt), mesh));
+        const spacing = startRegion ? regionSpacing / Math.sqrt(settings.partStartDensity) : regionSpacing;
         const minZ = island.baseZ;
         // A steep flat is self-supporting, so its contacts are there to ANCHOR
         // the part, not to hold up material that is still forming. Anchoring
@@ -695,7 +734,7 @@ export function generateGridCandidates(
 
         // Part start (partStart.ts): a region facing the plate gets a finer
         // lattice over its lowest band, where the print begins.
-        if (settings.reinforcePartStart && mesh && !island.interior && emitted.length > 0 && isPartStart(emitted, mesh)) {
+        if (startRegion && emitted.length > 0) {
             const lowest = Math.min(...emitted.map((p) => p.z));
             // The lattice and ring already reach the band; what thins it out is
             // deduplication, so their points there are protected too.

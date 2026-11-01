@@ -143,6 +143,9 @@ export interface AutoSupportSettings {
     /** Finer contacts over the lowest band of a region that faces the plate,
      *  where a part's print begins (default off); see `partStart.ts`. */
     reinforcePartStart: boolean;
+    /** Support density in a part-start region (`reinforcePartStart`) relative
+     *  to the region's own: 0.8 places about 20 % fewer contacts there. */
+    partStartDensity: number;
     /** Fraction of the local free width a contact tip may occupy so the
      *  rendered disc fits the feature it lands on. **Calibration, not a
      *  preference**: 0.9 is measured — at 0.6 the cap shrank a 0.28 mm band tip
@@ -227,7 +230,8 @@ export type NumericAutoSupportSettingKey =
     | 'memberHostShaftRatio'
     | 'modelSizeFactorCap'
     | 'modelLoadFactorCap'
-    | 'heightFactorCap';
+    | 'heightFactorCap'
+    | 'partStartDensity';
 
 export const AUTO_SUPPORT_CONSTRAINTS = {
     minIslandAreaMm2: { min: 0.01, max: 10, step: 0.01, defaultValue: 0.02 },
@@ -248,6 +252,7 @@ export const AUTO_SUPPORT_CONSTRAINTS = {
     modelSizeFactorCap: { min: 1, max: 2, step: 0.05, defaultValue: 1.45 },
     modelLoadFactorCap: { min: 1, max: 2, step: 0.05, defaultValue: 1.3 },
     heightFactorCap: { min: 1, max: 2, step: 0.05, defaultValue: 1.35 },
+    partStartDensity: { min: 0.5, max: 1.5, step: 0.05, defaultValue: 1 },
 } satisfies Record<NumericAutoSupportSettingKey, NumericConstraint>;
 
 function precisionFromStep(step: number): number {
@@ -311,6 +316,7 @@ export function createDefaultAutoSupportSettings(): AutoSupportSettings {
         preferTrees: false,
         strictClearance: false,
         reinforcePartStart: false,
+        partStartDensity: AUTO_SUPPORT_CONSTRAINTS.partStartDensity.defaultValue,
     };
 }
 
@@ -355,6 +361,7 @@ export function normalizeAutoSupportSettings(input?: Partial<AutoSupportSettings
         preferTrees: normalizeBoolean(source.preferTrees, defaults.preferTrees),
         strictClearance: normalizeBoolean(source.strictClearance, defaults.strictClearance),
         reinforcePartStart: normalizeBoolean(source.reinforcePartStart, defaults.reinforcePartStart),
+        partStartDensity: clampNumeric(source.partStartDensity, AUTO_SUPPORT_CONSTRAINTS.partStartDensity),
     };
 }
 

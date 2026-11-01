@@ -153,6 +153,7 @@ const KNOBS: readonly KnobDef[] = [
   { key: 'leafFanMaxAngleDeg', section: 'distribution', label: msg`Fan Angle`, min: 20, max: 80, step: 5, unit: '°', hint: msg`Max angle from vertical for fan-out leaves` },
   // Density & Sizing — how many and how thick.
   { key: 'areaPerSupportMm2', section: 'density', label: msg`Support Density`, min: 1, max: 30, step: 0.5, unit: 'mm²', hint: msg`Projected area each support carries — smaller = more, tighter supports (grid spacing ≈ √value)` },
+  { key: 'partStartDensity', section: 'density', label: msg`Part Start Density`, min: 0.5, max: 1.5, step: 0.05, unit: '×', hint: msg`Support density where a part starts (Part Start Reinforcement) relative to the rest of that surface — 0.8 = about 20 % fewer contacts` },
   { key: 'sizeScale', section: 'density', label: msg`Support Size`, min: 0.5, max: 2, step: 0.05, unit: '×', hint: msg`Master multiplier over the preset sizing bands — thicker or thinner everywhere` },
   { key: 'gridAreaThresholdMm2', section: 'density', label: msg`Grid Threshold`, min: 5, max: 200, step: 5, unit: 'mm²', hint: msg`Flat regions at/above this area get a full grid; smaller regions get a single support` },
   { key: 'flatDensityBoost', section: 'density', label: msg`Flat Boost`, min: 0.5, max: 1, step: 0.05, unit: '×', hint: msg`Grid spacing on flat ceilings — lower = denser supports on anchor surfaces (0.7 = ~2× the supports)` },
