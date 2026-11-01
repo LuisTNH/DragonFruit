@@ -21,6 +21,7 @@
 // so the imports below are resolved one after another, after this has run.
 import './test-unit/register.mjs';
 import { readFileSync, writeFileSync, statSync, mkdtempSync, rmSync } from 'fs';
+import { randomUUID } from 'crypto';
 import { tmpdir } from 'os';
 import { fileURLToPath } from 'url';
 import { basename, resolve, dirname } from 'path';
@@ -709,6 +710,7 @@ async function supportAuto(args: ReturnType<typeof parseArgs>): Promise<void> {
 
   const target = supportCollections(doc.supports);
   const docFields = doc.supports as unknown as Record<string, unknown[]>;
+  renameCollidingIds(result.supports, doc.supports);
   for (const [key, rows] of Object.entries(supportCollections(result.supports))) {
     if (rows.length === 0) continue;
     if (!target[key]) docFields[key] = [];
@@ -736,6 +738,55 @@ async function supportAuto(args: ReturnType<typeof parseArgs>): Promise<void> {
       + (islandsCli ? '' : ' (voxel islands only: build rust/dragonfruit-cli for the full scan)'),
     );
   }
+}
+
+/**
+ * Each run plans one model on an empty store, so its generated ids (fan knots
+ * `auto-fan-o30-b`, braces `auto-brace-1` and their knots) repeat the ids an
+ * earlier run gave another model in the same scene. Appended as they are, a
+ * leaf of one model resolves its knot to the other's: a bar across the plate.
+ * Rename every id of the new rows that the scene already uses, and every
+ * reference to it within the new rows.
+ */
+function renameCollidingIds(added: object, existing: object): void {
+  const taken = new Set<string>();
+  const collectIds = (node: unknown): void => {
+    if (Array.isArray(node)) { node.forEach(collectIds); return; }
+    if (!node || typeof node !== 'object') return;
+    const record = node as Record<string, unknown>;
+    if (typeof record.id === 'string') taken.add(record.id);
+    Object.values(record).forEach(collectIds);
+  };
+  collectIds(existing);
+  const renamed = new Map<string, string>();
+  const findCollisions = (node: unknown): void => {
+    if (Array.isArray(node)) { node.forEach(findCollisions); return; }
+    if (!node || typeof node !== 'object') return;
+    const record = node as Record<string, unknown>;
+    if (typeof record.id === 'string' && taken.has(record.id) && !renamed.has(record.id)) {
+      renamed.set(record.id, `${record.id}-${randomUUID().slice(0, 8)}`);
+    }
+    Object.values(record).forEach(findCollisions);
+  };
+  findCollisions(added);
+  if (renamed.size === 0) return;
+  const rewrite = (node: unknown): void => {
+    if (Array.isArray(node)) {
+      node.forEach((value, i) => {
+        if (typeof value === 'string' && renamed.has(value)) node[i] = renamed.get(value);
+        else rewrite(value);
+      });
+      return;
+    }
+    if (!node || typeof node !== 'object') return;
+    const record = node as Record<string, unknown>;
+    for (const [key, value] of Object.entries(record)) {
+      if (typeof value === 'string' && renamed.has(value)) record[key] = renamed.get(value);
+      else rewrite(value);
+    }
+  };
+  rewrite(added);
+  console.error(`support auto: renamed ${renamed.size} ids the scene already used`);
 }
 
 /**
