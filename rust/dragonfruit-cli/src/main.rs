@@ -283,6 +283,33 @@ enum IslandCommands {
         #[arg(short, long)]
         output: PathBuf,
     },
+
+    /// The app's combined island scan (voxel islands + mesh minima + overhang
+    /// regions + topple report) on a world-space soup; the JSON `scan_islands_staged` returns
+    Combined {
+        /// World-space triangle soup as raw f32 (positions.bin, 9 floats per triangle)
+        input: PathBuf,
+        /// Output JSON
+        #[arg(short, long)]
+        output: PathBuf,
+        #[arg(long, default_value = "0.05")]
+        layer_height: f64,
+        #[arg(long, default_value = "0.1")]
+        px_mm: f64,
+        #[arg(long, default_value = "0.6")]
+        buffer: f64,
+        #[arg(long, default_value = "4")]
+        connectivity: u8,
+        /// Minima neighbourhood rings (app default 2)
+        #[arg(long)]
+        k: Option<usize>,
+        #[arg(long)]
+        overhang_angle: Option<f32>,
+        #[arg(long)]
+        overhang_px_mm: Option<f32>,
+        #[arg(long)]
+        has_raft: bool,
+    },
 }
 
 // ===========================================================================
@@ -754,6 +781,32 @@ fn cmd_analyze(input: &PathBuf, output: &PathBuf, min_area: f64) -> Result<(), S
     Ok(())
 }
 
+/// The app's combined island scan, headless: the same `scan_islands_from_mesh`
+/// the Islands panel runs through `scan_islands_staged`.
+#[allow(clippy::too_many_arguments)]
+fn cmd_island_combined(
+    input: &PathBuf, output: &PathBuf,
+    layer_height: f64, px_mm: f64, buffer: f64, connectivity: u8,
+    k: Option<usize>, overhang_angle: Option<f32>, overhang_px_mm: Option<f32>, has_raft: bool,
+) -> Result<(), String> {
+    let soup = read_positions_bin(input)?;
+    if soup.is_empty() || soup.len() % 9 != 0 {
+        return Err(format!("island combined needs a triangle soup (9 floats per triangle); got {} floats", soup.len()));
+    }
+    let mesh = dragonfruit_mesh_repair::IndexedMesh::from_triangle_soup(&soup, 1e-5);
+    let result = dragonfruit_mesh_scan::minima::scan_islands_from_mesh(
+        &|done| eprintln!("island combined: {done}%"),
+        mesh, None, layer_height, px_mm, buffer, connectivity, k,
+        overhang_angle, overhang_px_mm, Some(has_raft),
+    )?;
+    write_json(output, &result)?;
+    eprintln!(
+        "island combined: {} voxel islands, {} minima, {} overhang regions",
+        result.voxel_islands.len(), result.minima_islands.len(), result.overhang_islands.len(),
+    );
+    Ok(())
+}
+
 fn cmd_island_full(
     input: &PathBuf, output: &PathBuf,
     px_mm: f64, layer_height: f64, buffer: f64, connectivity: u8,
@@ -1073,6 +1126,14 @@ fn cmd_rle_subtract(mask_a: &PathBuf, mask_b: &PathBuf, output: &PathBuf) -> Res
 // ===========================================================================
 
 /// Whole-process CPU seconds (user+system, aggregated across all threads).
+/// `getrusage` is POSIX only; Windows reports 0.
+#[cfg(not(unix))]
+fn cpu_total_seconds() -> f64 {
+    0.0
+}
+
+/// Whole-process CPU seconds (user+system, aggregated across all threads).
+#[cfg(unix)]
 fn cpu_total_seconds() -> f64 {
     let mut usage = std::mem::MaybeUninit::<libc::rusage>::uninit();
     if unsafe { libc::getrusage(libc::RUSAGE_SELF, usage.as_mut_ptr()) } != 0 {
@@ -1087,6 +1148,16 @@ fn cpu_total_seconds() -> f64 {
 /// so it captures transient peaks without a sampler thread. CPU time aggregates
 /// all rayon worker threads, so cpu_percent can exceed 100% under parallelism.
 /// `samples` is the periodic RSS/CPU time series gathered during the run.
+#[cfg(not(unix))]
+fn capture_resources(
+    _wall_s: f64,
+    _samples: Vec<serde_json::Value>,
+    _sample_interval_ms: u64,
+) -> serde_json::Value {
+    serde_json::json!({ "error": "resource usage needs getrusage (POSIX only)" })
+}
+
+#[cfg(unix)]
 fn capture_resources(
     wall_s: f64,
     samples: Vec<serde_json::Value>,
@@ -1896,6 +1967,7 @@ fn main() {
             IslandCommands::Batch { .. } => "island batch",
             IslandCommands::RleLabel { .. } => "island rle-label",
             IslandCommands::RleSubtract { .. } => "island rle-subtract",
+            IslandCommands::Combined { .. } => "island combined",
         },
         Commands::Slice { command } => match command {
             SliceCommands::Run { .. } => "slice run",
@@ -1951,6 +2023,10 @@ fn main() {
                 cmd_rle_label(&input, &output, connectivity, json),
             IslandCommands::RleSubtract { mask_a, mask_b, output } =>
                 cmd_rle_subtract(&mask_a, &mask_b, &output),
+            IslandCommands::Combined { input, output, layer_height, px_mm, buffer, connectivity,
+                k, overhang_angle, overhang_px_mm, has_raft } =>
+                cmd_island_combined(&input, &output, layer_height, px_mm, buffer, connectivity,
+                    k, overhang_angle, overhang_px_mm, has_raft),
         },
 
         Commands::Slice { command } => match command {
