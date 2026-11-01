@@ -130,6 +130,8 @@ export function PreparePanelStack({
     setArrangePrecisionMode,
     arrangePlateFillMode,
     setArrangePlateFillMode,
+    arrangeGroupByHeight,
+    setArrangeGroupByHeight,
     arrangeLayoutMode,
     setArrangeLayoutMode,
     arrangeAllowRotateOnZ,
@@ -305,6 +307,8 @@ export function PreparePanelStack({
           onPrecisionModeChange={setArrangePrecisionMode}
           fillMode={arrangePlateFillMode}
           onFillModeChange={setArrangePlateFillMode}
+          groupByHeight={arrangeGroupByHeight}
+          onGroupByHeightChange={setArrangeGroupByHeight}
           layoutMode={arrangeLayoutMode}
           onLayoutModeChange={setArrangeLayoutMode}
           spacingMm={arrangeSpacingMm}

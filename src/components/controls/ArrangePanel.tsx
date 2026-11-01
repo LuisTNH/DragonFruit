@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutGrid, RotateCw } from 'lucide-react';
+import { ArrowUpDown, LayoutGrid, RotateCw } from 'lucide-react';
 import { useLingui } from '@lingui/react';
 import { msg, plural } from '@lingui/core/macro';
 import type { MessageDescriptor } from '@lingui/core';
@@ -20,6 +20,8 @@ interface ArrangePanelProps {
   onPrecisionModeChange: (value: ArrangePrecisionMode) => void;
   fillMode: ArrangePlateFillMode;
   onFillModeChange: (value: ArrangePlateFillMode) => void;
+  groupByHeight: boolean;
+  onGroupByHeightChange: (value: boolean) => void;
   layoutMode: ArrangeLayoutMode;
   onLayoutModeChange: (value: ArrangeLayoutMode) => void;
   spacingMm: number;
@@ -60,6 +62,8 @@ export function ArrangePanel({
   onPrecisionModeChange,
   fillMode,
   onFillModeChange,
+  groupByHeight,
+  onGroupByHeightChange,
   layoutMode,
   onLayoutModeChange,
   spacingMm,
@@ -337,6 +341,34 @@ export function ArrangePanel({
                   }}
                 >
                   {precisionMode === 'high_precision' ? _(msg`ON (Required)`) : (allowRotateOnZ ? _(msg`ON`) : _(msg`OFF`))}
+                </span>
+              </div>
+            </button>
+          )}
+
+          {layoutMode === 'auto' && (
+            <button
+              type="button"
+              className="w-full rounded-md border px-2 py-2 text-left transition-colors disabled:opacity-60"
+              style={groupByHeight ? accentCardStyle : panelCardStyle}
+              onClick={() => onGroupByHeightChange(!groupByHeight)}
+              disabled={isApplying}
+              title={_(msg({ message: 'Put the tallest models on the same plates and the short ones together: a resin plate prints as long as its tallest model', comment: 'Tooltip on the Arrange panel switch that sorts models onto plates by height when they spread over several plates.' }))}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <ArrowUpDown className="h-3.5 w-3.5" style={{ color: 'var(--accent)' }} />
+                  <span className="text-xs font-medium" style={{ color: 'var(--text-strong)' }}><Trans>Group by Height</Trans></span>
+                </div>
+                <span
+                  className="rounded-full border px-2 py-0.5 text-[10px]"
+                  style={{
+                    borderColor: 'var(--border-subtle)',
+                    color: groupByHeight ? 'var(--accent)' : 'var(--text-muted)',
+                    background: groupByHeight ? 'color-mix(in srgb, var(--accent), transparent 88%)' : 'transparent',
+                  }}
+                >
+                  {groupByHeight ? _(msg`ON`) : _(msg`OFF`)}
                 </span>
               </div>
             </button>

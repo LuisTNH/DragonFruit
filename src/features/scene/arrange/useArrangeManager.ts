@@ -8,6 +8,7 @@ import type { DuplicateLayoutMode } from '@/components/controls/DuplicatePanel';
 import { type HullCacheEntry, type ArrangeModel as HighPrecisionArrangeModel } from '@/features/scene/arrange/highPrecisionArrange';
 import { computeHighPrecisionArrangeResultWorker } from '@/features/scene/arrange/highPrecisionArrangeWorkerClient';
 import { freeRectsForPlate, type PlateRect } from '@/features/scene/arrange/plateFreeSpace';
+import { chooseBedByHeight } from '@/features/scene/arrange/heightGrouping';
 import { modelPlateScope } from '@/features/scene/plates/plateInteractivity';
 
 type SceneManager = ReturnType<typeof useSceneCollectionManager>;
@@ -24,6 +25,9 @@ type FootprintPolygonFn = (model: SceneModel, rotationZOverride?: number, transf
  * small models.
  */
 const MAX_ARRANGE_BEDS = 32;
+/** Group by Height on the high-precision packer: single tries to fill a bed's
+ *  leftover space with shorter models. Each try is a full pack. */
+const HIGH_PRECISION_HEIGHT_FILL_TRIES = 6;
 
 /**
  * How far an arrange run may spread its models.
@@ -131,6 +135,7 @@ export function useArrangeManager({
 
   const [arrangePrecisionMode, setArrangePrecisionMode] = React.useState<ArrangePrecisionMode>('standard');
   const [arrangePlateFillMode, setArrangePlateFillMode] = React.useState<ArrangePlateFillMode>('plates');
+  const [arrangeGroupByHeight, setArrangeGroupByHeight] = React.useState(false);
   const [arrangeAllowRotateOnZ, setArrangeAllowRotateOnZ] = React.useState(false);
   const [arrangeLayoutMode, setArrangeLayoutMode] = React.useState<ArrangeLayoutMode>('auto');
   const [arrangeAnchorMode, setArrangeAnchorMode] = React.useState<ArrangeAnchorMode>('center');
@@ -1062,6 +1067,23 @@ export function useArrangeManager({
         return { placed: packedWithPositions, spilled: spills.map((item) => item.model) };
       };
 
+      /**
+       * One bed's pass. With Group by Height the bed is first offered only the
+       * tallest models still waiting, and what fits around them (heightGrouping.ts);
+       * the shelf packer is cheap enough to be asked about every model.
+       */
+      const planBedPass = async (passModels: SceneModel[], frame: Parameters<typeof planPass>[1]) => {
+        if (!arrangeGroupByHeight || passModels.length < 2) return planPass(passModels, frame);
+        const chosen = await chooseBedByHeight(passModels, {
+          heightOf: (model) => getModelSupportAwareDimensionsMm(model, undefined, getArrangeTransform(model)).height,
+          fits: (models) => planPass(models, frame).spilled.length === 0,
+        });
+        if (chosen.length === 0) return { placed: [], spilled: passModels };
+        const pass = planPass(chosen, frame);
+        const placedIds = new Set(pass.placed.map((entry) => entry.model.id));
+        return { placed: pass.placed, spilled: passModels.filter((model) => !placedIds.has(model.id)) };
+      };
+
       // Every bed holds the same build volume; only where the cascade puts it differs.
       const localFrame = resolveArrangeFrame({ dxMm: 0, dyMm: 0 });
       const platesBefore = { plates: scene.plates, activePlateId: scene.activePlateId };
@@ -1113,7 +1135,7 @@ export function useArrangeManager({
 
         for (const rect of freeRects) {
           if (pending.length === 0) break;
-          const pass = planPass(pending, rect);
+          const pass = await planBedPass(pending, rect);
           if (pass.placed.length === 0) continue;
           passes.push({ placed: pass.placed, plateId: target.plateId });
           pending = pass.spilled;
@@ -1124,7 +1146,7 @@ export function useArrangeManager({
       // The cap only bites on a set that cannot be packed at all, where a pass below makes
       // no progress and the rest goes beside the plate instead.
       while (pending.length > 0 && passes.filter((pass) => pass.plateId === null).length < MAX_ARRANGE_BEDS) {
-        const pass = planPass(pending, localFrame);
+        const pass = await planBedPass(pending, localFrame);
         if (pass.placed.length === 0) break;
 
         passes.push({ placed: pass.placed, plateId: null });
@@ -1192,7 +1214,7 @@ export function useArrangeManager({
       setActiveArrangeOperation(null);
       setArrangeOverlayModelCount(null);
     }
-  }, [arrangeAllowRotateOnZ, arrangeAnchorMode, arrangeSpacingMm, bedsEmptiedByRun, getArrangeTransform, getModelSupportAwareDimensionsMm, isAutoArranging, resolveArrangeBedTargets, resolveArrangeFrame, resolveArrangeVisibleModels, scene, sleep, transformMgr, applyArrangeTransforms]);
+  }, [arrangeAllowRotateOnZ, arrangeAnchorMode, arrangeGroupByHeight, arrangeSpacingMm, bedsEmptiedByRun, getArrangeTransform, getModelSupportAwareDimensionsMm, isAutoArranging, resolveArrangeBedTargets, resolveArrangeFrame, resolveArrangeVisibleModels, scene, sleep, transformMgr, applyArrangeTransforms]);
 
   const handleHighPrecisionArrangeModels = React.useCallback(async (scope: 'all' | 'selected', explicitSelectedIds?: string[]) => {
     if (isAutoArranging) return;
@@ -1297,15 +1319,67 @@ export function useArrangeManager({
        * models rather than what to avoid: no blockers, and the frame it is given is that
        * rectangle — a bed's own frame is only the special case where nothing is on it.
        */
+      /** Height that sets each model's print time, for Group by Height. */
+      const heightById = new Map(visibleModels.map((model) => [
+        model.id,
+        getModelSupportAwareDimensionsMm(model, undefined, getArrangeTransform(model)).height,
+      ]));
+      const runPacker = (ids: readonly string[], rect: PlateRect) => {
+        const targetIds = new Set(ids);
+        const passModels = sceneArrangeModels.filter((model) => targetIds.has(model.id));
+        return computeHighPrecisionArrangeResultWorker({
+          visibleModels: passModels,
+          sceneModels: passModels,
+          widthMm: rect.maxX - rect.minX,
+          depthMm: rect.maxY - rect.minY,
+          // The rectangle is the frame: a front-left origin plus the offset puts it
+          // exactly where the free space is, with the margins already taken out.
+          originMode: 'front_left',
+          plateOffsetMm: { dxMm: rect.minX, dyMm: rect.minY },
+          arrangeSpacingMm,
+          arrangeAllowRotateOnZ,
+          arrangeAnchorMode,
+          getArrangeTransform: (model) => model.transform,
+          hullCache: arrangeHullFootprintCacheRef.current,
+          safetyMarginMm: undefined,
+        });
+      };
+      const loneFits = (id: string, rect: PlateRect) => {
+        const lone = visibleModels.find((model) => model.id === id);
+        if (!lone) return false;
+        const dims = getModelSupportAwareDimensionsMm(lone, undefined, getArrangeTransform(lone));
+        return dims.width <= (rect.maxX - rect.minX) && dims.depth <= (rect.maxY - rect.minY);
+      };
+
       const packIntoRect = async (rect: PlateRect, plateId: string | null): Promise<void> => {
         if (pendingIds.length === 0) return;
 
+        // Group by Height: the bed takes the tallest models still waiting (see
+        // heightGrouping.ts); the rest stay pending for the beds after it.
+        let bedIds = pendingIds;
+        const packedSets = new Map<string, Awaited<ReturnType<typeof runPacker>>>();
+        if (arrangeGroupByHeight && pendingIds.length > 1) {
+          bedIds = await chooseBedByHeight(pendingIds, {
+            heightOf: (id) => heightById.get(id) ?? 0,
+            fits: async (ids) => {
+              if (ids.length === 1) return loneFits(ids[0], rect);
+              const result = await runPacker(ids, rect);
+              packedSets.set(ids.join('|'), result);
+              return result.spilledIds.length === 0 && result.packedIds.length === ids.length;
+            },
+            maxFillTries: HIGH_PRECISION_HEIGHT_FILL_TRIES,
+          });
+          if (bedIds.length === 0) return;
+        }
+        const chosenIds = new Set(bedIds);
+        const rest = pendingIds.filter((id) => !chosenIds.has(id));
+
         // The packer arranges a set; asked for one model it answers nothing at all. The
         // lone leftover is therefore placed the way a solo arrange places it.
-        if (pendingIds.length === 1) {
-          const lone = visibleModels.find((model) => model.id === pendingIds[0]);
+        if (bedIds.length === 1) {
+          const lone = visibleModels.find((model) => model.id === bedIds[0]);
           if (!lone) {
-            pendingIds = [];
+            pendingIds = rest;
             return;
           }
 
@@ -1328,28 +1402,11 @@ export function useArrangeManager({
             }],
             plateId,
           });
-          pendingIds = [];
+          pendingIds = rest;
           return;
         }
 
-        const targetIds = new Set(pendingIds);
-        const passModels = sceneArrangeModels.filter((model) => targetIds.has(model.id));
-        const result = await computeHighPrecisionArrangeResultWorker({
-          visibleModels: passModels,
-          sceneModels: passModels,
-          widthMm: rect.maxX - rect.minX,
-          depthMm: rect.maxY - rect.minY,
-          // The rectangle is the frame: a front-left origin plus the offset puts it
-          // exactly where the free space is, with the margins already taken out.
-          originMode: 'front_left',
-          plateOffsetMm: { dxMm: rect.minX, dyMm: rect.minY },
-          arrangeSpacingMm,
-          arrangeAllowRotateOnZ,
-          arrangeAnchorMode,
-          getArrangeTransform: (model) => model.transform,
-          hullCache: arrangeHullFootprintCacheRef.current,
-          safetyMarginMm: undefined,
-        });
+        const result = packedSets.get(bedIds.join('|')) ?? await runPacker(bedIds, rect);
 
         const packedIds = new Set(result.packedIds);
         const packed = result.updates.filter((update) => packedIds.has(update.id));
@@ -1360,7 +1417,7 @@ export function useArrangeManager({
         }
 
         passes.push({ placed: packed, plateId });
-        pendingIds = result.spilledIds;
+        pendingIds = [...result.spilledIds, ...rest];
       };
 
       // Fill what the scene already has: each bed's own free space, its largest rectangle
@@ -1468,6 +1525,7 @@ export function useArrangeManager({
   }, [
     arrangeAllowRotateOnZ,
     arrangeAnchorMode,
+    arrangeGroupByHeight,
     arrangePlateOffset,
     arrangeSpacingMm,
     bedsEmptiedByRun,
@@ -2048,6 +2106,8 @@ export function useArrangeManager({
     setArrangePrecisionMode,
     arrangePlateFillMode,
     setArrangePlateFillMode,
+    arrangeGroupByHeight,
+    setArrangeGroupByHeight,
     arrangeAllowRotateOnZ,
     setArrangeAllowRotateOnZ,
     arrangeLayoutMode,
