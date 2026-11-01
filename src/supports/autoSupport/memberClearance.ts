@@ -36,7 +36,7 @@ const AXIAL_STEP_MM = 0.1;
 /** Points sampled around each ring of the cone surface. */
 const RING_SAMPLES = 8;
 /** Inside samples on foreign geometry a member may have before it is culled. */
-const MAX_FOREIGN_SAMPLES = 1;
+const MAX_FOREIGN_SAMPLES = 0;
 const FOREIGN_COS = Math.cos(Math.PI / 4);
 /** Distance before the tip (mm) within which the contact's own surface may
  *  hold cone samples; past it every inside sample counts. */

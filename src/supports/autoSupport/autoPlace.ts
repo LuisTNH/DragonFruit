@@ -31,7 +31,7 @@ import type { AutoPlaceTimings } from './types';
 import { normalizeAutoSupportSettings, AUTO_SUPPORT_CONSTRAINTS, MIN_CONTACT_TIP_DIAMETER_MM } from './settings';
 import { activeSizingBand, TIP_CONTACT_MIN_SHAFT_RATIO } from './parameterSizing';
 import { generateCandidates, deduplicateCandidates } from './candidateGeneration';
-import { generateGridCandidates, shouldUseDensityGrid } from './gridPlacement';
+import { generateGridCandidates, generatePartStartClusters, shouldUseDensityGrid } from './gridPlacement';
 import { computeStabilizationAnchors } from './stabilization';
 import { computeMinimaReinforcementPoints } from './minimaReinforcement';
 import {
@@ -3139,6 +3139,18 @@ export function computeAutoSupportPlan(
             candidates = [
                 ...generated,
                 ...candidates.filter((c) => !generatedRegionIds.has(c.id)),
+            ];
+        }
+    }
+
+    // Part start (partStart.ts): a start region too small for the grid gets a
+    // few contacts spread over it in place of its single candidate.
+    {
+        const clusters = generatePartStartClusters(overhangIslands, autoSettings, resolvedMesh);
+        if (clusters.candidates.length > 0) {
+            candidates = [
+                ...clusters.candidates.map((c): CandidatePoint => ({ ...c, modelId })),
+                ...candidates.filter((c) => !clusters.regionIds.has(c.id)),
             ];
         }
     }

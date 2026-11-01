@@ -13,7 +13,7 @@ import {
 import type { AutoSupportSettings } from './settings';
 import { applyContactTipCaps } from './contactTipCap';
 import { isSupportBlockedContact } from './supportBlockers';
-import { isPartStart, PART_START_BAND_MM, PART_START_SPACING_FACTOR } from './partStart';
+import { isPartStart, PART_START_BAND_MM, PART_START_SPACING_FACTOR, spreadStartContacts } from './partStart';
 
 const FOOTPRINT_TOLERANCE_MM = 0.25;
 
@@ -531,6 +531,56 @@ function sampleFootprintSurface(
         if (s) out.push({ x, y, z: s.z });
     }
     return out;
+}
+
+/**
+ * Part-start clusters (`reinforcePartStart`): an overhang region too small
+ * for the density grid that faces the plate — the foot of a spear — gets a few
+ * contacts spread over it (`spreadStartContacts`) in place of its single one.
+ * Not grid points: they may fan onto one trunk, which is the small tree such a
+ * foot wants. Returns the candidates and the ids of the regions they replace.
+ */
+export function generatePartStartClusters(
+    overhangIslands: DetectedIsland[],
+    settings: AutoSupportSettings,
+    mesh?: THREE.Mesh,
+): { candidates: CandidatePoint[]; regionIds: Set<string> } {
+    const candidates: CandidatePoint[] = [];
+    const regionIds = new Set<string>();
+    if (!settings.reinforcePartStart || !mesh) return { candidates, regionIds };
+    for (const island of overhangIslands) {
+        if (island.interior || shouldUseDensityGrid(island, settings)) continue;
+        const voxels = island.contactVoxels;
+        if (!voxels || voxels.count === 0) continue;
+        const surfaceAt = createTriangleSurfaceAt(island, mesh)
+            ?? createVoxelSurfaceAt(footprintToPoints(voxels), 1.0, island.baseZ);
+        const points: Array<{ x: number; y: number; z: number; faceIndex?: number }> = [];
+        for (let i = 0; i < voxels.count; i++) {
+            const x = footprintX(voxels, i);
+            const y = footprintY(voxels, i);
+            const hit = surfaceAt(x, y);
+            if (hit) points.push({ x, y, z: hit.z, faceIndex: (hit as { faceIndex?: number }).faceIndex });
+        }
+        if (!isPartStart(points, mesh)) continue;
+        const spread = spreadStartContacts(points);
+        if (spread.length < 2) continue;
+        regionIds.add(island.id);
+        const surfaceNormal = island.surfaceNormal ?? { x: 0, y: 0, z: -1 };
+        for (const p of spread) {
+            candidates.push({
+                id: `start-${island.id}-${p.x.toFixed(2)}-${p.y.toFixed(2)}`,
+                tipPos: { x: p.x, y: p.y, z: p.z },
+                tipNormal: (p.faceIndex != null ? faceNormalAt(mesh, p.faceIndex) : null) ?? surfaceNormal,
+                modelId: '',
+                source: 'overhang',
+                islandAreaMm2: (island.areaMm2 ?? 0) / spread.length,
+                zHeight: p.z,
+                priority: 0,
+                partStart: true,
+            });
+        }
+    }
+    return { candidates, regionIds };
 }
 
 /**
