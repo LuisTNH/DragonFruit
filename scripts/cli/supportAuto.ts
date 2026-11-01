@@ -29,6 +29,8 @@ import { clearHistory } from '../../src/history/historyStore';
 import { getSnapshot, resetKickstandsInState, resetStore } from '../../src/supports/state';
 import { registerSupportHistoryHandlers } from '../../src/supports/history/useSupportHistoryHandlers';
 import { setModelMesh } from '../../src/supports/autoSupport/meshStore';
+import { setSupportBlockedTriangles } from '../../src/supports/autoSupport/supportBlockers';
+import { soupTriangleOf } from '../../src/supports/autoSupport/gridPlacement';
 import {
   modelMeshKey,
   runAutoPlaceRequest,
@@ -54,6 +56,12 @@ export type SupportAutoInput = {
    * runs) instead of the in-process voxel detector.
    */
   islandsCli?: string;
+  /**
+   * Faces that must take no support contact, as the app's blocker paint
+   * marks them: tested per triangle of `positions` (world space, 9 floats per
+   * triangle) and handed to the support-blocker mask before the run.
+   */
+  blockTriangle?: (a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3) => boolean;
 };
 
 /** The JSON `island combined` writes: what `scan_islands_staged` returns to the app. */
@@ -140,7 +148,35 @@ export type SupportAutoResult = {
   placed: Record<string, number>;
 };
 
+/**
+ * The blocker mask in the indexing a raycast reports: the BVH reorders the
+ * index of a triangle soup, so the mask holds every face index whose soup
+ * triangle the predicate blocks.
+ */
+function blockedFaceIndices(
+  geometry: THREE.BufferGeometry,
+  positions: Float32Array,
+  block: NonNullable<SupportAutoInput['blockTriangle']>,
+): number[] {
+  const a = new THREE.Vector3();
+  const b = new THREE.Vector3();
+  const c = new THREE.Vector3();
+  const faces = positions.length / 9;
+  const blocked: number[] = [];
+  for (let face = 0; face < faces; face++) {
+    const t = soupTriangleOf(geometry, face) * 9;
+    a.fromArray(positions, t);
+    b.fromArray(positions, t + 3);
+    c.fromArray(positions, t + 6);
+    if (block(a, b, c)) blocked.push(face);
+  }
+  return blocked;
+}
+
 export async function computeSupportAuto(input: SupportAutoInput): Promise<SupportAutoResult> {
+  // Before the first accelerateGeometry: without it the geometry gets no BVH
+  // until the plan builds one later and reorders the index under it.
+  initializeBVH();
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(input.positions, 3));
   geometry.computeVertexNormals();
@@ -154,7 +190,6 @@ export async function computeSupportAuto(input: SupportAutoInput): Promise<Suppo
   resetKickstandsInState();
   clearHistory();
   const dispose = registerSupportHistoryHandlers();
-  initializeBVH();
   const appSettings = createDefaultSettings();
   // The panel stores its settings here, and sizing reads them from here
   // (`activeSizingBand`, model-scale switches), not from the run override.
@@ -163,6 +198,9 @@ export async function computeSupportAuto(input: SupportAutoInput): Promise<Suppo
   const mesh = new THREE.Mesh(geometry);
   mesh.updateMatrixWorld(true);
   setModelMesh(input.modelId, mesh);
+  const blocked = input.blockTriangle ? blockedFaceIndices(geometry, input.positions, input.blockTriangle) : [];
+  setSupportBlockedTriangles(input.modelId, blocked);
+  if (blocked.length > 0) console.error(`support auto: ${blocked.length} faces blocked for contacts`);
   try {
     const plan = runAutoPlaceRequest({
       modelId: input.modelId,

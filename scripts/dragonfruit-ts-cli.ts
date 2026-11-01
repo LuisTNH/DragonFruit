@@ -658,7 +658,8 @@ async function supportAuto(args: ReturnType<typeof parseArgs>): Promise<void> {
   if (!voxlPath) {
     throw new Error(
       'Usage: support auto <scene.voxl> --model-id <id> [--mesh-dir <dir>] [--settings <auto-support.json>]\n'
-      + '  [--lift-mm 7] [--px-mm 0.1] [--layer-height-mm 0.05] [--islands-cli <dragonfruit-cli>]',
+      + '  [--lift-mm 7] [--px-mm 0.1] [--layer-height-mm 0.05] [--islands-cli <dragonfruit-cli>]\n'
+      + '  [--block-facing x,y,z[,deg]] [--block-beyond x,y,z,mm] [--support-only-below-mm <h>]',
     );
   }
   const doc = await loadVoxl(voxlPath);
@@ -699,6 +700,7 @@ async function supportAuto(args: ReturnType<typeof parseArgs>): Promise<void> {
     positions,
     settings: readJsonFlag(args.flags, 'settings') as SupportAutoInput['settings'],
     islandsCli,
+    blockTriangle: contactBlocker(args.flags, positions),
     detect: {
       ...(pxMm ? { pxMm: parseFloat(pxMm) } : {}),
       ...(layerHeightMm ? { layerHeightMm: parseFloat(layerHeightMm) } : {}),
@@ -734,6 +736,57 @@ async function supportAuto(args: ReturnType<typeof parseArgs>): Promise<void> {
       + (islandsCli ? '' : ' (voxel islands only: build rust/dragonfruit-cli for the full scan)'),
     );
   }
+}
+
+/**
+ * Faces auto supports must leave alone, as the app's blocker paint does:
+ * `--block-facing x,y,z[,deg]` blocks faces turned within `deg` (default 60)
+ * of a world direction; `--block-beyond x,y,z,mm` blocks every face whose
+ * centre lies within `mm` of the model's far side in that direction (the
+ * engraved back and magnet pocket of a base standing upright, whatever way
+ * their faces turn); `--support-only-below-mm h` blocks every face that
+ * reaches more than `h` above the model's lowest point (supports on the
+ * bottom edge only).
+ */
+function contactBlocker(
+  flags: ReturnType<typeof parseArgs>['flags'],
+  positions: Float32Array,
+): ((a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3) => boolean) | undefined {
+  const facing = optionalFlag(flags, 'block-facing');
+  const beyond = optionalFlag(flags, 'block-beyond');
+  const below = optionalFlag(flags, 'support-only-below-mm');
+  if (!facing && !beyond && !below) return undefined;
+  let modelBottomZ = Infinity;
+  for (let i = 2; i < positions.length; i += 3) modelBottomZ = Math.min(modelBottomZ, positions[i]);
+  let side: THREE.Vector3 | null = null;
+  let sideFrom = Infinity;
+  if (beyond) {
+    const [x, y, z, depth] = beyond.split(',').map(Number);
+    side = new THREE.Vector3(x, y, z).normalize();
+    let far = -Infinity;
+    for (let i = 0; i < positions.length; i += 3) {
+      far = Math.max(far, positions[i] * side.x + positions[i + 1] * side.y + positions[i + 2] * side.z);
+    }
+    sideFrom = far - depth;
+  }
+  let direction: THREE.Vector3 | null = null;
+  let cosLimit = 1;
+  if (facing) {
+    const [x, y, z, deg = 60] = facing.split(',').map(Number);
+    direction = new THREE.Vector3(x, y, z).normalize();
+    cosLimit = Math.cos((deg * Math.PI) / 180);
+  }
+  const topZ = below ? modelBottomZ + parseFloat(below) : Infinity;
+  const ab = new THREE.Vector3();
+  const ac = new THREE.Vector3();
+  return (a, b, c) => {
+    if (Math.max(a.z, b.z, c.z) > topZ) return true;
+    if (side && (a.dot(side) + b.dot(side) + c.dot(side)) / 3 > sideFrom) return true;
+    if (!direction) return false;
+    const normal = ab.subVectors(b, a).cross(ac.subVectors(c, a));
+    const length = normal.length();
+    return length > 0 && normal.dot(direction) / length >= cosLimit;
+  };
 }
 
 async function supportList(args: ReturnType<typeof parseArgs>): Promise<void> {
