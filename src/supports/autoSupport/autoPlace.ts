@@ -4,7 +4,6 @@ import {
     contactEndpointsFor,
     getSupportTypeDescriptor,
     GRID_HOST_TYPES,
-    isOriginConvertibleToTree,
     resolveSupportTypeIdOf,
     selectTypeForPlacement,
     SHAFT_HOSTED_MEMBER_TYPES,
@@ -77,6 +76,7 @@ import { buildTrunkData } from '../SupportTypes/Trunk/trunkBuilder';
 import { buildCavityBridge } from '../SupportTypes/Trunk/useTrunkPlacement';
 import { createCavityTester } from '../interiorSupportGeometry';
 import { closestSurfaceNormal } from './closestSurfaceNormal';
+import { allowsModelToModelBridges, isTreeConvertibleOrigin } from './forestShape';
 import { computeForestDiameterProfile, memberDiameterOf } from '../SupportTypes/Trunk/TrunkReplacement/maxConnectedDiameter';
 import { buildBranchData } from '../SupportTypes/Branch/branchBuilder';
 import type { BranchBuildInput, BranchBuildResult } from '../SupportTypes/Branch/branchBuilder';
@@ -1425,7 +1425,13 @@ function placeOneCandidate(
                     })`;
             } catch {}
             const band = activeSizingBand();
-            const cavityResult = buildCavityBridge(tipPos, tipNormal, candidate.modelId, mesh, band);
+            const bridgeAllowed = allowsModelToModelBridges(getSettings().autoSupport);
+            if (!bridgeAllowed) {
+                logPlacement(`Cavity bridge skipped ${candidate.id}: model-to-model supports are off`);
+            }
+            const cavityResult = bridgeAllowed
+                ? buildCavityBridge(tipPos, tipNormal, candidate.modelId, mesh, band)
+                : null;
             if (cavityResult) {
                 // Keep short cavity twigs but cap long bridges at 12mm; a
                 // rejected tip is reconsidered by fan/merge in a later pass.
@@ -3426,11 +3432,14 @@ export function computeAutoSupportPlan(
             // in the forest, so a crown of pillars becomes a crown of leaves
             // on the pillar it rings. Read through the origin, never by id.
             const originKind = hostOriginById.get(hostId);
-            const isConvertible = isOriginConvertibleToTree(entity.origin)
+            // `preferTrees` adds island trunks (voxel islands, mesh minima);
+            // see forestShape.ts.
+            const isConvertible = isTreeConvertibleOrigin(entity.origin, autoSettings)
                 && (originKind === 'gridInfill'
                     || originKind === 'coverageFill'
                     || entity.origin === 'standalone'
-                    || entity.origin === 'reinforcement');
+                    || entity.origin === 'reinforcement'
+                    || entity.origin === 'island');
             if (!isConvertible) continue;
             if (countAttachmentsOnHost(hostTypeId, hostId, draft) > 0) continue;
             const tip = entity.contactCone?.pos;

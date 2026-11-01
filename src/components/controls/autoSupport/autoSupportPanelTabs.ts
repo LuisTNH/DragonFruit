@@ -127,6 +127,8 @@ export type BooleanAutoSupportSettingKey =
   | 'prioritizeIntersection'
   | 'stabilizationEnabled'
   | 'minimaReinforcementEnabled'
+  | 'allowModelToModel'
+  | 'preferTrees'
   | 'debugSupportOriginColors'
   | 'debugSkipAutoBracing'
   | 'modelScaleEnabled';
@@ -195,6 +197,8 @@ const TOGGLES: readonly ToggleDef[] = [
   { key: 'prioritizeIntersection', section: 'detection', label: msg`Prioritize Dual`, hint: msg`Islands found by BOTH the slice and mesh scans are placed first (they are the most certain)` },
   { key: 'stabilizationEnabled', section: 'stability', label: msg`Stabilization Anchors`, hint: msg`Add contacts along the edge or corner a pose bears on, so a leaning part is held against toppling and peel (default on)` },
   { key: 'minimaReinforcementEnabled', section: 'stability', label: msg`Minima Reinforcement`, hint: msg`Ring each mesh minima with contacts on its own flank, so a section starts on a base instead of a needle (default on)` },
+  { key: 'allowModelToModel', section: 'distribution', label: msg`Model-to-Model`, hint: msg`Bridge a tip to a lower part of the model when no support can reach the plate or a nearby trunk. Off leaves it to the branch passes, so the model gets no second scar (default on)` },
+  { key: 'preferTrees', section: 'distribution', label: msg`Prefer Trees`, hint: msg`Let island and minima trunks join a neighbouring trunk as branches, so clustered contacts share few trunks instead of standing as a bundle of pillars (default off)` },
   { key: 'debugSupportOriginColors', section: 'debug', label: msg`Origin Colors`, hint: msg`Debug: color supports by origin — stump (red), overhang (orange), island (blue), standalone (purple), reinforcement (teal)` },
   { key: 'debugSkipAutoBracing', section: 'debug', label: msg`No Brace`, hint: msg`Debug: skip automatic bracing for this run` },
 ];

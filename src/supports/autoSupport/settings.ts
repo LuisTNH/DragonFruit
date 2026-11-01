@@ -128,6 +128,14 @@ export interface AutoSupportSettings {
     /** Ring mesh minima (the first point of a section) with reinforcement
      *  contacts on their own flank (default on). */
     minimaReinforcementEnabled: boolean;
+    /** Allow model-to-model bridges (twig/stick) when a tip has no route to
+     *  the plate and no host can carry it (default on). Off leaves such a tip
+     *  to the fan and merge passes; see `forestShape.ts`. */
+    allowModelToModel: boolean;
+    /** Let island and minima trunks fan into a neighbouring host during
+     *  consolidation, so clustered contacts read as trees on few trunks
+     *  instead of a bundle of pillars (default off); see `forestShape.ts`. */
+    preferTrees: boolean;
     /** Fraction of the local free width a contact tip may occupy so the
      *  rendered disc fits the feature it lands on. **Calibration, not a
      *  preference**: 0.9 is measured — at 0.6 the cap shrank a 0.28 mm band tip
@@ -292,6 +300,8 @@ export function createDefaultAutoSupportSettings(): AutoSupportSettings {
         debugSkipAutoBracing: false,
         stabilizationEnabled: true,
         minimaReinforcementEnabled: true,
+        allowModelToModel: true,
+        preferTrees: false,
     };
 }
 
@@ -332,6 +342,8 @@ export function normalizeAutoSupportSettings(input?: Partial<AutoSupportSettings
             source.minimaReinforcementEnabled,
             defaults.minimaReinforcementEnabled,
         ),
+        allowModelToModel: normalizeBoolean(source.allowModelToModel, defaults.allowModelToModel),
+        preferTrees: normalizeBoolean(source.preferTrees, defaults.preferTrees),
     };
 }
 
