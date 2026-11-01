@@ -129,6 +129,7 @@ export type BooleanAutoSupportSettingKey =
   | 'minimaReinforcementEnabled'
   | 'allowModelToModel'
   | 'preferTrees'
+  | 'strictClearance'
   | 'debugSupportOriginColors'
   | 'debugSkipAutoBracing'
   | 'modelScaleEnabled';
@@ -199,6 +200,7 @@ const TOGGLES: readonly ToggleDef[] = [
   { key: 'minimaReinforcementEnabled', section: 'stability', label: msg`Minima Reinforcement`, hint: msg`Ring each mesh minima with contacts on its own flank, so a section starts on a base instead of a needle (default on)` },
   { key: 'allowModelToModel', section: 'distribution', label: msg`Model-to-Model`, hint: msg`Bridge a tip to a lower part of the model when no support can reach the plate or a nearby trunk. Off leaves it to the branch passes, so the model gets no second scar (default on)` },
   { key: 'preferTrees', section: 'distribution', label: msg`Prefer Trees`, hint: msg`Let island and minima trunks join a neighbouring trunk as branches, so clustered contacts share few trunks instead of standing as a bundle of pillars (default off)` },
+  { key: 'strictClearance', section: 'distribution', label: msg`Strict Clearance`, hint: msg`After placement, remove any leaf or branch whose cone cuts into a part of the model other than the surface it touches (default off)` },
   { key: 'debugSupportOriginColors', section: 'debug', label: msg`Origin Colors`, hint: msg`Debug: color supports by origin — stump (red), overhang (orange), island (blue), standalone (purple), reinforcement (teal)` },
   { key: 'debugSkipAutoBracing', section: 'debug', label: msg`No Brace`, hint: msg`Debug: skip automatic bracing for this run` },
 ];

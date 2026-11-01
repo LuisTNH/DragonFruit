@@ -77,6 +77,7 @@ import { buildCavityBridge } from '../SupportTypes/Trunk/useTrunkPlacement';
 import { createCavityTester } from '../interiorSupportGeometry';
 import { closestSurfaceNormal } from './closestSurfaceNormal';
 import { allowsModelToModelBridges, isTreeConvertibleOrigin } from './forestShape';
+import { cullIntrudingMembers } from './memberClearance';
 import { computeForestDiameterProfile, memberDiameterOf } from '../SupportTypes/Trunk/TrunkReplacement/maxConnectedDiameter';
 import { buildBranchData } from '../SupportTypes/Branch/branchBuilder';
 import type { BranchBuildInput, BranchBuildResult } from '../SupportTypes/Branch/branchBuilder';
@@ -4074,6 +4075,18 @@ export function computeAutoSupportPlan(
             if (coneSynced !== draft) {
                 draft = coneSynced;
                 console.log(LOG_PREFIX, 'Contact cone sync: matched cone bodies to their host shafts.');
+            }
+
+            // Strict clearance: after the sync every cone has its final body, so
+            // this is the first point a member's real shape can be tested.
+            if (autoSettings.strictClearance && resolvedMesh) {
+                const cleared = cullIntrudingMembers(draft, resolvedMesh);
+                if (cleared.culled.length > 0) {
+                    draft = cleared.draft;
+                    for (const member of cleared.culled) placed[member.typeId]--;
+                    console.log(LOG_PREFIX, `Clearance cull: ${cleared.culled.length} members cut into the model and were removed — `
+                        + cleared.culled.map((m) => `${m.typeId} ${m.id.slice(0, 8)} (${m.foreignSamples} samples)`).join(', '));
+                }
             }
 
             timingEnd('resize');

@@ -136,6 +136,10 @@ export interface AutoSupportSettings {
      *  consolidation, so clustered contacts read as trees on few trunks
      *  instead of a bundle of pillars (default off); see `forestShape.ts`. */
     preferTrees: boolean;
+    /** Final clearance check: cull a leaf or branch whose cone body cuts into
+     *  model geometry other than the surface its tip contacts (default off);
+     *  see `memberClearance.ts`. */
+    strictClearance: boolean;
     /** Fraction of the local free width a contact tip may occupy so the
      *  rendered disc fits the feature it lands on. **Calibration, not a
      *  preference**: 0.9 is measured — at 0.6 the cap shrank a 0.28 mm band tip
@@ -302,6 +306,7 @@ export function createDefaultAutoSupportSettings(): AutoSupportSettings {
         minimaReinforcementEnabled: true,
         allowModelToModel: true,
         preferTrees: false,
+        strictClearance: false,
     };
 }
 
@@ -344,6 +349,7 @@ export function normalizeAutoSupportSettings(input?: Partial<AutoSupportSettings
         ),
         allowModelToModel: normalizeBoolean(source.allowModelToModel, defaults.allowModelToModel),
         preferTrees: normalizeBoolean(source.preferTrees, defaults.preferTrees),
+        strictClearance: normalizeBoolean(source.strictClearance, defaults.strictClearance),
     };
 }
 
