@@ -235,9 +235,13 @@ pub fn classify_overhangs(
         }
     }
 
+    // Both sides must be overhang: joining through ordinary faces chains every
+    // down-facing patch of a closed mesh into one region (a mini's soles, its
+    // shoulders and its helmet rim became a single footprint).
     for pair in edges.windows(2) {
-        if pair[0].key == pair[1].key {
-            union(&mut parent, pair[0].tri, pair[1].tri);
+        let (a, b) = (pair[0].tri, pair[1].tri);
+        if pair[0].key == pair[1].key && is_overhang[a as usize] && is_overhang[b as usize] {
+            union(&mut parent, a, b);
         }
     }
 
@@ -1799,6 +1803,18 @@ mod tests {
         assert!((regions[1].angle_deg - 20.0).abs() < 1.5);
         // Deterministic ordering: the two regions are ordered by root triangle id.
         assert!(regions[0].xy_min[0] < regions[1].xy_min[0]);
+    }
+
+    #[test]
+    fn patches_joined_only_by_a_wall_are_two_regions() {
+        // One closed stair: the base (z=0, x 0–10) and a ledge underside
+        // (z=5, x 10–20), joined only through the vertical riser at x=10.
+        let section = [(0.0, 0.0), (10.0, 0.0), (10.0, 5.0), (20.0, 5.0), (20.0, 10.0), (0.0, 10.0)];
+        let regions = overhang_and_stability_from_soup(&prism(&section, 10.0), 45.0, 0.25, false).0;
+        assert_eq!(regions.len(), 2, "base and ledge are separate patches: {regions:?}");
+        let mut min_z: Vec<f32> = regions.iter().map(|r| r.min_z).collect();
+        min_z.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        assert!(min_z[0].abs() < 1e-3 && (min_z[1] - 5.0).abs() < 1e-3, "{min_z:?}");
     }
 
     /// n×n grid of unit quads on the z=0 plane, wound with −Z normals so the
