@@ -1,0 +1,18 @@
+[package]
+name = "dragonfruit-mesh-scan"
+version = "0.1.0"
+edition = "2021"
+description = "Mesh scanners behind Islands: mesh minima, overhang regions and the topple report, and the combined voxel + minima + overhang scan. Shared by the app and the CLI."
+
+[lib]
+name = "dragonfruit_mesh_scan"
+path = "src/lib.rs"
+
+[dependencies]
+dragonfruit-islands = { path = "../dragonfruit-islands" }
+dragonfruit-mesh-repair = { path = "../dragonfruit-mesh-repair" }
+dragonfruit-slicing-engine = { path = "../dragonfruit-slicing-engine" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rayon = "1.10"
+log = "0.4"

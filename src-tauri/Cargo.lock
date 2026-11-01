@@ -1630,6 +1630,7 @@ dependencies = [
  "dragonfruit-islands",
  "dragonfruit-mesh-core",
  "dragonfruit-mesh-repair",
+ "dragonfruit-mesh-scan",
  "dragonfruit-organic-cut",
  "dragonfruit-rtsp-relay",
  "dragonfruit-slicing-engine",
@@ -1708,6 +1709,19 @@ dependencies = [
  "smallvec",
  "thiserror 1.0.69",
  "zip",
+]
+
+[[package]]
+name = "dragonfruit-mesh-scan"
+version = "0.1.0"
+dependencies = [
+ "dragonfruit-islands",
+ "dragonfruit-mesh-repair",
+ "dragonfruit-slicing-engine",
+ "log",
+ "rayon",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
