@@ -1,20 +1,28 @@
 /**
  * Auto supports for `support auto`, run with the app's own placement pipeline.
  *
- * Islands come from the voxel detector the Islands panel runs (in-process, see
- * `scripts/bench-island-scan.ts`); placement is `runAutoPlaceRequest`, the path
- * the app's auto-support worker takes. The app also merges islands from two
- * Rust scanners (`scan_mesh_minima`, `scan_overhangs`) that only exist behind
- * Tauri, so a headless run sees voxel islands only and may place fewer
- * supports than the app on the same model.
+ * Placement is `runAutoPlaceRequest`, the path the app's auto-support worker
+ * takes. Islands come, like in the app, from the combined native scan (voxel
+ * islands + mesh minima + overhang regions) when a built `dragonfruit-cli` is
+ * given (`island combined`). Without it only the in-process voxel detector runs
+ * (see `scripts/bench-island-scan.ts`), which misses the minima and overhang
+ * islands and places far fewer supports than the app on the same model.
  *
  * Isolated from the CLI entry point because it pulls in THREE, the support
  * stores and the generated registries; `dragonfruit-ts-cli.ts` loads it only
  * for `support auto`.
  */
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import * as THREE from 'three';
 
 import { accelerateGeometry, initializeBVH } from '../../src/utils/bvh';
+import { classifyIntersection } from '../../src/volumeAnalysis/Islands/intersection';
+import { mergeOverhangRegions, overhangRegionToIsland } from '../../src/volumeAnalysis/Islands/useIslands';
+import type { DetectedIsland, OverhangRegion } from '../../src/volumeAnalysis/Islands/types';
+import { OVERHANG_SELF_SUPPORT_ANGLE_DEG } from '../../src/supports/autoSupport/constants';
 import { createDefaultSettings } from '../../src/supports/Settings/types';
 import { setSettings } from '../../src/supports/Settings/state';
 import { clearHistory } from '../../src/history/historyStore';
@@ -40,7 +48,86 @@ export type SupportAutoInput = {
   /** Overrides on the default auto-support settings (the app's preset JSON shape). */
   settings?: Partial<AutoSupportSettings>;
   detect?: Partial<DetectOptions>;
+  /**
+   * Path to a built `dragonfruit-cli`. When given, islands come from its
+   * `island combined` (voxel + mesh minima + overhang regions, the scan the app
+   * runs) instead of the in-process voxel detector.
+   */
+  islandsCli?: string;
 };
+
+/** The JSON `island combined` writes: what `scan_islands_staged` returns to the app. */
+type CombinedIslandScan = {
+  voxelIslands: Array<{
+    id: string;
+    contact: { x: number; y: number; z: number };
+    baseZ: number;
+    areaMm2?: number;
+    layerSpan: [number, number];
+    contactVoxels?: number[];
+  }>;
+  minimaIslands: Array<{
+    position: { x: number; y: number; z: number };
+    vertexIndex?: number;
+    seedTriangleId?: number;
+  }>;
+  overhangIslands: OverhangRegion[];
+};
+
+/**
+ * The app's island list from a native combined scan: voxel islands above the
+ * minimum area, classified against the mesh minima, then merged with the
+ * overhang regions — the chain `useIslands` builds `allIslands` from (voxel
+ * consolidation is off by default there too). On a lifted model with no
+ * supports nothing is supported or grounded, so the panel's filter keeps all.
+ */
+function islandsFromCombinedScan(scan: CombinedIslandScan, detect: DetectOptions): DetectedIsland[] {
+  const voxel: DetectedIsland[] = scan.voxelIslands
+    .filter((v) => (v.areaMm2 ?? 0) >= detect.minAreaMm2)
+    .map((v) => ({
+      id: v.id,
+      source: 'voxel',
+      contact: new THREE.Vector3(v.contact.x, v.contact.y, v.contact.z),
+      baseZ: v.baseZ,
+      areaMm2: v.areaMm2,
+      layerSpan: v.layerSpan,
+      contactVoxels: v.contactVoxels && v.contactVoxels.length >= 2
+        ? { xy: new Float32Array(v.contactVoxels), z: null, count: v.contactVoxels.length / 2 }
+        : undefined,
+    }));
+  const minima: DetectedIsland[] = scan.minimaIslands.map((m, i) => ({
+    id: `m${i}`,
+    source: 'minima',
+    contact: new THREE.Vector3(m.position.x, m.position.y, m.position.z),
+    baseZ: m.position.z,
+    vertexIndex: m.vertexIndex,
+    seedTriangleId: m.seedTriangleId,
+  }));
+  const classified = classifyIntersection(voxel, minima, { xyToleranceMm: 0.5, zBandMm: detect.layerHeightMm });
+  return mergeOverhangRegions(classified.islands, (scan.overhangIslands ?? []).map(overhangRegionToIsland));
+}
+
+function runCombinedScan(cli: string, positions: Float32Array, detect: DetectOptions): DetectedIsland[] {
+  const dir = mkdtempSync(join(tmpdir(), 'df-support-auto-'));
+  try {
+    const soupPath = join(dir, 'positions.bin');
+    const outPath = join(dir, 'islands.json');
+    writeFileSync(soupPath, Buffer.from(positions.buffer, positions.byteOffset, positions.byteLength));
+    execFileSync(cli, [
+      'island', 'combined', soupPath, '-o', outPath,
+      '--layer-height', String(detect.layerHeightMm),
+      '--px-mm', String(detect.pxMm),
+      '--buffer', String(detect.supportBufferMm),
+      '--connectivity', String(detect.connectivity),
+      '--k', '2',
+      '--overhang-angle', String(OVERHANG_SELF_SUPPORT_ANGLE_DEG),
+      '--overhang-px-mm', '0.25',
+    ], { stdio: ['ignore', 'ignore', 'inherit'] });
+    return islandsFromCombinedScan(JSON.parse(readFileSync(outPath, 'utf8')) as CombinedIslandScan, detect);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
 
 export type SupportAutoResult = {
   supports: DragonfruitImportFormat;
@@ -56,7 +143,10 @@ export async function computeSupportAuto(input: SupportAutoInput): Promise<Suppo
   geometry.setAttribute('position', new THREE.BufferAttribute(input.positions, 3));
   geometry.computeVertexNormals();
   accelerateGeometry(geometry);
-  const islands = await detectIslands(geometry, { ...DEFAULT_DETECT_OPTIONS, ...input.detect });
+  const detect = { ...DEFAULT_DETECT_OPTIONS, ...input.detect };
+  const islands = input.islandsCli
+    ? runCombinedScan(input.islandsCli, input.positions, detect)
+    : await detectIslands(geometry, detect);
 
   resetStore();
   resetKickstandsInState();

@@ -20,9 +20,11 @@
 // stubs `npm test` loads for the same reason. The CLI runs as CommonJS under tsx,
 // so the imports below are resolved one after another, after this has run.
 import './test-unit/register.mjs';
-import { readFileSync, writeFileSync, statSync } from 'fs';
+import { readFileSync, writeFileSync, statSync, mkdtempSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
+import { fileURLToPath } from 'url';
 import { basename, resolve, dirname } from 'path';
-import { execFileSync, execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { createRequire } from 'module';
 import { v4 as uuidv4 } from 'uuid';
 import { parseVoxlAuto } from '../src/features/scene/voxl/codec';
@@ -648,7 +650,7 @@ async function supportAuto(args: ReturnType<typeof parseArgs>): Promise<void> {
   if (!voxlPath) {
     throw new Error(
       'Usage: support auto <scene.voxl> --model-id <id> [--mesh-dir <dir>] [--settings <auto-support.json>]\n'
-      + '  [--lift-mm 7] [--px-mm 0.1] [--layer-height-mm 0.05]',
+      + '  [--lift-mm 7] [--px-mm 0.1] [--layer-height-mm 0.05] [--islands-cli <dragonfruit-cli>]',
     );
   }
   const doc = await loadVoxl(voxlPath);
@@ -663,6 +665,13 @@ async function supportAuto(args: ReturnType<typeof parseArgs>): Promise<void> {
   const liftMm = parseFloat(optionalFlag(args.flags, 'lift-mm') ?? String(SUPPORT_AUTO_LIFT_MM));
   const pxMm = optionalFlag(args.flags, 'px-mm');
   const layerHeightMm = optionalFlag(args.flags, 'layer-height-mm');
+  // The native island scan (voxel + minima + overhang, as in the app) needs a
+  // built dragonfruit-cli; without one only voxel islands are found.
+  const builtCli = rustCliPath();
+  let islandsCli = optionalFlag(args.flags, 'islands-cli');
+  if (!islandsCli) {
+    try { statSync(builtCli); islandsCli = builtCli; } catch { /* voxel islands only */ }
+  }
 
   // World space, as the app places supports: bake the transform, then hold the
   // model `liftMm` above the plate and keep that lift in the scene.
@@ -681,6 +690,7 @@ async function supportAuto(args: ReturnType<typeof parseArgs>): Promise<void> {
     modelId,
     positions,
     settings: readJsonFlag(args.flags, 'settings') as SupportAutoInput['settings'],
+    islandsCli,
     detect: {
       ...(pxMm ? { pxMm: parseFloat(pxMm) } : {}),
       ...(layerHeightMm ? { layerHeightMm: parseFloat(layerHeightMm) } : {}),
@@ -699,6 +709,7 @@ async function supportAuto(args: ReturnType<typeof parseArgs>): Promise<void> {
   const summary = {
     modelId,
     liftMm,
+    islandScan: islandsCli ? 'native' : 'voxel-only',
     islands: result.islands,
     islandsCovered: result.islandsCovered,
     islandsUncovered: result.islandsUncovered,
@@ -711,7 +722,8 @@ async function supportAuto(args: ReturnType<typeof parseArgs>): Promise<void> {
     const placed = Object.entries(result.placed).map(([type, count]) => `${count} ${type}`).join(', ') || 'nothing';
     console.error(
       `support auto: '${model.name}' ${result.islands} islands (${result.islandsCovered} covered), `
-      + `${summary.coveragePct}% area, placed ${placed}; lifted to ${liftMm} mm (voxel islands only)`,
+      + `${summary.coveragePct}% area, placed ${placed}; lifted to ${liftMm} mm`
+      + (islandsCli ? '' : ' (voxel islands only: build rust/dragonfruit-cli for the full scan)'),
     );
   }
 }
@@ -1200,15 +1212,13 @@ async function sceneExportStl(args: ReturnType<typeof parseArgs>): Promise<void>
   let off = 0;
   for (const p of allPositions) { merged.set(p, off); off += p.length; }
 
-  const tmpDir = `/tmp/df-export-stl-${Date.now()}`;
-  execSync(`mkdir -p ${tmpDir}`);
+  const tmpDir = makeTempDir('df-export-stl-');
   const posPath = resolve(tmpDir, 'positions.bin');
   writePositionsBin(posPath, merged);
 
   // Shell out to Rust CLI
-  const rustCli = resolve(dirname(new URL(import.meta.url).pathname), '../rust/dragonfruit-cli/target/release/dragonfruit-cli');
-  execSync(`${rustCli} mesh export-stl -i ${tmpDir} -o ${resolve(output)}`, { stdio: 'inherit' });
-  execSync(`rm -rf ${tmpDir}`);
+  execFileSync(rustCliPath(), ['mesh', 'export-stl', '-i', tmpDir, '-o', resolve(output)], { stdio: 'inherit' });
+  rmSync(tmpDir, { recursive: true, force: true });
 
   if (jsonOutput(args.flags)) {
     console.log(JSON.stringify({
@@ -1390,6 +1400,17 @@ function parseBinaryStl(data: Buffer): Float32Array {
  * For VOXL scene slicing, rotation/scale in the scene transform are Euler radians.
  * This handles translation; full matrix transform would need quaternion math.
  */
+/** A fresh scratch directory under the OS temp dir (not `/tmp`, which Windows lacks). */
+function makeTempDir(prefix: string): string {
+  return mkdtempSync(resolve(tmpdir(), prefix));
+}
+
+/** The release build of the Rust CLI beside this script, with the platform's extension. */
+function rustCliPath(): string {
+  const exe = process.platform === 'win32' ? 'dragonfruit-cli.exe' : 'dragonfruit-cli';
+  return resolve(dirname(fileURLToPath(import.meta.url)), '../rust/dragonfruit-cli/target/release', exe);
+}
+
 function applyTranslation(positions: Float32Array, tx: number, ty: number, tz: number): void {
   for (let i = 0; i < positions.length; i += 3) {
     positions[i] += tx;
@@ -1760,8 +1781,7 @@ async function sceneSlice(args: ReturnType<typeof parseArgs>): Promise<void> {
   releaseHeap();
 
   // Phase 3: Write positions.bin
-  const tmpDir = `/tmp/df-scene-slice-${Date.now()}`;
-  execSync(`mkdir -p ${tmpDir}`);
+  const tmpDir = makeTempDir('df-scene-slice-');
   const mergedPath = resolve(tmpDir, 'positions.bin');
   const totalTriangles = meshPositions.length / 9;
   writePositionsBin(mergedPath, meshPositions);
@@ -1775,7 +1795,7 @@ async function sceneSlice(args: ReturnType<typeof parseArgs>): Promise<void> {
   releaseHeap();
 
   // Phase 4: Shell out to Rust slicer
-  const rustCli = resolve(dirname(new URL(import.meta.url).pathname), '../rust/dragonfruit-cli/target/release/dragonfruit-cli');
+  const rustCli = rustCliPath();
   const run = sliceJob.buildSceneSliceRun(job, {
     maxZMm,
     modelTriangleCount,
@@ -1813,7 +1833,7 @@ async function sceneSlice(args: ReturnType<typeof parseArgs>): Promise<void> {
   const result = execFileSync(rustCli, run.args, { encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 });
 
   // Cleanup temp
-  execSync(`rm -rf ${tmpDir}`);
+  rmSync(tmpDir, { recursive: true, force: true });
 
   if (jsonOutput(args.flags)) {
     // Parse and augment the Rust output with scene info
