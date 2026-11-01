@@ -13,8 +13,11 @@
  *
  * "Other surface" is judged by orientation: a sample inside the model whose
  * nearest surface faces more than 45° away from the contact's surface normal
- * is foreign geometry. The last `TIP_EXEMPT_MM` before the tip is skipped, as
- * the contact itself sits on (and slightly in) its own surface.
+ * is foreign geometry. That allowance only holds within `OWN_SURFACE_GRACE_MM`
+ * of the tip: further back a cone buried in its own curved surface (a vertical
+ * cone on a steep helmet rim) is an intrusion too. The last `TIP_EXEMPT_MM`
+ * before the tip is skipped, as the contact itself sits on (and slightly in)
+ * its own surface.
  */
 
 import * as THREE from 'three';
@@ -23,6 +26,7 @@ import type { MeshBVH } from 'three-mesh-bvh';
 import type { SupportState, Vec3 } from '../types';
 import { draftRemoveEntity, draftRemovePrimitive } from './supportDraft';
 import { getFinalSocketPosition } from '../SupportPrimitives/ContactCone/contactConeUtils';
+import { calculateDiskThickness } from '../SupportPrimitives/ContactDisk/contactDiskUtils';
 import type { ContactCone } from '../SupportPrimitives/ContactCone/types';
 
 /** Axial stretch before the tip the check ignores (mm). */
@@ -34,6 +38,9 @@ const RING_SAMPLES = 8;
 /** Inside samples on foreign geometry a member may have before it is culled. */
 const MAX_FOREIGN_SAMPLES = 1;
 const FOREIGN_COS = Math.cos(Math.PI / 4);
+/** Distance before the tip (mm) within which the contact's own surface may
+ *  hold cone samples; past it every inside sample counts. */
+const OWN_SURFACE_GRACE_MM = 0.6;
 
 const PARITY_DIRS = [
     new THREE.Vector3(0, 0, 1),
@@ -105,7 +112,7 @@ function countForeignSamples(
                 if (crossingCount(bvh, ray) % 2 === 1) votes++;
             }
             if (votes < 2) continue;
-            if (!contactNormal) {
+            if (!contactNormal || length - s > OWN_SURFACE_GRACE_MM) {
                 foreign++;
                 continue;
             }
@@ -135,10 +142,16 @@ function countMemberForeignSamples(
     const sn = cone.surfaceNormal ?? cone.normal;
     const contactNormal = new THREE.Vector3(sn.x, sn.y, sn.z).normalize();
     const socket = getFinalSocketPosition(cone);
+    // The cone body starts where the contact disk ends, offset along the
+    // surface normal (as `getFinalSocketPosition` builds it), not at the tip.
+    const diskMm = cone.profile.type === 'disk'
+        ? (cone.diskLengthOverride ?? calculateDiskThickness(sn, cone.normal, cone.profile))
+        : 0;
+    const coneStart = { x: cone.pos.x + sn.x * diskMm, y: cone.pos.y + sn.y * diskMm, z: cone.pos.z + sn.z * diskMm };
     const body = cone.profile.bodyDiameterMm / 2;
     const contact = cone.profile.contactDiameterMm / 2;
-    return countForeignSamples(from, socket, body, body, 0, contactNormal, bvh, toLocal, normalToWorld)
-        + countForeignSamples(socket, cone.pos, body, contact, TIP_EXEMPT_MM, contactNormal, bvh, toLocal, normalToWorld);
+    return countForeignSamples(from, socket, body, body, 0, null, bvh, toLocal, normalToWorld)
+        + countForeignSamples(socket, coneStart, body, contact, TIP_EXEMPT_MM, contactNormal, bvh, toLocal, normalToWorld);
 }
 
 /** Leaves and branches whose cone body cuts into foreign model geometry. */
