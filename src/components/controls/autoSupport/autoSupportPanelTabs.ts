@@ -131,6 +131,7 @@ export type BooleanAutoSupportSettingKey =
   | 'preferTrees'
   | 'strictClearance'
   | 'reinforcePartStart'
+  | 'ballTips'
   | 'debugSupportOriginColors'
   | 'debugSkipAutoBracing'
   | 'modelScaleEnabled';
@@ -154,6 +155,7 @@ const KNOBS: readonly KnobDef[] = [
   // Density & Sizing — how many and how thick.
   { key: 'areaPerSupportMm2', section: 'density', label: msg`Support Density`, min: 1, max: 30, step: 0.5, unit: 'mm²', hint: msg`Projected area each support carries — smaller = more, tighter supports (grid spacing ≈ √value)` },
   { key: 'partStartDensity', section: 'density', label: msg`Part Start Density`, min: 0.5, max: 1.5, step: 0.05, unit: '×', hint: msg`Support density where a part starts (Part Start Reinforcement) relative to the rest of that surface — 0.8 = about 20 % fewer contacts` },
+  { key: 'ballTipDiameterMm', section: 'density', label: msg`Ball Diameter`, min: 0.2, max: 1, step: 0.05, unit: 'mm', hint: msg`Diameter of the break-off ball when Ball Tips is on — larger than the contact, so the support breaks at the neck and the ball stays on the model to sand off` },
   { key: 'sizeScale', section: 'density', label: msg`Support Size`, min: 0.5, max: 2, step: 0.05, unit: '×', hint: msg`Master multiplier over the preset sizing bands — thicker or thinner everywhere` },
   { key: 'gridAreaThresholdMm2', section: 'density', label: msg`Grid Threshold`, min: 5, max: 200, step: 5, unit: 'mm²', hint: msg`Flat regions at/above this area get a full grid; smaller regions get a single support` },
   { key: 'flatDensityBoost', section: 'density', label: msg`Flat Boost`, min: 0.5, max: 1, step: 0.05, unit: '×', hint: msg`Grid spacing on flat ceilings — lower = denser supports on anchor surfaces (0.7 = ~2× the supports)` },
@@ -204,6 +206,7 @@ const TOGGLES: readonly ToggleDef[] = [
   { key: 'allowModelToModel', section: 'distribution', label: msg`Model-to-Model`, hint: msg`Bridge a tip to a lower part of the model when no support can reach the plate or a nearby trunk. Off leaves it to the branch passes, so the model gets no second scar (default on)` },
   { key: 'preferTrees', section: 'distribution', label: msg`Prefer Trees`, hint: msg`Let island and minima trunks join a neighbouring trunk as branches, so clustered contacts share few trunks instead of standing as a bundle of pillars (default off)` },
   { key: 'strictClearance', section: 'distribution', label: msg`Strict Clearance`, hint: msg`After placement, remove any leaf or branch whose cone cuts into a part of the model other than the surface it touches (default off)` },
+  { key: 'ballTips', section: 'density', label: msg`Ball Tips`, hint: msg`End every contact in a small ball instead of a flat disk: the support breaks at the narrow neck above it and leaves a bump that sands off, not a pit (default off)` },
   { key: 'debugSupportOriginColors', section: 'debug', label: msg`Origin Colors`, hint: msg`Debug: color supports by origin — stump (red), overhang (orange), island (blue), standalone (purple), reinforcement (teal)` },
   { key: 'debugSkipAutoBracing', section: 'debug', label: msg`No Brace`, hint: msg`Debug: skip automatic bracing for this run` },
 ];

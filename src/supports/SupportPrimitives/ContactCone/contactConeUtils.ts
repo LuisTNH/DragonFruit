@@ -22,6 +22,30 @@ export function getSocketPosition(
 }
 
 /**
+ * The break-off ball of a `sphere` contact: `sphereRadiusRatio` × the contact
+ * diameter across, resting on the surface at the contact point and sunk
+ * `penetrationMm` into it. The cone keeps its contact diameter where it leaves
+ * the ball, so the neck there — narrower than the ball — is where the support
+ * breaks, and the ball stays on the model as a small bump to sand off. Null for
+ * any other profile. One definition for slicing, export and the lowest-Z
+ * bound, so the three cannot disagree.
+ */
+export function getContactBall(
+    cone: Pick<ContactCone, 'pos' | 'normal' | 'surfaceNormal' | 'profile'>,
+    penetrationMm: number = cone.profile.penetrationMm ?? 0,
+): { center: Vec3; radius: number } | null {
+    const { profile } = cone;
+    if (profile.type !== 'sphere') return null;
+    const radius = (profile.contactDiameterMm * (profile.sphereRadiusRatio || 1)) / 2;
+    const n = cone.surfaceNormal ?? cone.normal;
+    const offset = radius - penetrationMm;
+    return {
+        center: { x: cone.pos.x + n.x * offset, y: cone.pos.y + n.y * offset, z: cone.pos.z + n.z * offset },
+        radius,
+    };
+}
+
+/**
  * Calculates the FINAL, effective socket position for a Contact Cone.
  * This accounts for:
  * 1. The base surface position.
@@ -80,6 +104,8 @@ export function getContactConeLowestZ(cone: ContactCone): number {
         const diskBackZ = pos.z - surfaceNormal.z * Math.max(0, profile.penetrationMm);
         lowestZ = Math.min(lowestZ, Math.min(diskBackZ, startZ) - contactRadius * surfaceRadialZ);
     }
+    const ball = getContactBall(cone);
+    if (ball) lowestZ = Math.min(lowestZ, ball.center.z - ball.radius);
     return lowestZ;
 }
 

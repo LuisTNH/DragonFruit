@@ -78,6 +78,7 @@ import { createCavityTester } from '../interiorSupportGeometry';
 import { closestSurfaceNormal } from './closestSurfaceNormal';
 import { allowsModelToModelBridges, isTreeConvertibleOrigin } from './forestShape';
 import { cullIntrudingMembers, entityIntrudes } from './memberClearance';
+import { applyBallTips } from './ballTips';
 import { computeForestDiameterProfile, memberDiameterOf } from '../SupportTypes/Trunk/TrunkReplacement/maxConnectedDiameter';
 import { buildBranchData } from '../SupportTypes/Branch/branchBuilder';
 import type { BranchBuildInput, BranchBuildResult } from '../SupportTypes/Branch/branchBuilder';
@@ -4089,6 +4090,14 @@ export function computeAutoSupportPlan(
                 console.log(LOG_PREFIX, 'Contact cone sync: matched cone bodies to their host shafts.');
             }
 
+            // Ball tips (ballTips.ts): before the clearance pass, which has to
+            // test the cone a ball contact really has (no nib in front of it).
+            if (autoSettings.ballTips) {
+                const balled = applyBallTips(draft, autoSettings.ballTipDiameterMm);
+                draft = balled.draft;
+                console.log(LOG_PREFIX, `Ball tips: ${balled.converted} contacts end in a ${autoSettings.ballTipDiameterMm} mm ball.`);
+            }
+
             // Strict clearance: after the sync every cone has its final body, so
             // this is the first point a member's real shape can be tested.
             if (autoSettings.strictClearance && resolvedMesh) {
@@ -4123,7 +4132,8 @@ export function computeAutoSupportPlan(
                                 const trial = createOwnedDraft(cloneSupportState(draft));
                                 const result = placeOneCandidate(attempt, trial, undefined, gridHostIds, resolvedMesh, modelCtx);
                                 if (result.kind === 'reject' || !result.entityId) continue;
-                                const synced = syncContactConeDiameters(result.draft);
+                                let synced = syncContactConeDiameters(result.draft);
+                                if (autoSettings.ballTips) synced = applyBallTips(synced, autoSettings.ballTipDiameterMm).draft;
                                 if (entityIntrudes(synced, resolvedMesh, result.kind, result.entityId)) continue;
                                 draft = synced;
                                 placed[result.kind]++;

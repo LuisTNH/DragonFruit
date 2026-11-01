@@ -168,10 +168,12 @@ export function writeConeTipMatrix(
   instance: number,
   slot: ConeBatchSlot,
 ): void {
-  const start = coneStartPoint(slot);
+  // A `sphere` contact draws its break-off ball where slicing builds it.
+  const start = slot.ball?.center ?? coneStartPoint(slot);
+  const radius = slot.ball?.radius ?? slot.contactRadius;
   scratchPosition.set(start.x, start.y, start.z);
   scratchQuaternion.identity();
-  scratchScale.set(slot.contactRadius, slot.contactRadius, slot.contactRadius);
+  scratchScale.set(radius, radius, radius);
   scratchMatrix.compose(scratchPosition, scratchQuaternion, scratchScale);
   batch.setMatrix(instance, scratchMatrix);
 }
