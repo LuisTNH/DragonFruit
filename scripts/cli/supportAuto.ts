@@ -70,6 +70,7 @@ type CombinedIslandScan = {
     position: { x: number; y: number; z: number };
     vertexIndex?: number;
     seedTriangleId?: number;
+    persistenceMm?: number;
   }>;
   overhangIslands: OverhangRegion[];
 };
@@ -102,6 +103,7 @@ function islandsFromCombinedScan(scan: CombinedIslandScan, detect: DetectOptions
     baseZ: m.position.z,
     vertexIndex: m.vertexIndex,
     seedTriangleId: m.seedTriangleId,
+    persistenceMm: m.persistenceMm,
   }));
   const classified = classifyIntersection(voxel, minima, { xyToleranceMm: 0.5, zBandMm: detect.layerHeightMm });
   return mergeOverhangRegions(classified.islands, (scan.overhangIslands ?? []).map(overhangRegionToIsland));

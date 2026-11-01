@@ -6,6 +6,7 @@ interface RawLocalMinimum {
   vertexIndex: number;
   position: { x: number; y: number; z: number };
   seedTriangleId: number;
+  persistenceMm?: number;
 }
 
 /**
@@ -28,5 +29,6 @@ export async function scanMeshMinima(positions: Float32Array, k?: number): Promi
     baseZ: m.position.z,
     vertexIndex: m.vertexIndex,
     seedTriangleId: m.seedTriangleId,
+    persistenceMm: m.persistenceMm,
   }));
 }

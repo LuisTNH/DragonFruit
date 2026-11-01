@@ -68,6 +68,25 @@ test('a minima below the island floor still gets a contact once a voxel island c
     assert.deepEqual(generateCandidates([makeIsland({ id: 'v0', areaMm2: 0.05 })], settings), []);
 });
 
+test('a shallow minimum no voxel island confirms is skipped once a persistence floor is set', () => {
+    const minimum = (id: string, persistenceMm: number | undefined, cls: DetectedIsland['class']): DetectedIsland => ({
+        id, source: 'minima', class: cls, persistenceMm,
+        contact: new THREE.Vector3(0, 0, 10), baseZ: 10,
+    });
+    const islands = [
+        minimum('dimple', 0.02, 'minimaOnly'),
+        minimum('deep', 0.5, 'minimaOnly'),
+        minimum('lowest', undefined, 'minimaOnly'),
+        minimum('confirmed', 0.02, 'intersection'),
+    ];
+    const ids = (minPersistence: number) => generateCandidates(
+        islands, { ...createDefaultAutoSupportSettings(), minMinimaPersistenceMm: minPersistence },
+    ).map((c) => c.id).sort();
+
+    assert.deepEqual(ids(0), ['confirmed', 'deep', 'dimple', 'lowest'], 'off by default: every minimum stays');
+    assert.deepEqual(ids(0.1), ['confirmed', 'deep', 'lowest'], 'only the unconfirmed dimple goes');
+});
+
 test('generateCandidates does not filter by supported flag (handled by filterAlreadySupported)', () => {
     const islands = [
         makeIsland({ id: 'a' }),

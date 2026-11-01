@@ -29,6 +29,13 @@ pub struct LocalMinimum {
     pub vertex_index: u32,
     pub position: Vec3,
     pub seed_triangle_id: u32,
+    /// How far (mm) the surface rises from this minimum before it joins lower
+    /// ground: the minimum's persistence in the height filtration of the
+    /// surface. A dimple in sculpted detail joins within a layer or two and
+    /// prints as part of the body; a real island start stands for millimetres.
+    /// `None` for the lowest minimum of a connected piece, which never joins.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub persistence_mm: Option<f32>,
 }
 
 pub struct AdjacencyList {
@@ -188,7 +195,7 @@ pub fn scan_minima_internal(mesh: &IndexedMesh, k: Option<usize>) -> Vec<LocalMi
     let bvh = dragonfruit_mesh_repair::core::bvh::Bvh::build(mesh);
     let k_val = k.unwrap_or(2);
 
-    (0..vert_count)
+    let mut minima = (0..vert_count)
         .into_par_iter()
         .filter_map(|vi| {
             SCAN_CONTEXT.with(|cell| {
@@ -235,13 +242,75 @@ pub fn scan_minima_internal(mesh: &IndexedMesh, k: Option<usize>) -> Vec<LocalMi
                         vertex_index: vi as u32,
                         position: mesh.positions[vi],
                         seed_triangle_id: vert_to_face[vi],
+                        persistence_mm: None,
                     })
                 } else {
                     None
                 }
             })
         })
-        .collect()
+        .collect::<Vec<_>>();
+    let persistence = surface_minimum_persistence(mesh, &adj);
+    for m in &mut minima {
+        m.persistence_mm = persistence[m.vertex_index as usize];
+    }
+    minima
+}
+
+/// Persistence of every vertex that starts a component of the surface's
+/// sublevel sets (sweeping Z upward): the rise from its birth to the vertex
+/// where it merges into an older (lower) component. Union-find over the
+/// vertices in Z order; ties break by index so equal heights stay
+/// deterministic. Non-minima and never-merging components read `None`.
+pub fn surface_minimum_persistence(mesh: &IndexedMesh, adj: &AdjacencyList) -> Vec<Option<f32>> {
+    let n = mesh.vertex_count();
+    let mut order: Vec<u32> = (0..n as u32).collect();
+    order.sort_by(|&a, &b| {
+        mesh.positions[a as usize].z
+            .total_cmp(&mesh.positions[b as usize].z)
+            .then(a.cmp(&b))
+    });
+    const UNSEEN: u32 = u32::MAX;
+    let mut parent = vec![UNSEEN; n];
+    let mut persistence = vec![None; n];
+    fn find(parent: &mut [u32], mut x: u32) -> u32 {
+        while parent[x as usize] != x {
+            let grand = parent[parent[x as usize] as usize];
+            parent[x as usize] = grand;
+            x = grand;
+        }
+        x
+    }
+    // The root of a component is its lowest vertex, so comparing roots by
+    // (z, index) tells the older component from the younger.
+    let older = |a: u32, b: u32| {
+        let (za, zb) = (mesh.positions[a as usize].z, mesh.positions[b as usize].z);
+        za < zb || (za == zb && a < b)
+    };
+    for &v in &order {
+        parent[v as usize] = v;
+        let z = mesh.positions[v as usize].z;
+        for &u in adj.neighbors(v as usize) {
+            if parent[u as usize] == UNSEEN {
+                continue;
+            }
+            let ru = find(&mut parent, u);
+            let rv = find(&mut parent, v);
+            if ru == rv {
+                continue;
+            }
+            let (keep, die) = if older(ru, rv) { (ru, rv) } else { (rv, ru) };
+            // A vertex joining as its own fresh component is no minimum, and
+            // a flat patch meeting its neighbour at its own height is none
+            // either.
+            let rise = z - mesh.positions[die as usize].z;
+            if die != v && rise > 0.0 {
+                persistence[die as usize] = Some(rise);
+            }
+            parent[die as usize] = keep;
+        }
+    }
+    persistence
 }
 
 pub fn load_and_transform_mesh(
@@ -776,6 +845,42 @@ fn is_point_inside_mesh(orig: &Vec3, mesh: &IndexedMesh) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn dimple_persists_less_than_a_real_low_point() {
+        // A flat 8×4 sheet at Z=0 with a deep dip at (2,2) and a shallow
+        // dimple at (6,2): the dimple joins the rest of the sheet 0.05 mm up,
+        // the deep dip is the sheet's lowest point and never joins anything.
+        let (w, h) = (8usize, 4usize);
+        let mut positions = Vec::new();
+        for y in 0..=h {
+            for x in 0..=w {
+                let z = match (x, y) {
+                    (2, 2) => -1.0,
+                    (6, 2) => -0.05,
+                    _ => 0.0,
+                };
+                positions.push(Vec3::new(x as f32, y as f32, z));
+            }
+        }
+        let idx = |x: usize, y: usize| (y * (w + 1) + x) as u32;
+        let mut triangles = Vec::new();
+        for y in 0..h {
+            for x in 0..w {
+                triangles.push([idx(x, y), idx(x + 1, y + 1), idx(x + 1, y)]);
+                triangles.push([idx(x, y), idx(x, y + 1), idx(x + 1, y + 1)]);
+            }
+        }
+        let mesh = IndexedMesh { positions, triangles };
+        let adj = AdjacencyList::build(&mesh);
+        let p = surface_minimum_persistence(&mesh, &adj);
+        assert_eq!(p[idx(2, 2) as usize], None);
+        let dimple = p[idx(6, 2) as usize].expect("the dimple joins the sheet");
+        assert!((dimple - 0.05).abs() < 1e-6, "dimple persistence {dimple}");
+        // Every other vertex joined an existing component as it arrived.
+        let joined_late = p.iter().filter(|v| v.is_some()).count();
+        assert_eq!(joined_late, 1);
+    }
 
     #[test]
     fn test_local_minima_scanner() {

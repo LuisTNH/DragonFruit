@@ -40,7 +40,13 @@ export function generateCandidates(
         // covered minima fell through to the area test as "0 mm²" and was dropped
         // whenever that voxel island was itself below the floor: a silent miss on
         // a real minimum, with nothing in the report to show for it.
-        if (island.source === 'minima') return true;
+        if (island.source === 'minima') {
+            // ...unless it is a dimple no voxel island confirms: the surface
+            // joins lower ground within a layer or two of it.
+            return island.class === 'intersection'
+                || island.persistenceMm === undefined
+                || island.persistenceMm >= settings.minMinimaPersistenceMm;
+        }
         const area = island.areaMm2 ?? 0;
         return area >= settings.minIslandAreaMm2;
     });

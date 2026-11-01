@@ -74,6 +74,12 @@ export const SIZING_BANDS: Record<SizingPreset, SizingBand> = {
 export interface AutoSupportSettings {
     enabled: boolean;
     minIslandAreaMm2: number;
+    /**
+     * Skip a mesh minimum (one no voxel island confirms) whose surface joins
+     * lower ground within this rise (mm): a dimple in sculpted detail that
+     * prints as part of the body after a layer or two. 0 keeps every minimum.
+     */
+    minMinimaPersistenceMm: number;
     tipInfluenceRadiusMm: number;
     prioritizeIntersection: boolean;
     /** Max combined leaves + branches that can attach to a single trunk. */
@@ -218,6 +224,7 @@ export type NumericConstraint = {
 
 export type NumericAutoSupportSettingKey =
     | 'minIslandAreaMm2'
+    | 'minMinimaPersistenceMm'
     | 'tipInfluenceRadiusMm'
     | 'maxAttachmentsPerTrunk'
     | 'areaPerSupportMm2'
@@ -240,6 +247,7 @@ export type NumericAutoSupportSettingKey =
 
 export const AUTO_SUPPORT_CONSTRAINTS = {
     minIslandAreaMm2: { min: 0.01, max: 10, step: 0.01, defaultValue: 0.02 },
+    minMinimaPersistenceMm: { min: 0, max: 1, step: 0.01, defaultValue: 0 },
     tipInfluenceRadiusMm: { min: 0.1, max: 10, step: 0.1, defaultValue: 0.5 },
     maxAttachmentsPerTrunk: { min: 2, max: 50, step: 1, defaultValue: 12, integer: true },
     areaPerSupportMm2: { min: 1, max: 30, step: 0.5, defaultValue: 10 },
@@ -294,6 +302,7 @@ export function createDefaultAutoSupportSettings(): AutoSupportSettings {
     return {
         enabled: true,
         minIslandAreaMm2: AUTO_SUPPORT_CONSTRAINTS.minIslandAreaMm2.defaultValue,
+        minMinimaPersistenceMm: AUTO_SUPPORT_CONSTRAINTS.minMinimaPersistenceMm.defaultValue,
         tipInfluenceRadiusMm: AUTO_SUPPORT_CONSTRAINTS.tipInfluenceRadiusMm.defaultValue,
         prioritizeIntersection: false,
         maxAttachmentsPerTrunk: AUTO_SUPPORT_CONSTRAINTS.maxAttachmentsPerTrunk.defaultValue,
@@ -338,6 +347,7 @@ export function normalizeAutoSupportSettings(input?: Partial<AutoSupportSettings
     return {
         enabled: normalizeBoolean(source.enabled, defaults.enabled),
         minIslandAreaMm2: clampNumeric(source.minIslandAreaMm2, AUTO_SUPPORT_CONSTRAINTS.minIslandAreaMm2),
+        minMinimaPersistenceMm: clampNumeric(source.minMinimaPersistenceMm, AUTO_SUPPORT_CONSTRAINTS.minMinimaPersistenceMm),
         tipInfluenceRadiusMm: clampNumeric(source.tipInfluenceRadiusMm, AUTO_SUPPORT_CONSTRAINTS.tipInfluenceRadiusMm),
         prioritizeIntersection: normalizeBoolean(source.prioritizeIntersection, defaults.prioritizeIntersection),
         maxAttachmentsPerTrunk: clampNumeric(source.maxAttachmentsPerTrunk, AUTO_SUPPORT_CONSTRAINTS.maxAttachmentsPerTrunk),

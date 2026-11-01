@@ -446,6 +446,7 @@ export function useIslands({ geom, transform, layerHeightMm, supportTips, plateZ
             position: { x: number; y: number; z: number };
             vertexIndex?: number;
             seedTriangleId?: number;
+            persistenceMm?: number;
           }>;
           overhangIslands: OverhangRegion[];
           stability?: PoseStabilityWire | null;
@@ -496,6 +497,7 @@ export function useIslands({ geom, transform, layerHeightMm, supportTips, plateZ
           baseZ: m.position.z,
           vertexIndex: m.vertexIndex,
           seedTriangleId: m.seedTriangleId,
+          persistenceMm: m.persistenceMm,
         }));
         setMinimaIslands(minimaMapped);
 
@@ -567,6 +569,7 @@ export function useIslands({ geom, transform, layerHeightMm, supportTips, plateZ
             position: { x: number; y: number; z: number };
             vertexIndex?: number;
             seedTriangleId?: number;
+            persistenceMm?: number;
           }>;
           overhangIslands: OverhangRegion[];
           stability?: PoseStabilityWire | null;
@@ -603,6 +606,7 @@ export function useIslands({ geom, transform, layerHeightMm, supportTips, plateZ
           baseZ: m.position.z,
           vertexIndex: m.vertexIndex,
           seedTriangleId: m.seedTriangleId,
+          persistenceMm: m.persistenceMm,
         }));
         const overhangs = (combined.overhangIslands ?? []).map(overhangRegionToIsland);
         setVoxelIslands(voxelMapped);

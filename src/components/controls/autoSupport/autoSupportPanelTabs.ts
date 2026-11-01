@@ -148,6 +148,7 @@ export const ADVANCED_CALIBRATION_NUMERIC_KEYS = [
 const KNOBS: readonly KnobDef[] = [
   // Detection — what needs support.
   { key: 'minIslandAreaMm2', section: 'detection', label: msg`Min Island Size`, min: 0.01, max: 2, step: 0.01, unit: 'mm²', hint: msg`Skip detected areas smaller than this — tiny specks rarely need supports` },
+  { key: 'minMinimaPersistenceMm', section: 'detection', label: msg`Min Low-Point Depth`, min: 0, max: 1, step: 0.01, unit: 'mm', hint: msg`Skip low points that join the model within this height — dimples in sculpted detail print as part of the body. 0 = support every low point` },
   { key: 'tipInfluenceRadiusMm', section: 'detection', label: msg`Merge Radius`, min: 0.1, max: 10, step: 0.1, unit: 'mm', hint: msg`A candidate within this 3D distance of an existing support merges into it instead of starting a new trunk` },
   // Distribution — where contacts land and how members fan out.
   { key: 'leafFanRadiusMm', section: 'distribution', label: msg`Fan Reach`, min: 2, max: 15, step: 0.5, unit: 'mm', hint: msg`Max horizontal distance a fan-out leaf may span from a trunk shaft` },

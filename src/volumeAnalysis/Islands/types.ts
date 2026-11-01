@@ -139,6 +139,9 @@ export interface DetectedIsland {
   // --- minima-detector extras (undefined for voxel) ---
   /** Source mesh vertex index. */
   vertexIndex?: number;
+  /** Minima: how far (mm) the surface rises from this low point before it
+   *  joins lower ground; absent when it never does (the lowest point). */
+  persistenceMm?: number;
   /** Seed triangle id. */
   seedTriangleId?: number;
 
