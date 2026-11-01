@@ -77,7 +77,7 @@ import { buildCavityBridge } from '../SupportTypes/Trunk/useTrunkPlacement';
 import { createCavityTester } from '../interiorSupportGeometry';
 import { closestSurfaceNormal } from './closestSurfaceNormal';
 import { allowsModelToModelBridges, isTreeConvertibleOrigin } from './forestShape';
-import { cullIntrudingMembers } from './memberClearance';
+import { cullIntrudingMembers, entityIntrudes } from './memberClearance';
 import { computeForestDiameterProfile, memberDiameterOf } from '../SupportTypes/Trunk/TrunkReplacement/maxConnectedDiameter';
 import { buildBranchData } from '../SupportTypes/Branch/branchBuilder';
 import type { BranchBuildInput, BranchBuildResult } from '../SupportTypes/Branch/branchBuilder';
@@ -4080,12 +4080,49 @@ export function computeAutoSupportPlan(
             // Strict clearance: after the sync every cone has its final body, so
             // this is the first point a member's real shape can be tested.
             if (autoSettings.strictClearance && resolvedMesh) {
+                const beforeCull = draft;
                 const cleared = cullIntrudingMembers(draft, resolvedMesh);
                 if (cleared.culled.length > 0) {
                     draft = cleared.draft;
                     for (const member of cleared.culled) placed[member.typeId]--;
                     console.log(LOG_PREFIX, `Clearance cull: ${cleared.culled.length} members cut into the model and were removed — `
                         + cleared.culled.map((m) => `${m.typeId} ${m.id.slice(0, 8)} (${m.foreignSamples} samples)`).join(', '));
+                    // Re-place each culled tip: a standalone trunk first (a grid
+                    // point never fans back onto the host that failed), then the
+                    // ordinary decision. Every attempt runs on a copy, and a
+                    // result is kept only if it clears the model as built.
+                    let replaced = 0;
+                    for (const member of cleared.culled) {
+                        const entity = member.typeId === 'leaf' ? beforeCull.leaves[member.id] : beforeCull.branches[member.id];
+                        const cone = entity?.contactCone;
+                        if (!entity || !cone?.pos) continue;
+                        const base: CandidatePoint = {
+                            id: `${member.id}-clearance`,
+                            tipPos: cone.pos,
+                            tipNormal: cone.surfaceNormal ?? cone.normal,
+                            modelId: entity.modelId,
+                            source: entity.origin === 'overhang' ? 'overhang' : 'voxel',
+                            islandAreaMm2: 0.05,
+                            zHeight: cone.pos.z,
+                            priority: 0,
+                        };
+                        for (const attempt of [{ ...base, gridPoint: true }, base]) {
+                            try {
+                                const trial = createOwnedDraft(cloneSupportState(draft));
+                                const result = placeOneCandidate(attempt, trial, undefined, gridHostIds, resolvedMesh, modelCtx);
+                                if (result.kind === 'reject' || !result.entityId) continue;
+                                const synced = syncContactConeDiameters(result.draft);
+                                if (entityIntrudes(synced, resolvedMesh, result.kind, result.entityId)) continue;
+                                draft = synced;
+                                placed[result.kind]++;
+                                replaced++;
+                                break;
+                            } catch {
+                                // A failed attempt leaves the draft as it was.
+                            }
+                        }
+                    }
+                    console.log(LOG_PREFIX, `Clearance re-place: ${replaced}/${cleared.culled.length} culled tips placed again without cutting into the model.`);
                 }
             }
 

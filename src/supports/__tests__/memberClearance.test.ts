@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { MeshBVH } from 'three-mesh-bvh';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
-import { cullIntrudingMembers, findIntrudingMembers } from '../autoSupport/memberClearance';
+import { cullIntrudingMembers, entityIntrudes, findIntrudingMembers } from '../autoSupport/memberClearance';
 import { createEmptySupportCollections } from '../supportTypeRegistry';
 import type { SupportState } from '../types';
 
@@ -54,4 +54,27 @@ test('a leaf whose body passes through a thin bar is found and culled with its k
 
 test('a leaf beside the bar, touching only its own ceiling, stays', () => {
     assert.deepEqual(findIntrudingMembers(leafState(), modelWithBar(5)), []);
+});
+
+test('a trunk from its root is vetted the same way', () => {
+    const state = createEmptySupportCollections() as unknown as SupportState;
+    state.roots = { r: { id: 'r', modelId: 'm', transform: { pos: { x: 0, y: 0, z: 0 }, rot: { x: 0, y: 0, z: 0, w: 1 } }, diameter: 2, diskHeight: 0.5, coneHeight: 1 } } as unknown as SupportState['roots'];
+    state.trunks = {
+        t: {
+            id: 't',
+            typeId: 'trunk',
+            modelId: 'm',
+            rootId: 'r',
+            segments: [{ id: 's', diameter: 0.8, topJoint: { id: 'j', pos: { x: 0, y: 0, z: 7.5 }, diameter: 0.8 } }],
+            contactCone: {
+                id: 'c',
+                pos: { x: 0, y: 0, z: 10 },
+                normal: { x: 0, y: 0, z: -1 },
+                surfaceNormal: { x: 0, y: 0, z: -1 },
+                profile: { type: 'disk', contactDiameterMm: 0.24, bodyDiameterMm: 0.8, lengthMm: 2.5, penetrationMm: 0, diskThicknessMm: 0.1, maxStandoffMm: 0.25, standoffAngleThreshold: Math.PI / 4 },
+            },
+        },
+    } as unknown as SupportState['trunks'];
+    assert.equal(entityIntrudes(state, modelWithBar(0), 'trunk', 't'), true);
+    assert.equal(entityIntrudes(state, modelWithBar(5), 'trunk', 't'), false);
 });

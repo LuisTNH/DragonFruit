@@ -154,6 +154,60 @@ function countMemberForeignSamples(
         + countForeignSamples(socket, coneStart, body, contact, TIP_EXEMPT_MM, contactNormal, bvh, toLocal, normalToWorld);
 }
 
+/** Foreign samples of one shaft chain from `from` through its segments, then its cone. */
+function countChainForeignSamples(
+    from: Vec3 | undefined,
+    segments: ReadonlyArray<{ bottomJoint?: { pos: Vec3 } | null; topJoint?: { pos: Vec3 } | null; diameter?: number }>,
+    cone: ContactCone,
+    bvh: MeshBVH,
+    toLocal: THREE.Matrix4,
+    normalToWorld: THREE.Matrix3,
+): number {
+    let start = from;
+    let shaftSamples = 0;
+    for (const segment of segments) {
+        const a = segment.bottomJoint?.pos ?? start;
+        const b = segment.topJoint?.pos;
+        if (a && b) {
+            const r = (segment.diameter ?? 1.0) / 2;
+            shaftSamples += countForeignSamples(a, b, r, r, 0, null, bvh, toLocal, normalToWorld);
+        }
+        start = b ?? start;
+    }
+    const last = segments[segments.length - 1]?.topJoint?.pos ?? from;
+    return last ? shaftSamples + countMemberForeignSamples(last, cone, bvh, toLocal, normalToWorld) : shaftSamples;
+}
+
+/**
+ * Whether one entity — a leaf, a branch, or a trunk from its root — cuts into
+ * the model as built. Used to vet a re-placed contact before it is kept.
+ */
+export function entityIntrudes(draft: SupportState, mesh: THREE.Mesh, typeId: string, id: string): boolean {
+    const bvh = boundsTreeOf(mesh);
+    if (!bvh) return false;
+    mesh.updateMatrixWorld(true);
+    const toLocal = new THREE.Matrix4().copy(mesh.matrixWorld).invert();
+    const normalToWorld = new THREE.Matrix3().getNormalMatrix(mesh.matrixWorld);
+    let samples = 0;
+    if (typeId === 'leaf') {
+        const leaf = draft.leaves?.[id];
+        const knot = leaf ? draft.knots?.[leaf.parentKnotId] : undefined;
+        if (!leaf?.contactCone || !knot) return false;
+        samples = countMemberForeignSamples(knot.pos, leaf.contactCone, bvh, toLocal, normalToWorld);
+    } else if (typeId === 'branch') {
+        const branch = draft.branches?.[id];
+        if (!branch?.contactCone) return false;
+        samples = countChainForeignSamples(draft.knots?.[branch.parentKnotId]?.pos, branch.segments, branch.contactCone, bvh, toLocal, normalToWorld);
+    } else if (typeId === 'trunk') {
+        const trunk = draft.trunks?.[id];
+        if (!trunk?.contactCone) return false;
+        samples = countChainForeignSamples(draft.roots?.[trunk.rootId]?.transform?.pos, trunk.segments, trunk.contactCone, bvh, toLocal, normalToWorld);
+    } else {
+        return false;
+    }
+    return samples > MAX_FOREIGN_SAMPLES;
+}
+
 /** Leaves and branches whose cone body cuts into foreign model geometry. */
 export function findIntrudingMembers(draft: SupportState, mesh: THREE.Mesh): IntrudingMember[] {
     const bvh = boundsTreeOf(mesh);
@@ -174,18 +228,7 @@ export function findIntrudingMembers(draft: SupportState, mesh: THREE.Mesh): Int
         // The first segment starts at the parent knot and has no bottom joint
         // of its own; `branchCollidesWithSDF` skips it, so the shaft leaving
         // the host was never tested.
-        let from: Vec3 | undefined = draft.knots?.[branch.parentKnotId]?.pos;
-        let shaftSamples = 0;
-        for (const segment of branch.segments) {
-            const start = segment.bottomJoint?.pos ?? from;
-            const end = segment.topJoint?.pos;
-            if (start && end) {
-                const r = (segment.diameter ?? 1.0) / 2;
-                shaftSamples += countForeignSamples(start, end, r, r, 0, null, bvh, toLocal, normalToWorld);
-            }
-            from = end ?? from;
-        }
-        const foreignSamples = shaftSamples + countMemberForeignSamples(last, branch.contactCone, bvh, toLocal, normalToWorld);
+        const foreignSamples = countChainForeignSamples(draft.knots?.[branch.parentKnotId]?.pos, branch.segments, branch.contactCone, bvh, toLocal, normalToWorld);
         if (foreignSamples > MAX_FOREIGN_SAMPLES) out.push({ typeId: 'branch', id: branch.id, parentKnotId: branch.parentKnotId, foreignSamples });
     }
     return out;
