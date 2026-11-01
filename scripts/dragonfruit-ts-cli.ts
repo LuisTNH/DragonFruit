@@ -52,6 +52,7 @@ import type {
 } from '../src/supports/types';
 import type { AaPreset } from '../src/features/slicing/autoAaPhysics';
 import type { SceneSliceModelInput } from './cli/sceneSliceMesh';
+import type { SupportAutoInput } from './cli/supportAuto';
 import type { RaftSettings } from '../src/supports/Rafts/Crenelated/RaftTypes';
 
 // ---------------------------------------------------------------------------
@@ -614,6 +615,104 @@ async function supportRemove(args: ReturnType<typeof parseArgs>): Promise<void> 
     console.log(JSON.stringify({ removed: id }, null, 2));
   } else {
     console.error(`remove: ${id}`);
+  }
+}
+
+// The app holds a model this far above the plate (Auto-Lift) so supports can
+// stand under it; `DEFAULT_LIFT_DISTANCE_MM` in src/features/transform/liftDefaults.ts.
+const SUPPORT_AUTO_LIFT_MM = 7;
+
+/** One model's mesh as flat positions: the embedded original, the embedded mesh, or the file. */
+function loadModelPositions(model: VoxlModelEntry, meshDir: string): Float32Array {
+  const embedded = LOADED_ORIG_BYTES.get(model.id) ?? LOADED_MESH_BYTES.get(model.id);
+  if (embedded) return parseBinaryStl(Buffer.from(embedded.buffer, embedded.byteOffset, embedded.byteLength));
+  const meshFileName = model.mesh.fileName ?? model.name + '.stl';
+  const candidates = [resolve(meshDir, meshFileName), meshFileName, resolve(meshFileName)];
+  for (const c of candidates) {
+    try { statSync(c); return loadBinaryStl(c); } catch { /* try next */ }
+  }
+  throw new Error(`Mesh file not found for model '${model.name}': tried ${candidates.join(', ')}`);
+}
+
+/** Every support collection of the import format, keyed by its field. */
+function supportCollections(supports: DragonfruitImportFormat): Record<string, { modelId?: string }[]> {
+  const out: Record<string, { modelId?: string }[]> = {};
+  for (const [key, value] of Object.entries(supports)) {
+    if (Array.isArray(value)) out[key] = value as { modelId?: string }[];
+  }
+  return out;
+}
+
+async function supportAuto(args: ReturnType<typeof parseArgs>): Promise<void> {
+  const voxlPath = args.positional[0];
+  if (!voxlPath) {
+    throw new Error(
+      'Usage: support auto <scene.voxl> --model-id <id> [--mesh-dir <dir>] [--settings <auto-support.json>]\n'
+      + '  [--lift-mm 7] [--px-mm 0.1] [--layer-height-mm 0.05]',
+    );
+  }
+  const doc = await loadVoxl(voxlPath);
+  const modelId = requireFlag(args.flags, 'model-id');
+  const model = doc.models.find((m) => m.id === modelId);
+  if (!model) throw new Error(`Model '${modelId}' not found`);
+  const existing = doc.supports.roots.filter((root) => root.modelId === modelId).length;
+  if (existing > 0) {
+    throw new Error(`Model '${model.name}' already has ${existing} rooted supports; remove them first (support remove)`);
+  }
+  const meshDir = optionalFlag(args.flags, 'mesh-dir') ?? dirname(resolve(voxlPath));
+  const liftMm = parseFloat(optionalFlag(args.flags, 'lift-mm') ?? String(SUPPORT_AUTO_LIFT_MM));
+  const pxMm = optionalFlag(args.flags, 'px-mm');
+  const layerHeightMm = optionalFlag(args.flags, 'layer-height-mm');
+
+  // World space, as the app places supports: bake the transform, then hold the
+  // model `liftMm` above the plate and keep that lift in the scene.
+  const positions = loadModelPositions(model, meshDir);
+  applyVoxlTransform(positions, model.transform);
+  let minZ = Infinity;
+  for (let i = 2; i < positions.length; i += 3) if (positions[i] < minZ) minZ = positions[i];
+  const dz = liftMm - minZ;
+  if (Math.abs(dz) > 1e-6) {
+    applyTranslation(positions, 0, 0, dz);
+    model.transform.position.z += dz;
+  }
+
+  const { computeSupportAuto } = requireSceneSliceModule<typeof import('./cli/supportAuto')>('./cli/supportAuto');
+  const result = await computeSupportAuto({
+    modelId,
+    positions,
+    settings: readJsonFlag(args.flags, 'settings') as SupportAutoInput['settings'],
+    detect: {
+      ...(pxMm ? { pxMm: parseFloat(pxMm) } : {}),
+      ...(layerHeightMm ? { layerHeightMm: parseFloat(layerHeightMm) } : {}),
+    },
+  });
+
+  const target = supportCollections(doc.supports);
+  const docFields = doc.supports as unknown as Record<string, unknown[]>;
+  for (const [key, rows] of Object.entries(supportCollections(result.supports))) {
+    if (rows.length === 0) continue;
+    if (!target[key]) docFields[key] = [];
+    docFields[key].push(...rows);
+  }
+  await saveVoxl(voxlPath, doc);
+
+  const summary = {
+    modelId,
+    liftMm,
+    islands: result.islands,
+    islandsCovered: result.islandsCovered,
+    islandsUncovered: result.islandsUncovered,
+    coveragePct: Math.round(result.coveragePct * 10) / 10,
+    placed: result.placed,
+  };
+  if (jsonOutput(args.flags)) {
+    console.log(JSON.stringify(summary, null, 2));
+  } else {
+    const placed = Object.entries(result.placed).map(([type, count]) => `${count} ${type}`).join(', ') || 'nothing';
+    console.error(
+      `support auto: '${model.name}' ${result.islands} islands (${result.islandsCovered} covered), `
+      + `${summary.coveragePct}% area, placed ${placed}; lifted to ${liftMm} mm (voxel islands only)`,
+    );
   }
 }
 
@@ -1761,6 +1860,7 @@ Commands:
   scene export-stl      Merge scene → binary STL via Rust
   scene load            Dump full scene
 
+  support auto          Auto supports for one model (app pipeline, voxel islands)
   support add-trunk     Add trunk + root support
   support add-branch    Add branch to knot
   support add-leaf      Add leaf to knot
@@ -1852,6 +1952,7 @@ async function main(): Promise<void> {
       }
     } else if (args.command === 'support') {
       switch (args.subcommand) {
+        case 'auto': await dispatch(supportAuto); break;
         case 'add-trunk': await dispatch(supportAddTrunk); break;
         case 'add-branch': await dispatch(supportAddBranch); break;
         case 'add-leaf': await dispatch(supportAddLeaf); break;
