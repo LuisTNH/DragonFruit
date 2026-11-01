@@ -238,7 +238,7 @@ export function deduplicateCandidates(
                     // must-support points: flat 3D ball only, so neighboring
                     // islands never eat each other. The grown disc applies to
                     // overhang-lattice pairs, where merging is the goal.
-                    if (c.source !== 'overhang' || r.source !== 'overhang') {
+                    if (c.source !== 'overhang' || r.source !== 'overhang' || c.partStart || r.partStart) {
                         const ddz = c.tipPos.z - r.tipPos.z;
                         if (ddx * ddx + ddy * ddy + ddz * ddz <= baseRadius * baseRadius) {
                             duplicate = true;

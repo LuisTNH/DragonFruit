@@ -13,6 +13,7 @@ import {
 import type { AutoSupportSettings } from './settings';
 import { applyContactTipCaps } from './contactTipCap';
 import { isSupportBlockedContact } from './supportBlockers';
+import { isPartStart, PART_START_BAND_MM, PART_START_SPACING_FACTOR } from './partStart';
 
 const FOOTPRINT_TOLERANCE_MM = 0.25;
 
@@ -584,7 +585,10 @@ export function generateGridCandidates(
         // footprint whose cells map up its height.
         const anchorBandTop = steepFlatAnchorBandTop(island, slenderPart);
 
-        const emitPoint = (x: number, y: number, z: number, kind: 'grid' | 'fill', faceIndex?: number | null) => {
+        // This region's own contacts, for the part-start test and its spacing.
+        const emitted: Array<{ x: number; y: number; z: number }> = [];
+        const firstCandidate = candidates.length;
+        const emitPoint = (x: number, y: number, z: number, kind: 'grid' | 'fill' | 'start', faceIndex?: number | null) => {
             if (z > anchorBandTop) return;
             // The contact leans into the face it actually lands on; the
             // region-wide normal is only the fallback (voxel sampler, blockers).
@@ -604,7 +608,9 @@ export function generateGridCandidates(
                 priority: 0,
                 gridPoint: true,
                 interior: island.interior,
+                ...(kind === 'start' ? { partStart: true } : {}),
             });
+            emitted.push({ x, y, z });
         };
 
         // Sliver test: nothing survives footprint erosion → ring only. A rib
@@ -685,6 +691,29 @@ export function generateGridCandidates(
             // normal the lattice got.
             const sampled = surfaceAt(b.x, b.y);
             emitPoint(b.x, b.y, sampled?.z ?? b.z, 'fill', sampled?.faceIndex ?? b.faceIndex ?? null);
+        }
+
+        // Part start (partStart.ts): a region facing the plate gets a finer
+        // lattice over its lowest band, where the print begins.
+        if (settings.reinforcePartStart && mesh && !island.interior && emitted.length > 0 && isPartStart(emitted, mesh)) {
+            const lowest = Math.min(...emitted.map((p) => p.z));
+            // The lattice and ring already reach the band; what thins it out is
+            // deduplication, so their points there are protected too.
+            for (let i = firstCandidate; i < candidates.length; i++) {
+                if (candidates[i].tipPos.z <= lowest + PART_START_BAND_MM) candidates[i].partStart = true;
+            }
+            const fine = Math.max(GRID_SPACING_FLOOR_MM, spacing * PART_START_SPACING_FACTOR);
+            const clearSq = (fine * 0.75) * (fine * 0.75);
+            const existing = [...emitted];
+            for (let x = minX + inset; x <= maxX - inset + 1e-6; x += fine) {
+                for (let y = minY + inset; y <= maxY - inset + 1e-6; y += fine) {
+                    const s = surfaceAt(x, y);
+                    if (!s || s.z > lowest + PART_START_BAND_MM) continue;
+                    if (existing.some((p) => (p.x - x) ** 2 + (p.y - y) ** 2 <= clearSq)) continue;
+                    emitPoint(x, y, s.z, 'start', s.faceIndex);
+                    existing.push({ x, y, z: s.z });
+                }
+            }
         }
     }
 
