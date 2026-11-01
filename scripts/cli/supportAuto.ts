@@ -37,7 +37,7 @@ import {
 } from '../../src/supports/autoSupport/autoPlace.worker.shared';
 import { buildScopedSupportExportDocument } from '../../src/features/export/logic/supportExportReconstruction';
 import { disposeEventLoopChannel } from '../../src/utils/yieldToEventLoop';
-import type { AutoSupportSettings } from '../../src/supports/autoSupport/settings';
+import { normalizeAutoSupportSettings, type AutoSupportSettings } from '../../src/supports/autoSupport/settings';
 import type { DragonfruitImportFormat } from '../../src/supports/types';
 import { DEFAULT_DETECT_OPTIONS, detectIslands, type DetectOptions } from '../bench-island-scan';
 
@@ -154,6 +154,9 @@ export async function computeSupportAuto(input: SupportAutoInput): Promise<Suppo
   const dispose = registerSupportHistoryHandlers();
   initializeBVH();
   const appSettings = createDefaultSettings();
+  // The panel stores its settings here, and sizing reads them from here
+  // (`activeSizingBand`, model-scale switches), not from the run override.
+  appSettings.autoSupport = normalizeAutoSupportSettings({ ...appSettings.autoSupport, ...input.settings });
   setSettings(appSettings);
   const mesh = new THREE.Mesh(geometry);
   mesh.updateMatrixWorld(true);

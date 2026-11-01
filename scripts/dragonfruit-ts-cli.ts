@@ -257,6 +257,14 @@ async function sceneAddModel(args: ReturnType<typeof parseArgs>): Promise<void> 
     transform: { position, rotation, scale },
     mesh: { mode: 'external-file', fileName: basename(meshPath) },
   };
+  // --embed writes the STL into the file as a MESH chunk, like the app saves a
+  // scene, so the .voxl opens in the app without the mesh beside it.
+  if (args.flags.embed === true) {
+    const bytes = readFileSync(meshPath);
+    LOADED_MESH_BYTES.set(model.id, new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+    model.mesh = { mode: 'embedded-chunk', fileName: basename(meshPath) };
+    model.polygonCount = Math.floor((bytes.length - 84) / 50);
+  }
 
   doc.models.push(model);
   doc.scene.activeModelId = model.id;
