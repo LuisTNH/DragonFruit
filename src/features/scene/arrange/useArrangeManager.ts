@@ -28,6 +28,7 @@ const MAX_ARRANGE_BEDS = 32;
 /** Group by Height on the high-precision packer: single tries to fill a bed's
  *  leftover space with shorter models. Each try is a full pack. */
 const HIGH_PRECISION_HEIGHT_MAX_PACKS = 6;
+const HIGH_PRECISION_HEIGHT_MAX_OFFER = 8;
 
 /**
  * How far an arrange run may spread its models.
@@ -1376,6 +1377,7 @@ export function useArrangeManager({
               return result.packedIds;
             },
             maxPacks: HIGH_PRECISION_HEIGHT_MAX_PACKS,
+            maxOffer: HIGH_PRECISION_HEIGHT_MAX_OFFER,
           });
           if (bedIds.length === 0) return;
         }
