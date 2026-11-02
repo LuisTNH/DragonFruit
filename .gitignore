@@ -105,3 +105,6 @@ src-tauri/binaries/dragonfruit-voxl-thumbnailer*
 
 # Directory-scoped agent notes: local working aids, not project docs.
 src/**/AGENTS.md
+
+# Calibration model STLs are not committed yet (size and licence decision pending)
+/public/calibration-models/*.stl

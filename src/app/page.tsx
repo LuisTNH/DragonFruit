@@ -42,6 +42,13 @@ import { useHollowingManager } from '@/features/hollowing/useHollowingManager';
 import type { HollowingManagerDeps } from '@/features/hollowing/useHollowingManager';
 import { useModifierApplyOverlay } from '@/features/hollowing/useModifierApplyOverlay';
 import { useImportExportManager } from '@/features/import-export/useImportExportManager';
+import {
+  calibrationModelUnavailableMessage,
+  calibrationModelUnavailableTitle,
+  fetchCalibrationModelFile,
+  findCalibrationModel,
+} from '@/features/calibration/calibrationModels';
+import { pushSystemNotification } from '@/features/notifications/systemNotificationStore';
 import type { ImportExportManagerDeps } from '@/features/import-export/useImportExportManager';
 import { GlobalUpdateIndicator } from '@/features/updater/GlobalUpdateIndicator';
 import { EmptySceneState } from '@/components/layout/EmptySceneState';
@@ -2076,6 +2083,23 @@ export default function Home() {
     handlePrepareDragLeave,
     handlePrepareDrop,
   } = importExport;
+
+  const handleInsertCalibrationModel = React.useCallback(async (modelId: string) => {
+    const model = findCalibrationModel(modelId);
+    if (!model) return;
+    try {
+      const file = await fetchCalibrationModelFile(model);
+      await scene.loadFiles([file]);
+    } catch (err) {
+      console.error('[Calibration] Failed to load calibration model:', err);
+      pushSystemNotification({
+        id: 'calibration-model-unavailable',
+        title: calibrationModelUnavailableTitle(_),
+        subtitle: calibrationModelUnavailableMessage(model.name, _),
+        tone: 'error',
+      });
+    }
+  }, [_, scene]);
 
   const [isExporting, setIsExporting] = React.useState(false);
   const showModifierApplyBlockingOverlay = isApplyingHollowing || isApplyingHolePunch || isApplyingBlockersHollowing || pendingHolePunchAutoApplyModelId !== null || applyAllHolePunchProgress !== null || isFinalizing;
@@ -10699,6 +10723,7 @@ export default function Home() {
         isSlicingBusy={isSlicingBusy}
         onLoadMeshChange={handleLoadMeshChangeWithZip}
         onImportSceneChange={handleImportSceneChangeWithZip}
+        onInsertCalibrationModel={(modelId) => { void handleInsertCalibrationModel(modelId); }}
         onNewScene={handleRequestNewScene}
         onSaveScene={() => { void handleTopBarSaveScene(); }}
         onSaveSceneAs={() => { handleTopBarSaveSceneAs(); }}

@@ -12,7 +12,8 @@ import type { MatcapVariant, MeshShaderType } from '@/features/shaders/mesh';
 import { AlertDiamondIcon, Button } from '@/components/atoms';
 import { StructuredDialogModal } from '@/components/ui/StructuredDialogModal';
 import { ContextMenu, type ContextMenuEntry } from '@/components/ui/ContextMenu';
-import { Activity, AlertTriangle, Anchor, ChevronDown, FilePlus2, FolderInput, FolderOpen, Lock, Maximize2, Minimize2, Power, Printer, Save, SaveAll, Settings, Square, Upload, X } from 'lucide-react';
+import { CALIBRATION_MODELS } from '@/features/calibration/calibrationModels';
+import { Activity, AlertTriangle, Anchor, ChevronDown, FilePlus2, FlaskConical, FolderInput, FolderOpen, Lock, Maximize2, Minimize2, Power, Printer, Save, SaveAll, Settings, Square, Upload, X } from 'lucide-react';
 import {
   applyThemeCustomColors,
   getSavedThemeCustomColors,
@@ -37,6 +38,8 @@ import type { View3DSettings } from '@/components/settings/view3dPreferences';
 import type { SlicingThumbnailRenderSettings } from '@/components/settings/PerformanceSettingsTab';
 import { useSceneFileInputAccept } from '@/features/plugins/pluginFileTypeExtensions';
 import { formatTopbarPrinterAriaLabel, formatTopbarPrinterTitle } from '@/components/layout/topBarMessages';
+
+const CALIBRATION_MODEL_MENU_PREFIX = 'calibration-model:';
 
 interface TopBarProps {
   meshColor: string;
@@ -91,6 +94,8 @@ interface TopBarProps {
   onOpenScene?: () => void;
   onLoadMeshChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onImportSceneChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  /** Drops a built-in calibration model (`CALIBRATION_MODELS` id) onto the plate. */
+  onInsertCalibrationModel?: (modelId: string) => void;
   onCloseProgram?: () => void;
   showMonitorButton?: boolean;
   monitorButtonActive?: boolean;
@@ -148,6 +153,7 @@ export function TopBar({
   isSlicingBusy = false,
   onLoadMeshChange,
   onImportSceneChange,
+  onInsertCalibrationModel,
   onNewScene,
   onSaveScene,
   onSaveSceneAs,
@@ -661,6 +667,17 @@ export function TopBar({
       disabled: topbarActionsDisabled || !onImportSceneChange,
     },
     {
+      id: 'calibration-models',
+      label: _(msg`Calibration models`),
+      icon: FlaskConical,
+      disabled: topbarActionsDisabled || !onInsertCalibrationModel,
+      children: CALIBRATION_MODELS.map((model) => ({
+        id: `${CALIBRATION_MODEL_MENU_PREFIX}${model.id}`,
+        label: model.name,
+        trailing: model.maker,
+      })),
+    },
+    {
       id: 'close-program',
       label: _(msg`Close program`),
       icon: Power,
@@ -694,6 +711,9 @@ export function TopBar({
         void handleCloseProgram();
         break;
       default:
+        if (id.startsWith(CALIBRATION_MODEL_MENU_PREFIX)) {
+          onInsertCalibrationModel?.(id.slice(CALIBRATION_MODEL_MENU_PREFIX.length));
+        }
         break;
     }
   };
