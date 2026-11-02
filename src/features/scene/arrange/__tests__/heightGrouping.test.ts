@@ -6,8 +6,15 @@ import { chooseBedByHeight, sortTallestFirst } from '../heightGrouping';
 type Part = { id: string; height: number; area: number };
 
 const part = (id: string, height: number, area = 1): Part => ({ id, height, area });
-/** A bed of `capacity` area units: a set fits when its areas add up to no more. */
-const bed = (capacity: number) => (models: Part[]) => models.reduce((sum, m) => sum + m.area, 0) <= capacity;
+/** A bed of `capacity` area units, packed in the order given: what still fits is placed. */
+const bed = (capacity: number) => (models: Part[]) => {
+    let used = 0;
+    return models.filter((m) => {
+        if (used + m.area > capacity) return false;
+        used += m.area;
+        return true;
+    });
+};
 const ids = (models: Part[]) => models.map((m) => m.id);
 const heightOf = (m: Part) => m.height;
 
@@ -16,7 +23,7 @@ async function fillBeds(models: Part[], capacity: number): Promise<string[][]> {
     const beds: string[][] = [];
     let pending = [...models];
     while (pending.length > 0) {
-        const chosen = await chooseBedByHeight(pending, { heightOf, fits: bed(capacity) });
+        const chosen = await chooseBedByHeight(pending, { heightOf, pack: bed(capacity) });
         if (chosen.length === 0) break;
         beds.push(ids(chosen));
         pending = pending.filter((m) => !chosen.includes(m));
@@ -46,15 +53,28 @@ test('a bed the tallest leave room on takes the next shorter that fits', async (
 });
 
 test('a model larger than the bed is left for the caller', async () => {
-    assert.deepEqual(await chooseBedByHeight([part('huge', 10, 9)], { heightOf, fits: bed(3) }), []);
+    assert.deepEqual(await chooseBedByHeight([part('huge', 10, 9)], { heightOf, pack: bed(3) }), []);
 });
 
-test('fill tries stop at the cap', async () => {
-    let calls = 0;
-    const counting = (models: Part[]) => { calls += 1; return bed(2)(models); };
-    const models = [part('a', 9), part('b', 8), part('c', 7), part('d', 6), part('e', 5)];
-    const chosen = await chooseBedByHeight(models, { heightOf, fits: counting, maxFillTries: 1 });
-    assert.deepEqual(ids(chosen), ['a', 'b']);
-    // first model, whole set, binary search (2), then one fill try
-    assert.ok(calls <= 5, `calls ${calls}`);
+test('each packer call is offered about a bed of models, and calls stop at the cap', async () => {
+    const offeredSizes: number[] = [];
+    const counting = (models: Part[]) => { offeredSizes.push(models.length); return bed(3)(models); };
+    const models = Array.from({ length: 40 }, (_, i) => part(`m${i}`, 100 - i));
+    const chosen = await chooseBedByHeight(models, {
+        heightOf,
+        pack: counting,
+        footprintOf: (m) => m.area,
+        bedArea: 3,
+        maxPacks: 2,
+    });
+    assert.deepEqual(ids(chosen), ['m0', 'm1', 'm2']);
+    assert.ok(offeredSizes.length <= 2, `calls ${offeredSizes.length}`);
+    assert.ok(Math.max(...offeredSizes) <= 5, `offered ${offeredSizes}`);
+});
+
+test('a packing that drops a bed model does not add the new ones', async () => {
+    // A packer that, given the tall one with anything else, only keeps the others.
+    const picky = (models: Part[]) => (models.length > 1 ? models.filter((m) => m.id !== 'tall') : models);
+    const chosen = await chooseBedByHeight([part('tall', 50), part('a', 10), part('b', 9)], { heightOf, pack: picky });
+    assert.deepEqual(ids(chosen), ['tall']);
 });

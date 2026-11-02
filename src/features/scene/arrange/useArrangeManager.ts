@@ -27,7 +27,7 @@ type FootprintPolygonFn = (model: SceneModel, rotationZOverride?: number, transf
 const MAX_ARRANGE_BEDS = 32;
 /** Group by Height on the high-precision packer: single tries to fill a bed's
  *  leftover space with shorter models. Each try is a full pack. */
-const HIGH_PRECISION_HEIGHT_FILL_TRIES = 6;
+const HIGH_PRECISION_HEIGHT_MAX_PACKS = 6;
 
 /**
  * How far an arrange run may spread its models.
@@ -1076,7 +1076,7 @@ export function useArrangeManager({
         if (!arrangeGroupByHeight || passModels.length < 2) return planPass(passModels, frame);
         const chosen = await chooseBedByHeight(passModels, {
           heightOf: (model) => getModelSupportAwareDimensionsMm(model, undefined, getArrangeTransform(model)).height,
-          fits: (models) => planPass(models, frame).spilled.length === 0,
+          pack: (models) => planPass(models, frame).placed.map((entry) => entry.model),
         });
         if (chosen.length === 0) return { placed: [], spilled: passModels };
         const pass = planPass(chosen, frame);
@@ -1319,10 +1319,10 @@ export function useArrangeManager({
        * models rather than what to avoid: no blockers, and the frame it is given is that
        * rectangle — a bed's own frame is only the special case where nothing is on it.
        */
-      /** Height that sets each model's print time, for Group by Height. */
-      const heightById = new Map(visibleModels.map((model) => [
+      /** Height that sets each model's print time, and its footprint, for Group by Height. */
+      const dimsById = new Map(visibleModels.map((model) => [
         model.id,
-        getModelSupportAwareDimensionsMm(model, undefined, getArrangeTransform(model)).height,
+        getModelSupportAwareDimensionsMm(model, undefined, getArrangeTransform(model)),
       ]));
       const runPacker = (ids: readonly string[], rect: PlateRect) => {
         const targetIds = new Set(ids);
@@ -1356,18 +1356,26 @@ export function useArrangeManager({
 
         // Group by Height: the bed takes the tallest models still waiting (see
         // heightGrouping.ts); the rest stay pending for the beds after it.
+        // Each packing is kept by the set it placed: when that is the bed's final
+        // set, its placement is used as it is instead of packing once more.
         let bedIds = pendingIds;
         const packedSets = new Map<string, Awaited<ReturnType<typeof runPacker>>>();
+        const setKey = (ids: readonly string[]) => [...ids].sort().join('|');
         if (arrangeGroupByHeight && pendingIds.length > 1) {
           bedIds = await chooseBedByHeight(pendingIds, {
-            heightOf: (id) => heightById.get(id) ?? 0,
-            fits: async (ids) => {
-              if (ids.length === 1) return loneFits(ids[0], rect);
-              const result = await runPacker(ids, rect);
-              packedSets.set(ids.join('|'), result);
-              return result.spilledIds.length === 0 && result.packedIds.length === ids.length;
+            heightOf: (id) => dimsById.get(id)?.height ?? 0,
+            footprintOf: (id) => {
+              const dims = dimsById.get(id);
+              return dims ? (dims.width + arrangeSpacingMm) * (dims.depth + arrangeSpacingMm) : 0;
             },
-            maxFillTries: HIGH_PRECISION_HEIGHT_FILL_TRIES,
+            bedArea: (rect.maxX - rect.minX) * (rect.maxY - rect.minY),
+            pack: async (ids) => {
+              if (ids.length === 1) return loneFits(ids[0], rect) ? ids : [];
+              const result = await runPacker(ids, rect);
+              packedSets.set(setKey(result.packedIds), result);
+              return result.packedIds;
+            },
+            maxPacks: HIGH_PRECISION_HEIGHT_MAX_PACKS,
           });
           if (bedIds.length === 0) return;
         }
@@ -1406,7 +1414,7 @@ export function useArrangeManager({
           return;
         }
 
-        const result = packedSets.get(bedIds.join('|')) ?? await runPacker(bedIds, rect);
+        const result = packedSets.get(setKey(bedIds)) ?? await runPacker(bedIds, rect);
 
         const packedIds = new Set(result.packedIds);
         const packed = result.updates.filter((update) => packedIds.has(update.id));
@@ -1417,7 +1425,8 @@ export function useArrangeManager({
         }
 
         passes.push({ placed: packed, plateId });
-        pendingIds = [...result.spilledIds, ...rest];
+        // A reused packing was offered more than the bed took; those wait in `rest`.
+        pendingIds = [...result.spilledIds.filter((id) => chosenIds.has(id)), ...rest];
       };
 
       // Fill what the scene already has: each bed's own free space, its largest rectangle
