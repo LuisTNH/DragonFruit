@@ -74,7 +74,7 @@ msgid "{count, plural, one {# model out of build volume} other {# models out of 
 msgstr "{count, plural, one {# model out of build volume} other {# models out of build volume}}"
 
 #: src/app/page.tsx:495
-#: src/components/controls/ArrangePanel.tsx:57
+#: src/components/controls/ArrangePanel.tsx:60
 msgid "{count, plural, one {# model} other {# models}}"
 msgstr "{count, plural, one {# model} other {# models}}"
 
@@ -808,11 +808,11 @@ msgstr "All Plates"
 msgid "All visible models are outside the build volume."
 msgstr "All visible models are outside the build volume."
 
-#: src/components/controls/ArrangePanel.tsx:325
+#: src/components/controls/ArrangePanel.tsx:330
 msgid "Allow auto-arrange to rotate models by 90° on Z when beneficial"
 msgstr "Allow auto-arrange to rotate models by 90° on Z when beneficial"
 
-#: src/components/controls/ArrangePanel.tsx:333
+#: src/components/controls/ArrangePanel.tsx:338
 msgid "Allow Z-rotation"
 msgstr "Allow Z-rotation"
 
@@ -906,7 +906,7 @@ msgstr "Apply this preset to the auto-support settings"
 msgid "Apply to All bakes the holes into every visible model when applicable. Or open the Hollow tool to review and apply holes individually."
 msgstr "Apply to All bakes the holes into every visible model when applicable. Or open the Hollow tool to review and apply holes individually."
 
-#: src/features/scene/arrange/useArrangeManager.ts:178
+#: src/features/scene/arrange/useArrangeManager.ts:186
 msgid "Applying Array Arrange…"
 msgstr "Applying Array Arrange…"
 
@@ -952,25 +952,25 @@ msgstr "Are you sure you want to remove every model from the plate?"
 msgid "Area Σ {totalAreaLabel} • Min {minAreaLabel} • Max {maxAreaLabel}"
 msgstr "Area Σ {totalAreaLabel} • Min {minAreaLabel} • Max {maxAreaLabel}"
 
-#: src/components/controls/ArrangePanel.tsx:146
+#: src/components/controls/ArrangePanel.tsx:151
 #: src/components/controls/toolRailEntries.ts:60
 msgid "Arrange"
 msgstr "Arrange"
 
-#: src/components/controls/ArrangePanel.tsx:397
+#: src/components/controls/ArrangePanel.tsx:435
 msgid "Arrange All"
 msgstr "Arrange All"
 
-#: src/components/controls/ArrangePanel.tsx:389
+#: src/components/controls/ArrangePanel.tsx:427
 msgid "Arrange all visible models"
 msgstr "Arrange all visible models"
 
-#: src/components/controls/ArrangePanel.tsx:250
-#: src/components/controls/ArrangePanel.tsx:260
+#: src/components/controls/ArrangePanel.tsx:255
+#: src/components/controls/ArrangePanel.tsx:265
 msgid "Arrange Distance"
 msgstr "Arrange Distance"
 
-#: src/components/controls/ArrangePanel.tsx:217
+#: src/components/controls/ArrangePanel.tsx:222
 msgid "Arrange Mode"
 msgstr "Arrange Mode"
 
@@ -984,24 +984,24 @@ msgid "Arrange models on the plate"
 msgstr "Arrange models on the plate"
 
 #. Tooltip on the Arrange panel's plate mode choice. Overflow goes onto new plates, and no other plate is touched.
-#: src/components/controls/ArrangePanel.tsx:207
+#: src/components/controls/ArrangePanel.tsx:212
 msgid "Arrange only the plate being worked on"
 msgstr "Arrange only the plate being worked on"
 
-#: src/components/controls/ArrangePanel.tsx:420
+#: src/components/controls/ArrangePanel.tsx:458
 msgid "Arrange Selected"
 msgstr "Arrange Selected"
 
-#: src/components/controls/ArrangePanel.tsx:412
+#: src/components/controls/ArrangePanel.tsx:450
 msgid "Arrange selected models only"
 msgstr "Arrange selected models only"
 
-#: src/features/scene/arrange/useArrangeManager.ts:187
+#: src/features/scene/arrange/useArrangeManager.ts:195
 msgid "Arranging Models…"
 msgstr "Arranging Models…"
 
-#: src/components/controls/ArrangePanel.tsx:394
-#: src/components/controls/ArrangePanel.tsx:417
+#: src/components/controls/ArrangePanel.tsx:432
+#: src/components/controls/ArrangePanel.tsx:455
 msgid "Arranging…"
 msgstr "Arranging…"
 
@@ -1026,7 +1026,7 @@ msgstr "Ask the printer to disable any stale webcam stream before retrying"
 msgid "Authorize DragonFruit so backups can be saved into your private repository."
 msgstr "Authorize DragonFruit so backups can be saved into your private repository."
 
-#: src/components/controls/ArrangePanel.tsx:170
+#: src/components/controls/ArrangePanel.tsx:175
 #: src/components/printers/SetupMethodChooser.tsx:28
 #: src/components/settings/PerformanceSettingsTab.tsx:220
 #: src/features/hole-punching/HolePunchPanel.tsx:125
@@ -1278,11 +1278,11 @@ msgstr "Avg island area"
 msgid "Back"
 msgstr "Back"
 
-#: src/components/controls/ArrangePanel.tsx:311
+#: src/components/controls/ArrangePanel.tsx:316
 msgid "Back Left"
 msgstr "Back Left"
 
-#: src/components/controls/ArrangePanel.tsx:312
+#: src/components/controls/ArrangePanel.tsx:317
 msgid "Back Right"
 msgstr "Back Right"
 
@@ -1701,7 +1701,7 @@ msgstr "Ceiling of the size factor derived from the model's bounding-box diagona
 msgid "Center"
 msgstr "Center"
 
-#: src/components/controls/ArrangePanel.tsx:308
+#: src/components/controls/ArrangePanel.tsx:313
 msgctxt "Placement anchor"
 msgid "Center"
 msgstr "Center"
@@ -2209,7 +2209,7 @@ msgstr "Components"
 msgid "Compression"
 msgstr "Compression"
 
-#: src/features/scene/arrange/useArrangeManager.ts:189
+#: src/features/scene/arrange/useArrangeManager.ts:197
 msgid "Computing placements and resolving collisions."
 msgstr "Computing placements and resolving collisions."
 
@@ -2480,7 +2480,7 @@ msgstr "Could not write beside the project ({reason}), so the default location i
 msgid "Couldn't connect to {host}."
 msgstr "Couldn't connect to {host}."
 
-#: src/components/controls/ArrangePanel.tsx:270
+#: src/components/controls/ArrangePanel.tsx:275
 msgid "Count"
 msgstr "Count"
 
@@ -2561,7 +2561,7 @@ msgstr "Crosses"
 msgid "Cube"
 msgstr "Cube"
 
-#: src/components/controls/ArrangePanel.tsx:226
+#: src/components/controls/ArrangePanel.tsx:231
 msgid "Current arrange algorithm"
 msgstr "Current arrange algorithm"
 
@@ -2715,7 +2715,7 @@ msgstr "Decrease point alpha"
 msgid "Decrease point position"
 msgstr "Decrease point position"
 
-#: src/components/controls/ArrangePanel.tsx:261
+#: src/components/controls/ArrangePanel.tsx:266
 msgid "Decrease spacing"
 msgstr "Decrease spacing"
 
@@ -3657,6 +3657,11 @@ msgstr "Fanning leaves"
 msgid "Far faces, darker so the shape reads solid."
 msgstr "Far faces, darker so the shape reads solid."
 
+#: src/components/controls/ArrangePanel.tsx:394
+msgctxt "Height grouping mode"
+msgid "Fast"
+msgstr "Fast"
+
 #: src/components/controls/AutoRotationPanel.tsx:69
 msgid "Fewest Supports"
 msgstr "Fewest Supports"
@@ -3825,11 +3830,11 @@ msgstr "From the community, for the community. Free to use, open to contribute, 
 msgid "Front"
 msgstr "Front"
 
-#: src/components/controls/ArrangePanel.tsx:309
+#: src/components/controls/ArrangePanel.tsx:314
 msgid "Front Left"
 msgstr "Front Left"
 
-#: src/components/controls/ArrangePanel.tsx:310
+#: src/components/controls/ArrangePanel.tsx:315
 msgid "Front Right"
 msgstr "Front Right"
 
@@ -3837,7 +3842,7 @@ msgstr "Front Right"
 msgid "Frustum"
 msgstr "Frustum"
 
-#: src/components/controls/ArrangePanel.tsx:271
+#: src/components/controls/ArrangePanel.tsx:276
 msgctxt "Arrange array spacing"
 msgid "Gap"
 msgstr "Gap"
@@ -3958,7 +3963,7 @@ msgctxt "Undo history entry"
 msgid "Group {modelName}"
 msgstr "Group {modelName}"
 
-#: src/components/controls/ArrangePanel.tsx:361
+#: src/components/controls/ArrangePanel.tsx:366
 msgid "Group by Height"
 msgstr "Group by Height"
 
@@ -4013,6 +4018,10 @@ msgstr "Height Factor Cap"
 msgid "Height Gradient"
 msgstr "Height Gradient"
 
+#: src/components/controls/ArrangePanel.tsx:384
+msgid "Height Grouping"
+msgstr "Height Grouping"
+
 #: src/components/controls/LayerSlider.tsx:860
 #: src/components/controls/LayerSlider.tsx:959
 msgid "Height mm"
@@ -4052,19 +4061,19 @@ msgctxt "Cluster spacing"
 msgid "High"
 msgstr "High"
 
-#: src/components/controls/ArrangePanel.tsx:242
+#: src/components/controls/ArrangePanel.tsx:247
 msgid "High-Precision"
 msgstr "High-Precision"
 
-#: src/features/scene/arrange/useArrangeManager.ts:168
+#: src/features/scene/arrange/useArrangeManager.ts:176
 msgid "High-Precision Arrange Running…"
 msgstr "High-Precision Arrange Running…"
 
-#: src/features/scene/arrange/useArrangeManager.ts:158
+#: src/features/scene/arrange/useArrangeManager.ts:166
 msgid "High-Precision Fill Running…"
 msgstr "High-Precision Fill Running…"
 
-#: src/components/controls/ArrangePanel.tsx:324
+#: src/components/controls/ArrangePanel.tsx:329
 msgid "High-Precision mode requires Z-rotation and keeps it enabled"
 msgstr "High-Precision mode requires Z-rotation and keeps it enabled"
 
@@ -4221,7 +4230,7 @@ msgstr "How the support forest is drawn"
 msgid "How to use Split"
 msgstr "How to use Split"
 
-#: src/components/controls/ArrangePanel.tsx:240
+#: src/components/controls/ArrangePanel.tsx:245
 msgid "Hull-based SAT packing for tighter fit"
 msgstr "Hull-based SAT packing for tighter fit"
 
@@ -4404,7 +4413,7 @@ msgstr "Increase point alpha"
 msgid "Increase point position"
 msgstr "Increase point position"
 
-#: src/components/controls/ArrangePanel.tsx:262
+#: src/components/controls/ArrangePanel.tsx:267
 msgid "Increase spacing"
 msgstr "Increase spacing"
 
@@ -4800,7 +4809,7 @@ msgstr "Layers"
 msgid "Layers:"
 msgstr "Layers:"
 
-#: src/components/controls/ArrangePanel.tsx:160
+#: src/components/controls/ArrangePanel.tsx:165
 msgid "Layout Mode"
 msgstr "Layout Mode"
 
@@ -5144,7 +5153,7 @@ msgid "Managed Printers"
 msgstr "Managed Printers"
 
 #. Tool rail label in Support mode. Short for the manual support settings panel (tip, shaft, roots, bracing).
-#: src/components/controls/ArrangePanel.tsx:180
+#: src/components/controls/ArrangePanel.tsx:185
 #: src/components/controls/toolRailEntries.ts:173
 #: src/components/printers/SetupMethodChooser.tsx:28
 #: src/features/hole-punching/HolePunchPanel.tsx:135
@@ -5579,7 +5588,7 @@ msgstr "Move, rotate, and scale"
 msgid "Moved off centre"
 msgstr "Moved off centre"
 
-#: src/components/controls/ArrangePanel.tsx:198
+#: src/components/controls/ArrangePanel.tsx:203
 #: src/components/settings/SettingsModal.tsx:1241
 msgid "Multi-Plate"
 msgstr "Multi-Plate"
@@ -5608,7 +5617,7 @@ msgstr "Name"
 msgid "Native"
 msgstr "Native"
 
-#: src/components/controls/ArrangePanel.tsx:388
+#: src/components/controls/ArrangePanel.tsx:426
 msgid "Need at least 2 visible models to arrange"
 msgstr "Need at least 2 visible models to arrange"
 
@@ -5991,8 +6000,8 @@ msgstr "Off"
 #. Toggle state on a narrow uppercase button. Keep it very short.
 #. Toggle state on a narrow uppercase button. Keep it very short.
 #. Toggle state on a narrow uppercase button. Keep it very short.
-#: src/components/controls/ArrangePanel.tsx:343
-#: src/components/controls/ArrangePanel.tsx:371
+#: src/components/controls/ArrangePanel.tsx:348
+#: src/components/controls/ArrangePanel.tsx:376
 #: src/components/controls/IslandOverlayControls.tsx:79
 #: src/components/controls/IslandVoxelControls.tsx:69
 #: src/components/controls/TerritoryVoxelControls.tsx:67
@@ -6068,8 +6077,8 @@ msgstr "On"
 #. Toggle state on a narrow uppercase button. Keep it very short.
 #. Toggle state on a narrow uppercase button. Keep it very short.
 #. Toggle state on a narrow uppercase button. Keep it very short.
-#: src/components/controls/ArrangePanel.tsx:343
-#: src/components/controls/ArrangePanel.tsx:371
+#: src/components/controls/ArrangePanel.tsx:348
+#: src/components/controls/ArrangePanel.tsx:376
 #: src/components/controls/IslandOverlayControls.tsx:78
 #: src/components/controls/IslandVoxelControls.tsx:68
 #: src/components/controls/TerritoryVoxelControls.tsx:66
@@ -6095,7 +6104,7 @@ msgstr "On"
 msgid "ON"
 msgstr "ON"
 
-#: src/components/controls/ArrangePanel.tsx:343
+#: src/components/controls/ArrangePanel.tsx:348
 msgid "ON (Required)"
 msgstr "ON (Required)"
 
@@ -6512,7 +6521,7 @@ msgctxt "Undo history entry"
 msgid "Place cut point"
 msgstr "Place cut point"
 
-#: src/components/controls/ArrangePanel.tsx:301
+#: src/components/controls/ArrangePanel.tsx:306
 msgid "Placement Anchor"
 msgstr "Placement Anchor"
 
@@ -6546,7 +6555,7 @@ msgstr "Plate 1"
 msgid "Plate behaviour across several beds"
 msgstr "Plate behaviour across several beds"
 
-#: src/components/controls/ArrangePanel.tsx:187
+#: src/components/controls/ArrangePanel.tsx:192
 msgid "Plate Mode"
 msgstr "Plate Mode"
 
@@ -6567,11 +6576,11 @@ msgstr "Plates"
 msgid "Please <0>save your scene and any unsaved progress</0> before continuing."
 msgstr "Please <0>save your scene and any unsaved progress</0> before continuing."
 
-#: src/features/scene/arrange/useArrangeManager.ts:161
+#: src/features/scene/arrange/useArrangeManager.ts:169
 msgid "Please be patient while we compute the densest valid fill."
 msgstr "Please be patient while we compute the densest valid fill."
 
-#: src/features/scene/arrange/useArrangeManager.ts:171
+#: src/features/scene/arrange/useArrangeManager.ts:179
 msgid "Please be patient while we process your models."
 msgstr "Please be patient while we process your models."
 
@@ -6604,11 +6613,11 @@ msgstr "Please verify before continuing:"
 #: src/app/page.tsx:1912
 #: src/app/page.tsx:1922
 #: src/app/page.tsx:1931
-#: src/features/scene/arrange/useArrangeManager.ts:181
+#: src/features/scene/arrange/useArrangeManager.ts:189
 msgid "Please wait a moment."
 msgstr "Please wait a moment."
 
-#: src/features/scene/arrange/useArrangeManager.ts:190
+#: src/features/scene/arrange/useArrangeManager.ts:198
 msgid "Please wait."
 msgstr "Please wait."
 
@@ -6645,7 +6654,7 @@ msgctxt "LUT curve point"
 msgid "Position"
 msgstr "Position"
 
-#: src/features/scene/arrange/useArrangeManager.ts:180
+#: src/features/scene/arrange/useArrangeManager.ts:188
 msgid "Positioning models and validating placement."
 msgstr "Positioning models and validating placement."
 
@@ -6970,7 +6979,7 @@ msgid "Put the cut settings back to their defaults: cut mode, thickness, both sm
 msgstr "Put the cut settings back to their defaults: cut mode, thickness, both smoothings and resolution. Your drawn loops and tenon settings are untouched."
 
 #. Tooltip on the Arrange panel switch that sorts models onto plates by height when they spread over several plates.
-#: src/components/controls/ArrangePanel.tsx:356
+#: src/components/controls/ArrangePanel.tsx:361
 msgid "Put the tallest models on the same plates and the short ones together: a resin plate prints as long as its tallest model"
 msgstr "Put the tallest models on the same plates and the short ones together: a resin plate prints as long as its tallest model"
 
@@ -7116,8 +7125,8 @@ msgstr "Recovery state"
 msgid "Reduce intersections"
 msgstr "Reduce intersections"
 
-#: src/components/controls/ArrangePanel.tsx:386
-#: src/components/controls/ArrangePanel.tsx:409
+#: src/components/controls/ArrangePanel.tsx:424
+#: src/components/controls/ArrangePanel.tsx:447
 msgid "Reduce Total Copies to 1 before arranging"
 msgstr "Reduce Total Copies to 1 before arranging"
 
@@ -8158,7 +8167,7 @@ msgstr "Select a material profile first."
 msgid "Select a model"
 msgstr "Select a model"
 
-#: src/components/controls/ArrangePanel.tsx:411
+#: src/components/controls/ArrangePanel.tsx:449
 msgid "Select a model to arrange selected"
 msgstr "Select a model to arrange selected"
 
@@ -8870,7 +8879,7 @@ msgid "Standalone trunks"
 msgstr "Standalone trunks"
 
 #. View mode: matte surface lit by the scene lights. The default view.
-#: src/components/controls/ArrangePanel.tsx:228
+#: src/components/controls/ArrangePanel.tsx:233
 #: src/features/shaders/mesh/types.ts:43
 msgid "Standard"
 msgstr "Standard"
@@ -9469,7 +9478,7 @@ msgstr "This file is a VOXL V1 JSON scene."
 msgid "This is a built-in profile, so its fields are fixed. Duplicate it and edit the copy — custom settings belong in a custom profile."
 msgstr "This is a built-in profile, so its fields are fixed. Duplicate it and edit the copy — custom settings belong in a custom profile."
 
-#: src/features/scene/arrange/useArrangeManager.ts:170
+#: src/features/scene/arrange/useArrangeManager.ts:178
 msgid "This is a computationally expensive operation for dense packing."
 msgstr "This is a computationally expensive operation for dense packing."
 
@@ -9501,7 +9510,7 @@ msgstr "This model has severe mesh issues and is likely to need heavy repair."
 msgid "This model is already added."
 msgstr "This model is already added."
 
-#: src/components/controls/ArrangePanel.tsx:209
+#: src/components/controls/ArrangePanel.tsx:214
 msgid "This Plate"
 msgstr "This Plate"
 
@@ -9558,6 +9567,11 @@ msgstr "This will replace the preset with your current settings."
 #: src/supports/Settings/components/PresetSelector.tsx:943
 msgid "This will reset <0>Detail</0>, <1>Structure</1>, and <2>Anchor</2> to their factory settings and unpin all user presets. Your user presets will <3>not</3> be deleted."
 msgstr "This will reset <0>Detail</0>, <1>Structure</1>, and <2>Anchor</2> to their factory settings and unpin all user presets. Your user presets will <3>not</3> be deleted."
+
+#: src/components/controls/ArrangePanel.tsx:404
+msgctxt "Height grouping mode"
+msgid "Thorough"
+msgstr "Thorough"
 
 #: src/components/scene/repairProgressMessages.ts:36
 msgid "Tidying up"
@@ -9852,6 +9866,16 @@ msgstr "Unsupported scene version"
 msgid "Untitled Curve"
 msgstr "Untitled Curve"
 
+#. Explains the Fast option of Group by Height in high-precision arrange.
+#: src/components/controls/ArrangePanel.tsx:409
+msgid "Up to 2 packing tries per plate: about as quick as arranging without grouping, plates a little less full."
+msgstr "Up to 2 packing tries per plate: about as quick as arranging without grouping, plates a little less full."
+
+#. Explains the Thorough option of Group by Height in high-precision arrange.
+#: src/components/controls/ArrangePanel.tsx:410
+msgid "Up to 6 packing tries per plate: fuller plates and a little less print time, but arranging takes several times as long."
+msgstr "Up to 6 packing tries per plate: fuller plates and a little less print time, but arranging takes several times as long."
+
 #: src/features/updater/UpdateCheckerSection.tsx:141
 msgid "Up to date"
 msgstr "Up to date"
@@ -9975,7 +9999,7 @@ msgid "Use existing repo"
 msgstr "Use existing repo"
 
 #. Tooltip on the Arrange panel's plate mode choice. It fills partly used plates around the models already on them.
-#: src/components/controls/ArrangePanel.tsx:196
+#: src/components/controls/ArrangePanel.tsx:201
 msgid "Use the plates the scene already has before adding more"
 msgstr "Use the plates the scene already has before adding more"
 
@@ -10003,7 +10027,7 @@ msgstr "Using existing repository: {repoName}"
 msgid "Using Material Settings"
 msgstr "Using Material Settings"
 
-#: src/features/scene/arrange/useArrangeManager.ts:160
+#: src/features/scene/arrange/useArrangeManager.ts:168
 msgid "Using SAT-based 2.5D nesting to pack duplicates onto the plate."
 msgstr "Using SAT-based 2.5D nesting to pack duplicates onto the plate."
 

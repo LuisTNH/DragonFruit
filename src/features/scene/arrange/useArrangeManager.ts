@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { msg } from '@lingui/core/macro';
 import type { ScenePlate, useSceneCollectionManager } from '@/features/scene/useSceneCollectionManager';
 import type { useTransformManager } from '@/features/transform/useTransformManager';
-import type { ArrangeAnchorMode, ArrangeLayoutMode, ArrangePrecisionMode } from '@/components/controls/ArrangePanel';
+import type { ArrangeAnchorMode, ArrangeHeightGroupingMode, ArrangeLayoutMode, ArrangePrecisionMode } from '@/components/controls/ArrangePanel';
 import type { DuplicateLayoutMode } from '@/components/controls/DuplicatePanel';
 import { type HullCacheEntry, type ArrangeModel as HighPrecisionArrangeModel } from '@/features/scene/arrange/highPrecisionArrange';
 import { computeHighPrecisionArrangeResultWorker } from '@/features/scene/arrange/highPrecisionArrangeWorkerClient';
@@ -27,7 +27,13 @@ type FootprintPolygonFn = (model: SceneModel, rotationZOverride?: number, transf
 const MAX_ARRANGE_BEDS = 32;
 /** Group by Height on the high-precision packer: single tries to fill a bed's
  *  leftover space with shorter models. Each try is a full pack. */
-const HIGH_PRECISION_HEIGHT_MAX_PACKS = 6;
+/**
+ * Packer calls per bed for Group by Height in high precision. Fast is about as
+ * quick as an arrange without grouping; thorough fills the beds a little more
+ * and takes several times as long (83 test minis: 76.7 h in 644 s against
+ * 74.5 h in 2196 s, 80.2 h in 627 s without grouping).
+ */
+const HIGH_PRECISION_HEIGHT_MAX_PACKS: Record<ArrangeHeightGroupingMode, number> = { fast: 2, thorough: 6 };
 const HIGH_PRECISION_HEIGHT_MAX_OFFER = 8;
 
 /**
@@ -137,6 +143,7 @@ export function useArrangeManager({
   const [arrangePrecisionMode, setArrangePrecisionMode] = React.useState<ArrangePrecisionMode>('standard');
   const [arrangePlateFillMode, setArrangePlateFillMode] = React.useState<ArrangePlateFillMode>('plates');
   const [arrangeGroupByHeight, setArrangeGroupByHeight] = React.useState(false);
+  const [arrangeHeightGroupingMode, setArrangeHeightGroupingMode] = React.useState<ArrangeHeightGroupingMode>('fast');
   const [arrangeAllowRotateOnZ, setArrangeAllowRotateOnZ] = React.useState(false);
   const [arrangeLayoutMode, setArrangeLayoutMode] = React.useState<ArrangeLayoutMode>('auto');
   const [arrangeAnchorMode, setArrangeAnchorMode] = React.useState<ArrangeAnchorMode>('center');
@@ -1376,7 +1383,7 @@ export function useArrangeManager({
               packedSets.set(setKey(result.packedIds), result);
               return result.packedIds;
             },
-            maxPacks: HIGH_PRECISION_HEIGHT_MAX_PACKS,
+            maxPacks: HIGH_PRECISION_HEIGHT_MAX_PACKS[arrangeHeightGroupingMode],
             maxOffer: HIGH_PRECISION_HEIGHT_MAX_OFFER,
           });
           if (bedIds.length === 0) return;
@@ -1537,6 +1544,7 @@ export function useArrangeManager({
     arrangeAllowRotateOnZ,
     arrangeAnchorMode,
     arrangeGroupByHeight,
+    arrangeHeightGroupingMode,
     arrangePlateOffset,
     arrangeSpacingMm,
     bedsEmptiedByRun,
@@ -2119,6 +2127,8 @@ export function useArrangeManager({
     setArrangePlateFillMode,
     arrangeGroupByHeight,
     setArrangeGroupByHeight,
+    arrangeHeightGroupingMode,
+    setArrangeHeightGroupingMode,
     arrangeAllowRotateOnZ,
     setArrangeAllowRotateOnZ,
     arrangeLayoutMode,

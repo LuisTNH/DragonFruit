@@ -14,6 +14,7 @@ import type { ArrangePlateFillMode } from '@/features/scene/arrange/useArrangeMa
 export type ArrangeAnchorMode = 'center' | 'front_left' | 'front_right' | 'back_left' | 'back_right';
 export type ArrangeLayoutMode = 'auto' | 'array';
 export type ArrangePrecisionMode = 'standard' | 'high_precision';
+export type ArrangeHeightGroupingMode = 'fast' | 'thorough';
 
 interface ArrangePanelProps {
   precisionMode: ArrangePrecisionMode;
@@ -22,6 +23,8 @@ interface ArrangePanelProps {
   onFillModeChange: (value: ArrangePlateFillMode) => void;
   groupByHeight: boolean;
   onGroupByHeightChange: (value: boolean) => void;
+  heightGroupingMode: ArrangeHeightGroupingMode;
+  onHeightGroupingModeChange: (value: ArrangeHeightGroupingMode) => void;
   layoutMode: ArrangeLayoutMode;
   onLayoutModeChange: (value: ArrangeLayoutMode) => void;
   spacingMm: number;
@@ -64,6 +67,8 @@ export function ArrangePanel({
   onFillModeChange,
   groupByHeight,
   onGroupByHeightChange,
+  heightGroupingMode,
+  onHeightGroupingModeChange,
   layoutMode,
   onLayoutModeChange,
   spacingMm,
@@ -372,6 +377,39 @@ export function ArrangePanel({
                 </span>
               </div>
             </button>
+          )}
+
+          {layoutMode === 'auto' && groupByHeight && precisionMode === 'high_precision' && (
+            <div className="rounded-md border p-2" style={panelCardStyle}>
+              <div className="ui-meta mb-1" style={{ color: 'var(--text-muted)' }}><Trans>Height Grouping</Trans></div>
+              <div className="grid grid-cols-2 gap-1">
+                <Button
+                  variant="secondary"
+                  size="auto"
+                  className="!h-8 whitespace-nowrap px-1.5 text-[10px] sm:text-[11px]"
+                  onClick={() => onHeightGroupingModeChange('fast')}
+                  disabled={isApplying}
+                  style={isApplying ? disabledModeStyle : (heightGroupingMode === 'fast' ? activeModeStyle : undefined)}
+                >
+                  <Trans context="Height grouping mode">Fast</Trans>
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="auto"
+                  className="!h-8 whitespace-nowrap px-1.5 text-[10px] sm:text-[11px]"
+                  onClick={() => onHeightGroupingModeChange('thorough')}
+                  disabled={isApplying}
+                  style={isApplying ? disabledModeStyle : (heightGroupingMode === 'thorough' ? activeModeStyle : undefined)}
+                >
+                  <Trans context="Height grouping mode">Thorough</Trans>
+                </Button>
+              </div>
+              <p className="mt-1.5 text-[10px] leading-snug" style={{ color: 'var(--text-muted)' }}>
+                {heightGroupingMode === 'fast'
+                  ? _(msg({ message: 'Up to 2 packing tries per plate: about as quick as arranging without grouping, plates a little less full.', comment: 'Explains the Fast option of Group by Height in high-precision arrange.' }))
+                  : _(msg({ message: 'Up to 6 packing tries per plate: fuller plates and a little less print time, but arranging takes several times as long.', comment: 'Explains the Thorough option of Group by Height in high-precision arrange.' }))}
+              </p>
+            </div>
           )}
 
           <div className="flex flex-col gap-2">
