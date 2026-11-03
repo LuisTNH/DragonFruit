@@ -16,6 +16,17 @@ import { StructuredDialogModal } from '@/components/ui/StructuredDialogModal';
 import { useFloatingPanelCollapse } from '@/components/layout/FloatingPanelStack';
 import { openProfileSettingsModal } from '@/components/settings/profileModalEvents';
 import { joinSliceOutputPath, type PlateSliceScope } from '@/features/slicing/plateSliceNaming';
+import {
+  buildExposureSeries,
+  EXPOSURE_SERIES_MAX_SEC,
+  EXPOSURE_SERIES_MAX_STEPS,
+  EXPOSURE_SERIES_MIN_SEC,
+  EXPOSURE_SERIES_MIN_STEPS,
+  exposureSeriesBaseName,
+  OPEN_EXPOSURE_SERIES_DIALOG_EVENT,
+  withNormalExposure,
+  type ExposureSeriesRequest,
+} from '@/features/calibration/exposureSeries';
 import { plateNumberPlaceholder } from '@/features/scene/plates/plateMessages';
 import { MaterialAntiAliasingSection, type MaterialDraft } from '@/components/settings/profileFormAtoms';
 import {
@@ -194,6 +205,25 @@ function formatSlicedPlatesStatus(translate: Translate, count: number): string {
     one: 'Sliced # plate.',
     other: 'Sliced # plates.',
   })}`);
+}
+
+/** What a finished exposure series leaves in the status line; module scope for the same reason. */
+function formatSlicedExposuresStatus(translate: Translate, count: number): string {
+  return translate(msg`${plural(count, {
+    one: 'Sliced # exposure.',
+    other: 'Sliced # exposures.',
+  })}`);
+}
+
+/** The material's exposure, two steps lower, so the series brackets what the user prints today. */
+function defaultExposureSeriesRequest(currentExposureSec: number | undefined): ExposureSeriesRequest {
+  const stepSec = 0.5;
+  const center = currentExposureSec && currentExposureSec > 0 ? currentExposureSec : 2;
+  return {
+    startSec: Math.max(EXPOSURE_SERIES_MIN_SEC, Math.round((center - 2 * stepSec) * 100) / 100),
+    stepSec,
+    count: 5,
+  };
 }
 
 function formatSlicingPhaseLabel(translate: Translate, phase: string): string {
@@ -1838,6 +1868,10 @@ export function SlicingPanel({
         /** Where the run wrote it, so the plate is not saved again on the way past. */
         savedPath?: string;
       }>;
+      /** Set by an exposure series: this run's normal exposure, in place of the material's. */
+      normalExposureSec?: number;
+      /** Set by an exposure series: the file name, which carries the exposure. */
+      baseName?: string;
     },
   ): Promise<boolean> => {
     // A batch passes each plate's scope in turn; a plain run uses the active one.
@@ -1877,7 +1911,10 @@ export function SlicingPanel({
     const intentForRun: SliceIntent = batch ? 'file' : effectiveSliceIntent;
 
     // The name the slice is written under, also offered in the save dialog so the two agree.
-    const outputBaseName = scopeFilenameBase ?? sliceFilenameBase;
+    const outputBaseName = batch?.baseName ?? scopeFilenameBase ?? sliceFilenameBase;
+    const materialProfileForRun = batch?.normalExposureSec != null
+      ? withNormalExposure(materialProfileForSlicing, batch.normalExposureSec, activePrinterProfile.display.outputFormat)
+      : materialProfileForSlicing;
     const proceed = await Promise.resolve(
       onBeforeSliceStart?.(
         intentForRun,
@@ -1957,7 +1994,7 @@ export function SlicingPanel({
             }
           : {}),
         printerProfile: activePrinterProfile,
-        materialProfile: materialProfileForSlicing,
+        materialProfile: materialProfileForRun,
         filenameBase: outputBaseName || activePrinterProfile.name || 'slice_export',
         // Written where the save step said, under the name the user kept or typed there: a
         // plate's name went into that path already, as the dialog's suggestion or as a batch's
@@ -2247,6 +2284,76 @@ export function SlicingPanel({
       });
     }
   };
+
+  /**
+   * Slice the active plate once per exposure, one file each, the exposure in its name. The
+   * same sequential batch as the plates': one folder, asked for once, and the files handed
+   * over together at the end.
+   */
+  const handleSliceExposureSeries = async (exposures: readonly number[]) => {
+    if (exposures.length === 0) return;
+
+    const destinationDirectory = (await pickDirectoryWithNativeDialog()).trim();
+    if (!destinationDirectory) return;
+
+    const outputExtension = resolveOutputFileExtension(
+      activePrinterProfile?.display.outputFormat,
+      activePrinterProfile?.display.formatVersion,
+    );
+    const baseNames = exposures.map((exposureSec) => exposureSeriesBaseName(sliceFilenameBase, exposureSec));
+    const targetPaths = baseNames.map((baseName) => joinSliceOutputPath(destinationDirectory, baseName, outputExtension));
+    const alreadyOnDisk = await existingNativePaths(targetPaths).catch(() => [] as boolean[]);
+    const collisions = alreadyOnDisk.filter((exists) => exists === true).length;
+    if (collisions > 0 && !(await requestOverwriteConfirmation(collisions))) return;
+
+    const completed: Array<{
+      artifact: SliceExportArtifact;
+      plateId?: string;
+      totalLayers: number;
+      savedPath?: string;
+    }> = [];
+    for (const [index, exposureSec] of exposures.entries()) {
+      const sliced = await handleSliceZipExport(undefined, {
+        destinationDirectory,
+        completed,
+        normalExposureSec: exposureSec,
+        baseName: baseNames[index],
+      });
+      if (!sliced) break;
+    }
+
+    setCurrentPhase('Ready');
+    setSliceStatus(formatSlicedExposuresStatus(_, completed.length));
+    setSlicingModalStage('finished');
+
+    for (const entry of completed) {
+      onSliceArtifactReady?.(entry.artifact, {
+        ...(entry.plateId ? { plateId: entry.plateId } : {}),
+        ...(entry.savedPath ? { savedPath: entry.savedPath } : {}),
+        savedDirectory: destinationDirectory,
+        totalLayers: entry.totalLayers,
+      });
+    }
+  };
+
+  const [exposureSeriesDraft, setExposureSeriesDraft] = useState<ExposureSeriesRequest | null>(null);
+  const exposureSeries = useMemo(
+    () => (exposureSeriesDraft ? buildExposureSeries(exposureSeriesDraft) : []),
+    [exposureSeriesDraft],
+  );
+  const materialNormalExposureSec = materialProfileForSlicing?.normalExposureSec;
+  // The calibration menu asks for a series from outside the panel.
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const open = () => setExposureSeriesDraft(defaultExposureSeriesRequest(materialNormalExposureSec));
+    window.addEventListener(OPEN_EXPOSURE_SERIES_DIALOG_EVENT, open);
+    return () => window.removeEventListener(OPEN_EXPOSURE_SERIES_DIALOG_EVENT, open);
+  }, [materialNormalExposureSec]);
+  const canSliceExposureSeries = !isSlicingZip
+    && Boolean(activePrinterProfile)
+    && Boolean(materialProfileForSlicing)
+    && models.length > 0
+    && exposureSeries.length > 0;
 
   const handleCancelSlicing = useCallback(() => {
     if (!isSlicingZip) return;
@@ -3133,6 +3240,105 @@ export function SlicingPanel({
             </Trans>
           )}
         </p>
+      </StructuredDialogModal>
+
+      <StructuredDialogModal
+        open={exposureSeriesDraft != null}
+        ariaLabel={_(msg`Exposure series`)}
+        title={<Trans>Exposure Series</Trans>}
+        subtitle={<Trans>One file per exposure, for the active plate.</Trans>}
+        icon={<Timer className="h-4 w-4" />}
+        zIndexClassName="z-[120]"
+        closeAriaLabel={_(msg`Close modal`)}
+        onClose={() => setExposureSeriesDraft(null)}
+        onBackdropClick={() => setExposureSeriesDraft(null)}
+        actions={(
+          <>
+            <Button
+              variant="secondary"
+              className="!h-9 text-xs"
+              onClick={() => setExposureSeriesDraft(null)}
+            >
+              <Trans>Cancel</Trans>
+            </Button>
+            <Button
+              className="!h-9 text-xs"
+              disabled={!canSliceExposureSeries}
+              onClick={() => {
+                const exposures = exposureSeries;
+                setExposureSeriesDraft(null);
+                void handleSliceExposureSeries(exposures);
+              }}
+            >
+              <Trans>Choose Folder and Slice</Trans>
+            </Button>
+          </>
+        )}
+      >
+        {exposureSeriesDraft && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-2">
+              <label className="space-y-1 text-xs" style={{ color: 'var(--text-muted)' }}>
+                <span><Trans>First exposure</Trans></span>
+                <ScrollableNumberField
+                  value={exposureSeriesDraft.startSec}
+                  onChange={(startSec) => setExposureSeriesDraft((draft) => (draft ? { ...draft, startSec } : draft))}
+                  min={EXPOSURE_SERIES_MIN_SEC}
+                  max={EXPOSURE_SERIES_MAX_SEC}
+                  step={0.1}
+                  unit="s"
+                  ariaLabel={_(msg`First exposure in seconds`)}
+                  commitOnBlur
+                />
+              </label>
+              <label className="space-y-1 text-xs" style={{ color: 'var(--text-muted)' }}>
+                <span><Trans>Step</Trans></span>
+                <ScrollableNumberField
+                  value={exposureSeriesDraft.stepSec}
+                  onChange={(stepSec) => setExposureSeriesDraft((draft) => (draft ? { ...draft, stepSec } : draft))}
+                  min={0.05}
+                  max={10}
+                  step={0.05}
+                  unit="s"
+                  ariaLabel={_(msg`Exposure step in seconds`)}
+                  commitOnBlur
+                />
+              </label>
+              <label className="space-y-1 text-xs" style={{ color: 'var(--text-muted)' }}>
+                <span><Trans>Files</Trans></span>
+                <ScrollableNumberField
+                  value={exposureSeriesDraft.count}
+                  onChange={(count) => setExposureSeriesDraft((draft) => (draft ? { ...draft, count: Math.round(count) } : draft))}
+                  min={EXPOSURE_SERIES_MIN_STEPS}
+                  max={EXPOSURE_SERIES_MAX_STEPS}
+                  step={1}
+                  ariaLabel={_(msg`Number of files in the series`)}
+                  commitOnBlur
+                />
+              </label>
+            </div>
+            {exposureSeries.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {exposureSeries.map((exposureSec) => (
+                  <span
+                    key={exposureSec}
+                    className="rounded border px-1.5 py-0.5 text-xs tabular-nums"
+                    style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-strong)' }}
+                  >
+                    {fmt.quantity(exposureSec, 2, 's')}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                <Trans>The last exposure is above what a printer takes. Lower the start, the step or the number of files.</Trans>
+              </p>
+            )}
+            <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+              <Trans>Only the normal exposure changes; the bottom layers keep the material&apos;s settings. The exposure is part of each file name.</Trans>
+            </p>
+          </div>
+        )}
       </StructuredDialogModal>
 
       <StructuredDialogModal

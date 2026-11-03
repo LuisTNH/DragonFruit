@@ -13,6 +13,7 @@ import { AlertDiamondIcon, Button } from '@/components/atoms';
 import { StructuredDialogModal } from '@/components/ui/StructuredDialogModal';
 import { ContextMenu, type ContextMenuEntry } from '@/components/ui/ContextMenu';
 import { CALIBRATION_MODELS } from '@/features/calibration/calibrationModels';
+import { openExposureSeriesDialog } from '@/features/calibration/exposureSeries';
 import { Activity, AlertTriangle, Anchor, ChevronDown, FilePlus2, FlaskConical, FolderInput, FolderOpen, Lock, Maximize2, Minimize2, Power, Printer, Save, SaveAll, Settings, Square, Upload, X } from 'lucide-react';
 import {
   applyThemeCustomColors,
@@ -671,11 +672,18 @@ export function TopBar({
       label: _(msg`Calibration models`),
       icon: FlaskConical,
       disabled: topbarActionsDisabled || !onInsertCalibrationModel,
-      children: CALIBRATION_MODELS.map((model) => ({
-        id: `${CALIBRATION_MODEL_MENU_PREFIX}${model.id}`,
-        label: model.name,
-        trailing: model.maker,
-      })),
+      children: [
+        ...CALIBRATION_MODELS.map((model) => ({
+          id: `${CALIBRATION_MODEL_MENU_PREFIX}${model.id}`,
+          label: model.name,
+          trailing: model.maker,
+        })),
+        {
+          id: 'exposure-series',
+          label: _(msg`Exposure series…`),
+          startsGroup: true,
+        },
+      ],
     },
     {
       id: 'close-program',
@@ -706,6 +714,9 @@ export function TopBar({
       case 'import-scene':
         if (typeof document === 'undefined') break;
         (document.getElementById('topbar-scene-input') as HTMLInputElement | null)?.click();
+        break;
+      case 'exposure-series':
+        openExposureSeriesDialog();
         break;
       case 'close-program':
         void handleCloseProgram();
