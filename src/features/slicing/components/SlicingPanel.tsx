@@ -24,6 +24,7 @@ import {
   EXPOSURE_SERIES_MIN_STEPS,
   exposureSeriesBaseName,
   OPEN_EXPOSURE_SERIES_DIALOG_EVENT,
+  takePendingExposureSeriesDialog,
   withNormalExposure,
   type ExposureSeriesRequest,
 } from '@/features/calibration/exposureSeries';
@@ -2342,10 +2343,15 @@ export function SlicingPanel({
     [exposureSeriesDraft],
   );
   const materialNormalExposureSec = materialProfileForSlicing?.normalExposureSec;
-  // The calibration menu asks for a series from outside the panel.
+  // The calibration menu asks for a series from outside the panel, often from another
+  // workspace: a request made before this panel mounted is waiting when it does.
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
-    const open = () => setExposureSeriesDraft(defaultExposureSeriesRequest(materialNormalExposureSec));
+    const open = () => {
+      if (!takePendingExposureSeriesDialog()) return;
+      setExposureSeriesDraft(defaultExposureSeriesRequest(materialNormalExposureSec));
+    };
+    open();
     window.addEventListener(OPEN_EXPOSURE_SERIES_DIALOG_EVENT, open);
     return () => window.removeEventListener(OPEN_EXPOSURE_SERIES_DIALOG_EVENT, open);
   }, [materialNormalExposureSec]);

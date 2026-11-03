@@ -1,4 +1,8 @@
+import { msg } from '@lingui/core/macro';
+import type { MessageDescriptor } from '@lingui/core';
 import type { MaterialProfile } from '@/features/profiles/profileStore';
+
+type Translate = (descriptor: MessageDescriptor) => string;
 
 export const OPEN_EXPOSURE_SERIES_DIALOG_EVENT = 'dragonfruit:open-exposure-series-dialog';
 
@@ -14,9 +18,31 @@ export type ExposureSeriesRequest = {
   count: number;
 };
 
+/**
+ * Set when the dialog is asked for. The slicing panel that shows it lives in the export
+ * workspace only, so a request from another workspace waits here until the panel mounts.
+ */
+let exposureSeriesDialogPending = false;
+
 export function openExposureSeriesDialog(): void {
+  exposureSeriesDialogPending = true;
   if (typeof window === 'undefined') return;
   window.dispatchEvent(new CustomEvent(OPEN_EXPOSURE_SERIES_DIALOG_EVENT));
+}
+
+/** Whether the dialog was asked for and not shown yet; asking clears it. */
+export function takePendingExposureSeriesDialog(): boolean {
+  const pending = exposureSeriesDialogPending;
+  exposureSeriesDialogPending = false;
+  return pending;
+}
+
+export function exposureSeriesNeedsModelTitle(translate: Translate): string {
+  return translate(msg`Nothing to slice`);
+}
+
+export function exposureSeriesNeedsModelMessage(translate: Translate): string {
+  return translate(msg`Load a model first; the exposure series slices the active plate.`);
 }
 
 /** Hundredths of a second, which is finer than any printer takes and keeps 0.1 + 0.2 at 0.3. */

@@ -48,6 +48,11 @@ import {
   fetchCalibrationModelFile,
   findCalibrationModel,
 } from '@/features/calibration/calibrationModels';
+import {
+  exposureSeriesNeedsModelMessage,
+  exposureSeriesNeedsModelTitle,
+  openExposureSeriesDialog,
+} from '@/features/calibration/exposureSeries';
 import { pushSystemNotification } from '@/features/notifications/systemNotificationStore';
 import type { ImportExportManagerDeps } from '@/features/import-export/useImportExportManager';
 import { GlobalUpdateIndicator } from '@/features/updater/GlobalUpdateIndicator';
@@ -7503,6 +7508,22 @@ export default function Home() {
     scene.setMode(nextMode);
   }, [hasSlicedPlate, isActiveSliceStale, scene]);
 
+  // The series slices the active plate from the export workspace's slicing panel, so the
+  // request goes there; with nothing loaded there is nothing to slice.
+  const handleOpenExposureSeries = React.useCallback(() => {
+    if (scene.models.length === 0) {
+      pushSystemNotification({
+        id: 'exposure-series-needs-model',
+        title: exposureSeriesNeedsModelTitle(_),
+        subtitle: exposureSeriesNeedsModelMessage(_),
+        tone: 'warning',
+      });
+      return;
+    }
+    openExposureSeriesDialog();
+    handleModeChange('export');
+  }, [_, handleModeChange, scene.models.length]);
+
   const handleAddPrinterFromOnboarding = React.useCallback(() => {
     openProfileSettingsModal('printer', { openPrinterLibrary: true });
   }, []);
@@ -10724,6 +10745,7 @@ export default function Home() {
         onLoadMeshChange={handleLoadMeshChangeWithZip}
         onImportSceneChange={handleImportSceneChangeWithZip}
         onInsertCalibrationModel={(modelId) => { void handleInsertCalibrationModel(modelId); }}
+        onOpenExposureSeries={handleOpenExposureSeries}
         onNewScene={handleRequestNewScene}
         onSaveScene={() => { void handleTopBarSaveScene(); }}
         onSaveSceneAs={() => { handleTopBarSaveSceneAs(); }}

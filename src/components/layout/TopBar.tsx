@@ -13,7 +13,6 @@ import { AlertDiamondIcon, Button } from '@/components/atoms';
 import { StructuredDialogModal } from '@/components/ui/StructuredDialogModal';
 import { ContextMenu, type ContextMenuEntry } from '@/components/ui/ContextMenu';
 import { CALIBRATION_MODELS } from '@/features/calibration/calibrationModels';
-import { openExposureSeriesDialog } from '@/features/calibration/exposureSeries';
 import { Activity, AlertTriangle, Anchor, ChevronDown, FilePlus2, FlaskConical, FolderInput, FolderOpen, Lock, Maximize2, Minimize2, Power, Printer, Save, SaveAll, Settings, Square, Upload, X } from 'lucide-react';
 import {
   applyThemeCustomColors,
@@ -97,6 +96,8 @@ interface TopBarProps {
   onImportSceneChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   /** Drops a built-in calibration model (`CALIBRATION_MODELS` id) onto the plate. */
   onInsertCalibrationModel?: (modelId: string) => void;
+  /** Opens the exposure-series dialog, which lives in the export workspace. */
+  onOpenExposureSeries?: () => void;
   onCloseProgram?: () => void;
   showMonitorButton?: boolean;
   monitorButtonActive?: boolean;
@@ -155,6 +156,7 @@ export function TopBar({
   onLoadMeshChange,
   onImportSceneChange,
   onInsertCalibrationModel,
+  onOpenExposureSeries,
   onNewScene,
   onSaveScene,
   onSaveSceneAs,
@@ -682,6 +684,7 @@ export function TopBar({
           id: 'exposure-series',
           label: _(msg`Exposure series…`),
           startsGroup: true,
+          disabled: !onOpenExposureSeries,
         },
       ],
     },
@@ -716,7 +719,7 @@ export function TopBar({
         (document.getElementById('topbar-scene-input') as HTMLInputElement | null)?.click();
         break;
       case 'exposure-series':
-        openExposureSeriesDialog();
+        onOpenExposureSeries?.();
         break;
       case 'close-program':
         void handleCloseProgram();
