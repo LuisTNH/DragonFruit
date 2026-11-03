@@ -659,6 +659,25 @@ to say so (its tooltip does). The band table in `src/supports/autoSupport/settin
 (`SIZING_BANDS`) is only a mirror of what the three factory presets carry, plus
 the fallback; it is not the source of truth.
 
+**The run builds with the whole preset, not the live sections.** The band covers
+only seven numbers; the rest of a support's shape (cone angle mode, disk
+and standoff, shaft shape, roots neck, base flare, joint, mesh-to-mesh) used to come
+from the *live* Support Studio settings, which are what the user dials in for
+hand-placed supports. A locked cone angle or a base flare set for manual work therefore
+changed the next automatic run. `autoSupportProfileSettings` in
+`src/supports/autoSupport/parameterSizing.ts` now swaps every section a Support
+Studio preset owns for the tier preset's own, and a run builds with that: the
+worker receives it as `AutoPlaceWorkerPayload.appSettings`, the in-process run
+wraps the plan in `runWithSettings` (`src/supports/Settings/state.ts`), which
+swaps the live settings for the call without notifying the panel. Grid, the
+`autoSupport` and `autoBracing` blocks and the dev routing switch stay live. An id
+that names no preset leaves the live sections in place. Manual placement and
+editing a selected support read the live settings as before.
+
+Known gap: the per-support settings code (`supportSettingsCodec.ts`) does not
+carry the shaft shape or joint, so a later rebuild of any support, manual or
+automatic, fills those two from the live settings.
+
 **Where a worker run resolves it.** The placement worker has no storage and
 therefore no Support Studio presets beyond the factory ones, so it cannot resolve
 an id the user made. The main thread resolves every band a run can name

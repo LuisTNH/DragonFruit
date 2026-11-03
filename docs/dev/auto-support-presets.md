@@ -25,8 +25,10 @@ These are **two systems**, and neither store knows the other exists:
 They have no shared storage, state, ids or functions. Support Studio's presets
 keep excluding `autoSupport`, and an auto-support preset carries no geometry: its
 `sizingPreset` is the id of the Support Studio preset the run borrows its tip,
-shaft and roots from, resolved at run time. That one read is the coupling the user
-chose — see [backlog.md](backlog.md) for the decision and its cost. A payload
+shaft and roots from, resolved at run time, and the run builds with the rest of
+that preset's geometry too (base flare, joint and cone mode), never with
+the live sections manual placement uses (`autoSupportProfileSettings`). That one
+read is the coupling the user chose — see [backlog.md](backlog.md) for the decision and its cost. A payload
 written by the band-as-data build carries a `sizingBand` object instead; the store
 runs `migrateLegacySizingPreset` (from `src/supports/autoSupport/settings.ts`) over
 a payload as it adopts it and over an imported file, so the band maps back to the

@@ -16,7 +16,7 @@ import { getSnapshot } from '../state';
 import { commitAutoPlacePlan, logAutoPlaceTimings, runAutoPlace } from './autoPlace';
 import * as THREE from 'three';
 import { getModelMesh } from './meshStore';
-import { resolvedSizingBandsForRun } from './parameterSizing';
+import { autoSupportProfileSettings, resolvedSizingBandsForRun } from './parameterSizing';
 import type { AutoSupportSettings } from './settings';
 import type { AutoPlaceResult, AutoSupportPlan } from './types';
 import {
@@ -228,6 +228,7 @@ export async function runAutoPlaceInWorker(
         return runAutoPlace(islands, modelId, settingsOverride, cavityMesh);
     }
 
+    const sizingPresetId = settingsOverride?.sizingPreset ?? getSettings().autoSupport.sizingPreset;
     let plan: AutoSupportPlan | null;
     try {
         plan = await requestPlan(target, {
@@ -237,10 +238,10 @@ export async function runAutoPlaceInWorker(
             // The worker has no storage, so it cannot resolve a Support Studio preset
             // the user made: every band the run can name is resolved here, where the
             // preset table is, and handed over with the request.
-            sizingBands: resolvedSizingBandsForRun(
-                settingsOverride?.sizingPreset ?? getSettings().autoSupport.sizingPreset,
-            ),
-            appSettings: getSettings(),
+            sizingBands: resolvedSizingBandsForRun(sizingPresetId),
+            // Resolved here for the same reason: the run builds with its tier's
+            // whole Support Studio profile, not the live manual-placement sections.
+            appSettings: autoSupportProfileSettings(getSettings(), sizingPresetId),
             baseState: getSnapshot(),
             ...serializeMeshForModel(modelId),
             ...serializeCavityForModel(modelId, cavityGeometry),

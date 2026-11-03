@@ -10053,8 +10053,8 @@ msgid "The spice must flow. The resin must cure."
 msgstr "The spice must flow. The resin must cure."
 
 #: src/components/controls/autoSupport/autoSupportPanelTabs.ts:254
-msgid "The Support Studio preset whose tip, shaft and root numbers size this run. Editing that preset changes what auto-support prints — Duplicate it first if you only want to change the run."
-msgstr "The Support Studio preset whose tip, shaft and root numbers size this run. Editing that preset changes what auto-support prints — Duplicate it first if you only want to change the run."
+msgid "The Support Studio preset this run builds with: its tip, shaft, roots, base flare and joint. What you set in Support Studio for hand-placed supports does not change the run, but editing that preset does — Duplicate it first if you only want to change the run."
+msgstr "The Support Studio preset this run builds with: its tip, shaft, roots, base flare and joint. What you set in Support Studio for hand-placed supports does not change the run, but editing that preset does — Duplicate it first if you only want to change the run."
 
 #: src/features/organicCut/OrganicCutColorsSection.tsx:21
 msgid "The tenon's faces turned toward you."

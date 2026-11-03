@@ -20,9 +20,10 @@ with its help text, and its own tooltip on hover. Numbers are typed or stepped
 with the field's own carets rather than dragged on a slider, and each one carries
 its unit in the label (`Min Island Size (mm²)`, `Fan Angle (°)`, `Coverage Target
 (%)`). A switch is a pill. **Sizing Tier** at the top of **Density & Sizing** is a
-dropdown of your Support Studio presets — the tip, shaft and root numbers of the
-one you pick are what the run sizes with, so editing that manual preset changes
-what auto-support prints.
+dropdown of your Support Studio presets — the run builds with the one you pick:
+its tip, shaft, roots, base flare and joint. What you set in Support Studio for
+hand-placed supports does not change an automatic run, but editing that preset
+does.
 
 **Edits are staged.** Changing a field or a switch in the dialog does nothing
 until you press **Apply**; **Cancel** discards the edits. Selecting a *preset* is

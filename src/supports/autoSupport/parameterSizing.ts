@@ -80,6 +80,35 @@ function sizingBandOfPreset(id: string | null | undefined): SizingBand | null {
 }
 
 /**
+ * The settings an auto-support run builds with: the live settings, with every
+ * section a Support Studio preset owns (tip, shaft, roots, base flare, joint,
+ * mesh-to-mesh) taken from the preset the run's tier names. Manual placement
+ * keeps reading the live Support Studio sections, so what the user dials in for
+ * hand-placed supports no longer leaks into an automatic run through the
+ * sections the band does not cover (cone angle mode, flare, joint).
+ * An id that names no preset leaves the live sections in place, as before.
+ * The live shaft keeps its routing algorithm: that is a dev-tools switch, not
+ * part of a profile. Pure read — neither store is written here.
+ */
+export function autoSupportProfileSettings(
+    live: SupportSettings,
+    presetId: string | null | undefined,
+): SupportSettings {
+    const preset = presetId ? getPresetById(presetId) : undefined;
+    if (!preset) return live;
+    const profile = preset.settings;
+    return {
+        ...live,
+        tip: { ...profile.tip },
+        shaft: { ...profile.shaft, routingAlgorithm: live.shaft.routingAlgorithm },
+        roots: { ...profile.roots },
+        baseFlare: { ...profile.baseFlare },
+        joint: { ...profile.joint },
+        meshToMesh: { ...profile.meshToMesh },
+    };
+}
+
+/**
  * The band table a worker run resolves against, set from the payload it is handed.
  *
  * The worker has no storage, so it has no Support Studio presets beyond the

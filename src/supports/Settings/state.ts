@@ -322,6 +322,22 @@ export function updateNavigationDiscsOnly(enabled: boolean): void {
     };
     notify();
 }
+/**
+ * Run `run` with `settings` as the live settings, then put the previous ones
+ * back. Listeners are not notified and nothing is persisted: this is how an
+ * in-process auto-support run builds with its own profile (see
+ * `autoSupportProfileSettings`) without the Support Studio panel seeing it.
+ */
+export function runWithSettings<T>(settings: SupportSettings, run: () => T): T {
+    const previous = currentSettings;
+    currentSettings = mergeWithDefaults(settings);
+    try {
+        return run();
+    } finally {
+        currentSettings = previous;
+    }
+}
+
 // --- Subscription ---
 
 export function subscribeToSettings(listener: SettingsListener): () => void {

@@ -251,7 +251,7 @@ export const TIER_HINTS: Record<string, MessageDescriptor> = {
 /** The Sizing Tier control's own label and tooltip. */
 export const SIZING_TIER_FIELD = {
   label: msg`Sizing Tier`,
-  hint: msg`The Support Studio preset whose tip, shaft and root numbers size this run. Editing that preset changes what auto-support prints — Duplicate it first if you only want to change the run.`,
+  hint: msg`The Support Studio preset this run builds with: its tip, shaft, roots, base flare and joint. What you set in Support Studio for hand-placed supports does not change the run, but editing that preset does — Duplicate it first if you only want to change the run.`,
 } as const;
 
 /**

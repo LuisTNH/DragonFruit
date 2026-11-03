@@ -54,10 +54,10 @@ import {
     computeRegionCoverage,
     coverageRadiusForArea,
 } from './coverage';
-import { sizeParameters, presetForArea, modelSizingFactors, RESIN_DENSITY_G_PER_MM3 } from './parameterSizing';
+import { sizeParameters, presetForArea, modelSizingFactors, RESIN_DENSITY_G_PER_MM3, autoSupportProfileSettings } from './parameterSizing';
 import { computeLoadBudget, type PlacedContact } from './loadBudget';
 import type { ModelSizingContext } from './parameterSizing';
-import { getSettings } from '../Settings/state';
+import { getSettings, runWithSettings } from '../Settings/state';
 import { memberDepartureAngleFromVerticalDeg } from '../PlacementLogic/smartPlacementSearchUtils';
 
 /**
@@ -4241,5 +4241,14 @@ export function runAutoPlace(
     settingsOverride?: Partial<AutoSupportSettings>,
     cavityMesh?: THREE.Mesh,
 ): AutoPlaceResult {
-    return commitAutoPlacePlan(computeAutoSupportPlan(islands, modelId, settingsOverride, undefined, undefined, undefined, cavityMesh));
+    // The run builds with its tier's whole Support Studio profile, not the
+    // live sections manual placement uses (the worker path does the same with
+    // the settings it hands over).
+    const profile = autoSupportProfileSettings(
+        getSettings(),
+        settingsOverride?.sizingPreset ?? getSettings().autoSupport.sizingPreset,
+    );
+    const plan = runWithSettings(profile, () =>
+        computeAutoSupportPlan(islands, modelId, settingsOverride, undefined, undefined, undefined, cavityMesh));
+    return commitAutoPlacePlan(plan);
 }
