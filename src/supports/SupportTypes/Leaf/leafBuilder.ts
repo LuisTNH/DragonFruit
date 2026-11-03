@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { withTipType } from '@/supports/SupportPrimitives/ContactCone/contactConeUtils';
 import type { Leaf, Knot, Vec3 } from '../../types';
 import type { ContactCone, SupportTipProfile } from '../../SupportPrimitives/ContactCone/types';
 // Direct, not through the barrel: the barrel re-exports renderers and their
@@ -91,11 +92,11 @@ export function buildLeafData(input: LeafBuildInput): LeafBuildResult {
         mesh,
     );
 
-    const profile: SupportTipProfile = {
+    const profile: SupportTipProfile = withTipType({
         ...baseProfile,
         lengthMm,
         bodyDiameterMm: hostDiameterMm,
-    };
+    }, settings.tip);
 
     const contactCone: ContactCone = {
         ...recomputeContactConeForMovedDisk(

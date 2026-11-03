@@ -615,6 +615,10 @@ msgstr "A cut needs at least one loop."
 msgid "A file this run writes is already in that folder. Slicing replaces it."
 msgstr "A file this run writes is already in that folder. Slicing replaces it."
 
+#: src/supports/Settings/SupportSidebar.tsx:846
+msgid "A flat disk, or a sphere that leaves a break-off ball on the model to sand off instead of a pit"
+msgstr "A flat disk, or a sphere that leaves a break-off ball on the model to sand off instead of a pit"
+
 #: src/components/settings/GeneralSettingsTab.tsx:276
 msgid "A left column or a bar centred under the app bar."
 msgstr "A left column or a bar centred under the app bar."
@@ -667,20 +671,20 @@ msgid "Active print thumbnail"
 msgstr "Active print thumbnail"
 
 #: src/supports/Settings/components/TipSettingsCard.tsx:62
-#: src/supports/Settings/SupportSidebar.tsx:888
-#: src/supports/Settings/SupportSidebar.tsx:1052
+#: src/supports/Settings/SupportSidebar.tsx:927
+#: src/supports/Settings/SupportSidebar.tsx:1093
 msgid "Adaptive"
 msgstr "Adaptive"
 
-#: src/supports/Settings/SupportSidebar.tsx:893
-#: src/supports/Settings/SupportSidebar.tsx:1057
+#: src/supports/Settings/SupportSidebar.tsx:932
+#: src/supports/Settings/SupportSidebar.tsx:1098
 msgid "Adaptive mode"
 msgstr "Adaptive mode"
 
-#: src/supports/Settings/SupportSidebar.tsx:911
-#: src/supports/Settings/SupportSidebar.tsx:912
-#: src/supports/Settings/SupportSidebar.tsx:1074
-#: src/supports/Settings/SupportSidebar.tsx:1075
+#: src/supports/Settings/SupportSidebar.tsx:950
+#: src/supports/Settings/SupportSidebar.tsx:951
+#: src/supports/Settings/SupportSidebar.tsx:1115
+#: src/supports/Settings/SupportSidebar.tsx:1116
 msgid "Adaptive offset"
 msgstr "Adaptive offset"
 
@@ -1449,6 +1453,11 @@ msgstr "Balanced supports — the structure sizing band"
 #: src/supports/Settings/presetMessages.ts:29
 msgid "Balanced supports for general use"
 msgstr "Balanced supports for general use"
+
+#: src/supports/Settings/SupportSidebar.tsx:853
+#: src/supports/Settings/SupportSidebar.tsx:853
+msgid "Ball Diameter"
+msgstr "Ball Diameter"
 
 #: src/supports/Settings/components/BaseFlareSettingsCard.tsx:19
 msgid "Base Flare"
@@ -2352,10 +2361,10 @@ msgstr "Compression"
 msgid "Computing placements and resolving collisions."
 msgstr "Computing placements and resolving collisions."
 
-#: src/supports/Settings/SupportSidebar.tsx:874
-#: src/supports/Settings/SupportSidebar.tsx:874
-#: src/supports/Settings/SupportSidebar.tsx:1038
-#: src/supports/Settings/SupportSidebar.tsx:1038
+#: src/supports/Settings/SupportSidebar.tsx:913
+#: src/supports/Settings/SupportSidebar.tsx:913
+#: src/supports/Settings/SupportSidebar.tsx:1079
+#: src/supports/Settings/SupportSidebar.tsx:1079
 msgid "Cone Angle"
 msgstr "Cone Angle"
 
@@ -2368,9 +2377,9 @@ msgstr "Cone Angle Mode"
 msgid "Cone H"
 msgstr "Cone H"
 
-#: src/supports/Settings/SupportSidebar.tsx:977
-#: src/supports/Settings/SupportSidebar.tsx:1135
-#: src/supports/Settings/SupportSidebar.tsx:1135
+#: src/supports/Settings/SupportSidebar.tsx:1018
+#: src/supports/Settings/SupportSidebar.tsx:1178
+#: src/supports/Settings/SupportSidebar.tsx:1178
 msgid "Cone Height"
 msgstr "Cone Height"
 
@@ -2495,18 +2504,18 @@ msgid "Contact"
 msgstr "Contact"
 
 #: src/supports/Settings/components/PresetCard.tsx:132
-#: src/supports/Settings/SupportSidebar.tsx:850
-#: src/supports/Settings/SupportSidebar.tsx:850
-#: src/supports/Settings/SupportSidebar.tsx:1015
-#: src/supports/Settings/SupportSidebar.tsx:1015
+#: src/supports/Settings/SupportSidebar.tsx:889
+#: src/supports/Settings/SupportSidebar.tsx:889
+#: src/supports/Settings/SupportSidebar.tsx:1056
+#: src/supports/Settings/SupportSidebar.tsx:1056
 msgid "Contact Cone Length"
 msgstr "Contact Cone Length"
 
 #: src/supports/Settings/components/PresetCard.tsx:115
-#: src/supports/Settings/SupportSidebar.tsx:834
-#: src/supports/Settings/SupportSidebar.tsx:834
-#: src/supports/Settings/SupportSidebar.tsx:1000
-#: src/supports/Settings/SupportSidebar.tsx:1000
+#: src/supports/Settings/SupportSidebar.tsx:873
+#: src/supports/Settings/SupportSidebar.tsx:873
+#: src/supports/Settings/SupportSidebar.tsx:1041
+#: src/supports/Settings/SupportSidebar.tsx:1041
 msgid "Contact Diameter"
 msgstr "Contact Diameter"
 
@@ -2517,6 +2526,12 @@ msgstr "Contact Disk"
 #: src/supports/PlacementLogic/SupportLimitations.tsx:13
 msgid "Contact point is lower than the stump root — the shaft would extend below the root joint."
 msgstr "Contact point is lower than the stump root — the shaft would extend below the root joint."
+
+#: src/supports/Settings/SupportSidebar.tsx:837
+#: src/supports/Settings/SupportSidebar.tsx:837
+#: src/supports/Settings/SupportSidebar.tsx:845
+msgid "Contact Type"
+msgstr "Contact Type"
 
 #: src/components/settings/PluginsSettingsTab.tsx:979
 msgid "Contents"
@@ -2616,7 +2631,7 @@ msgstr "Could not read printer data."
 msgid "Could not reopen this file from cache."
 msgstr "Could not reopen this file from cache."
 
-#: src/features/scene/useSceneCollectionManager.ts:8163
+#: src/features/scene/useSceneCollectionManager.ts:8171
 msgid "Could not restore the model."
 msgstr "Could not restore the model."
 
@@ -2748,7 +2763,7 @@ msgstr "Curve name"
 msgid "Curve Settings"
 msgstr "Curve Settings"
 
-#: src/supports/Settings/SupportSidebar.tsx:1197
+#: src/supports/Settings/SupportSidebar.tsx:1240
 msgid "Curves"
 msgstr "Curves"
 
@@ -3193,6 +3208,10 @@ msgstr "Disconnected GitHub account."
 #: src/components/settings/FleetManagement.tsx:351
 msgid "Discovered Printers"
 msgstr "Discovered Printers"
+
+#: src/supports/Settings/SupportSidebar.tsx:842
+msgid "Disk"
+msgstr "Disk"
 
 #: src/app/page.tsx:12105
 #: src/components/modals/ManifoldWarningModal.tsx:38
@@ -5404,8 +5423,8 @@ msgid "Lock waypoint"
 msgstr "Lock waypoint"
 
 #: src/supports/Settings/components/TipSettingsCard.tsx:61
-#: src/supports/Settings/SupportSidebar.tsx:887
-#: src/supports/Settings/SupportSidebar.tsx:1051
+#: src/supports/Settings/SupportSidebar.tsx:926
+#: src/supports/Settings/SupportSidebar.tsx:1092
 msgid "Locked"
 msgstr "Locked"
 
@@ -6264,7 +6283,7 @@ msgstr "No resin selected"
 msgid "No snapshots yet. Run \"Backup Now\" to create your first local snapshot."
 msgstr "No snapshots yet. Run \"Backup Now\" to create your first local snapshot."
 
-#: src/features/scene/useSceneCollectionManager.ts:8136
+#: src/features/scene/useSceneCollectionManager.ts:8144
 msgid "No source file to restore this model from."
 msgstr "No source file to restore this model from."
 
@@ -6306,8 +6325,8 @@ msgid "None of these materials are available on <0>{newPrinterName}</0>."
 msgstr "None of these materials are available on <0>{newPrinterName}</0>."
 
 #: src/supports/Settings/components/TipSettingsCard.tsx:60
-#: src/supports/Settings/SupportSidebar.tsx:886
-#: src/supports/Settings/SupportSidebar.tsx:1050
+#: src/supports/Settings/SupportSidebar.tsx:925
+#: src/supports/Settings/SupportSidebar.tsx:1091
 msgid "Normal"
 msgstr "Normal"
 
@@ -6431,10 +6450,10 @@ msgstr "Offline Layer Height"
 msgid "Offline layer height override in micrometers"
 msgstr "Offline layer height override in micrometers"
 
-#: src/supports/Settings/SupportSidebar.tsx:876
-#: src/supports/Settings/SupportSidebar.tsx:876
-#: src/supports/Settings/SupportSidebar.tsx:1040
-#: src/supports/Settings/SupportSidebar.tsx:1040
+#: src/supports/Settings/SupportSidebar.tsx:915
+#: src/supports/Settings/SupportSidebar.tsx:915
+#: src/supports/Settings/SupportSidebar.tsx:1081
+#: src/supports/Settings/SupportSidebar.tsx:1081
 msgid "Offset"
 msgstr "Offset"
 
@@ -7671,11 +7690,11 @@ msgstr "Remesh {modelName}"
 msgid "Remesh confirmation"
 msgstr "Remesh confirmation"
 
-#: src/features/scene/useSceneCollectionManager.ts:8327
+#: src/features/scene/useSceneCollectionManager.ts:8335
 msgid "Remesh failed: {message}"
 msgstr "Remesh failed: {message}"
 
-#: src/features/scene/useSceneCollectionManager.ts:8300
+#: src/features/scene/useSceneCollectionManager.ts:8308
 msgid "Remesh needs the desktop app."
 msgstr "Remesh needs the desktop app."
 
@@ -8147,7 +8166,7 @@ msgid "Restore as Current"
 msgstr "Restore as Current"
 
 #: src/features/mesh-smoothing/MeshSmoothingSettingsPanel.tsx:206
-#: src/supports/Settings/SupportSidebar.tsx:1183
+#: src/supports/Settings/SupportSidebar.tsx:1226
 msgid "Restore defaults"
 msgstr "Restore defaults"
 
@@ -8239,9 +8258,9 @@ msgstr "Roads? Where we're printing, we don't need roads."
 msgid "Root Disk H"
 msgstr "Root Disk H"
 
-#: src/supports/Settings/SupportSidebar.tsx:962
-#: src/supports/Settings/SupportSidebar.tsx:1120
-#: src/supports/Settings/SupportSidebar.tsx:1120
+#: src/supports/Settings/SupportSidebar.tsx:1003
+#: src/supports/Settings/SupportSidebar.tsx:1163
+#: src/supports/Settings/SupportSidebar.tsx:1163
 msgid "Root Disk Height"
 msgstr "Root Disk Height"
 
@@ -8249,10 +8268,10 @@ msgstr "Root Disk Height"
 msgid "Roots"
 msgstr "Roots"
 
-#: src/supports/Settings/SupportSidebar.tsx:946
-#: src/supports/Settings/SupportSidebar.tsx:946
-#: src/supports/Settings/SupportSidebar.tsx:1103
-#: src/supports/Settings/SupportSidebar.tsx:1103
+#: src/supports/Settings/SupportSidebar.tsx:987
+#: src/supports/Settings/SupportSidebar.tsx:987
+#: src/supports/Settings/SupportSidebar.tsx:1146
+#: src/supports/Settings/SupportSidebar.tsx:1146
 msgid "Roots Diameter"
 msgstr "Roots Diameter"
 
@@ -8366,7 +8385,7 @@ msgstr "Save current settings to this preset"
 msgid "Save Error"
 msgstr "Save Error"
 
-#: src/supports/Settings/SupportSidebar.tsx:1176
+#: src/supports/Settings/SupportSidebar.tsx:1219
 msgid "Save failed"
 msgstr "Save failed"
 
@@ -8399,7 +8418,7 @@ msgstr "Save scene as…"
 msgid "Save scene options"
 msgstr "Save scene options"
 
-#: src/supports/Settings/SupportSidebar.tsx:1176
+#: src/supports/Settings/SupportSidebar.tsx:1219
 msgid "Save settings"
 msgstr "Save settings"
 
@@ -8413,7 +8432,7 @@ msgid "Save webcam snapshot"
 msgstr "Save webcam snapshot"
 
 #: src/components/controls/autoSupport/AutoSupportPresets.tsx:637
-#: src/supports/Settings/SupportSidebar.tsx:1176
+#: src/supports/Settings/SupportSidebar.tsx:1219
 msgid "Saved"
 msgstr "Saved"
 
@@ -9118,11 +9137,11 @@ msgstr "Shrink-Wrap {modelName}"
 msgid "Shrink-Wrap confirmation"
 msgstr "Shrink-Wrap confirmation"
 
-#: src/features/scene/useSceneCollectionManager.ts:8381
+#: src/features/scene/useSceneCollectionManager.ts:8389
 msgid "Shrink-Wrap failed: {message}"
 msgstr "Shrink-Wrap failed: {message}"
 
-#: src/features/scene/useSceneCollectionManager.ts:8354
+#: src/features/scene/useSceneCollectionManager.ts:8362
 msgid "Shrink-Wrap needs the desktop app."
 msgstr "Shrink-Wrap needs the desktop app."
 
@@ -9382,6 +9401,7 @@ msgid "Speed"
 msgstr "Speed"
 
 #: src/components/settings/MeshSettingsTab.tsx:236
+#: src/supports/Settings/SupportSidebar.tsx:843
 msgid "Sphere"
 msgstr "Sphere"
 
@@ -9637,7 +9657,7 @@ msgstr "Support settings and presets"
 msgid "Support Size"
 msgstr "Support Size"
 
-#: src/supports/Settings/SupportSidebar.tsx:1168
+#: src/supports/Settings/SupportSidebar.tsx:1211
 msgid "Support Studio"
 msgstr "Support Studio"
 
@@ -10376,10 +10396,10 @@ msgid "Triangles:"
 msgstr "Triangles:"
 
 #: src/supports/Settings/components/PresetCard.tsx:149
-#: src/supports/Settings/SupportSidebar.tsx:926
-#: src/supports/Settings/SupportSidebar.tsx:926
-#: src/supports/Settings/SupportSidebar.tsx:1088
-#: src/supports/Settings/SupportSidebar.tsx:1088
+#: src/supports/Settings/SupportSidebar.tsx:967
+#: src/supports/Settings/SupportSidebar.tsx:967
+#: src/supports/Settings/SupportSidebar.tsx:1131
+#: src/supports/Settings/SupportSidebar.tsx:1131
 msgid "Trunk Diameter"
 msgstr "Trunk Diameter"
 

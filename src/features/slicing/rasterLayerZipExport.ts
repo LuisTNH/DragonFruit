@@ -19,7 +19,7 @@ import { filterLineRaftEdges, generateUnionedLineRaftMesh } from '@/supports/Raf
 import { generateChamferedBeam } from '@/supports/Rafts/Crenelated/geometry/generateChamferedBeam';
 import { buildLineRaftEdgePairs } from '@/supports/Rafts/Crenelated/geometry/buildLineRaftEdgePairs';
 import type { ContactDisk, Segment, SupportState, Vec3 } from '@/supports/types';
-import { getFinalSocketPosition } from '@/supports/SupportPrimitives/ContactCone/contactConeUtils';
+import { getContactBall, getFinalSocketPosition } from '@/supports/SupportPrimitives/ContactCone/contactConeUtils';
 import { calculateDiskThickness, getDiskCenter, getDiskRotation } from '@/supports/SupportPrimitives/ContactDisk/contactDiskUtils';
 import { getBezierPointAtT } from '@/supports/Curves/BezierUtils';
 import { resolveSegmentEndpoints, type ShaftEntity } from '@/supports/SupportPrimitives/Knot/segmentEndpoints';
@@ -765,6 +765,16 @@ function appendContactConePrimitive(
   if (!g) return;
   appendGeometryTriangles(sink, g);
   g.dispose();
+
+  // A `sphere` contact carries its break-off ball (getContactBall).
+  const ball = getContactBall(cone as any, penetrationMm);
+  if (ball) {
+    const segments = Math.max(4, Math.floor(radialSegments));
+    const sphere = new THREE.SphereGeometry(ball.radius, segments, Math.max(3, Math.floor(segments * 0.75)));
+    sphere.translate(ball.center.x, ball.center.y, ball.center.z);
+    appendGeometryTriangles(sink, sphere);
+    sphere.dispose();
+  }
 }
 
 function appendContactDiskPrimitive(

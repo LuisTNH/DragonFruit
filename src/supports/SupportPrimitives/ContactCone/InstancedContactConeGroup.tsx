@@ -1,3 +1,4 @@
+import { getContactBall } from './contactConeUtils';
 import React, { useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import type { ThreeEvent } from '@react-three/fiber';
@@ -152,10 +153,12 @@ export function conePrimitiveScales(
     penetration: number,
 ): { disk: [number, number, number]; body: [number, number, number]; tip: [number, number, number] } {
     const contactRadius = Math.max(0.001, cone.profile.contactDiameterMm / 2);
+    // A `sphere` contact's tip is its break-off ball (getContactBall).
+    const tipRadius = getContactBall(cone)?.radius ?? contactRadius;
     return {
         disk: [contactRadius, Math.max(0.001, diskThickness + penetration), contactRadius],
         body: [contactRadius, Math.max(0.001, cone.profile.lengthMm), contactRadius],
-        tip: [contactRadius, contactRadius, contactRadius],
+        tip: [tipRadius, tipRadius, tipRadius],
     };
 }
 
@@ -332,8 +335,11 @@ function ConeBucketMesh({
         write(bodyRef.current, conePosition, coneQuaternion, scales.body);
         write(overlayBodyRef.current, conePosition, coneQuaternion, scales.body);
 
-        // Tip sphere: the contact point itself, unrotated.
-        conePosition.set(startX, startY, startZ);
+        // Tip sphere: the contact point itself, unrotated; a `sphere`
+        // contact's break-off ball sits where slicing builds it.
+        const ball = getContactBall(cone);
+        if (ball) conePosition.set(ball.center.x, ball.center.y, ball.center.z);
+        else conePosition.set(startX, startY, startZ);
         coneQuaternion.identity();
         write(tipSphereRef.current, conePosition, coneQuaternion, scales.tip);
         write(overlayTipSphereRef.current, conePosition, coneQuaternion, scales.tip);

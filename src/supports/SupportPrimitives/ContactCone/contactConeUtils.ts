@@ -4,6 +4,7 @@ import { SupportTipProfile, DEFAULT_TIP_PROFILE } from './types';
 
 import { calculateDiskThickness } from '../ContactDisk/contactDiskUtils';
 import { ContactCone } from './types';
+import { DEFAULT_TIP_BALL_DIAMETER_MM } from '../../Settings/defaults';
 
 /**
  * Calculate the socket position (where the cone connects to the joint).
@@ -19,6 +20,58 @@ export function getSocketPosition(
         y: contactPos.y + normal.y * profile.lengthMm,
         z: contactPos.z + normal.z * profile.lengthMm,
     };
+}
+
+/**
+ * The break-off ball of a `sphere` contact: `sphereRadiusRatio` × the contact
+ * diameter across, resting on the surface at the contact point and sunk
+ * `penetrationMm` into it. The cone keeps its contact diameter where it leaves
+ * the ball, so the neck there — narrower than the ball — is where the support
+ * breaks, and the ball stays on the model as a small bump to sand off. Null for
+ * any other profile. One definition for slicing, export and the lowest-Z
+ * bound, so the three cannot disagree.
+ */
+export function getContactBall(
+    cone: Pick<ContactCone, 'pos' | 'normal' | 'surfaceNormal' | 'profile'>,
+    penetrationMm: number = cone.profile.penetrationMm ?? 0,
+): { center: Vec3; radius: number } | null {
+    const { profile } = cone;
+    if (profile.type !== 'sphere') return null;
+    const radius = (profile.contactDiameterMm * (profile.sphereRadiusRatio || 1)) / 2;
+    const n = cone.surfaceNormal ?? cone.normal;
+    const offset = radius - penetrationMm;
+    return {
+        center: { x: cone.pos.x + n.x * offset, y: cone.pos.y + n.y * offset, z: cone.pos.z + n.z * offset },
+        radius,
+    };
+}
+
+/** The member types whose contact can end in a break-off ball. */
+export const BALL_TIP_SUPPORT_TYPES = ['trunk', 'branch', 'leaf'] as const;
+
+/**
+ * A contact profile turned into a `sphere` contact whose break-off ball is
+ * `ballDiameterMm` across, never narrower than the contact itself (the neck has
+ * to stay the thinnest point, or the support would not break there).
+ */
+export function sphereTipProfile(profile: SupportTipProfile, ballDiameterMm: number): SupportTipProfile {
+    return {
+        ...profile,
+        type: 'sphere',
+        sphereRadiusRatio: Math.max(1, ballDiameterMm / profile.contactDiameterMm),
+    } as SupportTipProfile;
+}
+
+/**
+ * The contact a builder places for the settings' tip type: the disk profile it
+ * built, or that profile as a break-off ball when the tip type is `sphere`.
+ */
+export function withTipType(
+    profile: SupportTipProfile,
+    tip: { type?: 'disk' | 'sphere'; ballDiameterMm?: number },
+): SupportTipProfile {
+    if (tip.type !== 'sphere' || !(profile.contactDiameterMm > 0)) return profile;
+    return sphereTipProfile(profile, tip.ballDiameterMm ?? DEFAULT_TIP_BALL_DIAMETER_MM);
 }
 
 /**
@@ -80,6 +133,8 @@ export function getContactConeLowestZ(cone: ContactCone): number {
         const diskBackZ = pos.z - surfaceNormal.z * Math.max(0, profile.penetrationMm);
         lowestZ = Math.min(lowestZ, Math.min(diskBackZ, startZ) - contactRadius * surfaceRadialZ);
     }
+    const ball = getContactBall(cone);
+    if (ball) lowestZ = Math.min(lowestZ, ball.center.z - ball.radius);
     return lowestZ;
 }
 

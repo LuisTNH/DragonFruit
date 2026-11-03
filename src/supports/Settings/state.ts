@@ -11,6 +11,7 @@ import {
     DEFAULT_ROOTS_DIAMETER_MM,
     DEFAULT_ROOTS_DISK_HEIGHT_MM,
     DEFAULT_SHAFT_DIAMETER_MM,
+    DEFAULT_TIP_BALL_DIAMETER_MM,
     DEFAULT_TIP_CONTACT_DIAMETER_MM,
     DEFAULT_TIP_LENGTH_MM,
     SUPPORT_PROFILE_LIMITS,
@@ -58,6 +59,8 @@ function clampProfileFields(settings: SupportSettings): SupportSettings {
             lengthMm: clampToRange(settings.tip.lengthMm, DEFAULT_TIP_LENGTH_MM, SUPPORT_PROFILE_LIMITS.tip.lengthMm),
             // 30 mirrors the fallback the General tab uses when the offset is unset.
             adaptiveConeAngleOffsetDeg: clampToRange(settings.tip.adaptiveConeAngleOffsetDeg, 30, SUPPORT_PROFILE_LIMITS.tip.adaptiveConeAngleOffsetDeg),
+            type: settings.tip.type === 'sphere' ? 'sphere' : 'disk',
+            ballDiameterMm: clampToRange(settings.tip.ballDiameterMm, DEFAULT_TIP_BALL_DIAMETER_MM, SUPPORT_PROFILE_LIMITS.tip.ballDiameterMm),
         },
         shaft: {
             ...settings.shaft,

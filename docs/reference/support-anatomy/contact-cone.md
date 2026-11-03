@@ -18,6 +18,12 @@ The contact cone is the terminal piece that interfaces a support with the model.
 - The cone axis follows the averaged surface normal under the contact footprint.
 - The tip may embed slightly into the model surface.
 - The cone is the terminal element for support types that end on the model.
+- With the **Sphere** contact type (Support Studio's Contact Type, or an
+  auto-support profile's Tip Type), a trunk, branch or leaf contact ends in a
+  break-off ball of the chosen Ball Diameter instead of a disk. The ball rests on
+  the surface, sunk by the penetration; it is never narrower than the contact, so
+  the support breaks at the neck above it and leaves a small bump to sand off
+  rather than a pit. Sticks, stumps and twigs keep their disk contacts.
 
 ## Constraints
 

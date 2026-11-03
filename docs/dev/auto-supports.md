@@ -302,6 +302,28 @@ This is the member-side counterpart of the forest resize, which runs the other w
 
 **Where the thickness actually comes from (finding, not tuned here).** The floor is relative, so it cannot make a forest chunky by itself — it only tracks a host that is already thick. The host's own diameter is the model-scale term: at ×1.6 the harness hosts sit at 1.62 mm against a 1.0 mm band, and with the model terms at ×1 they sit at 1.01 mm (measured: sizeScale 1 → 1.01, 1.25 → 1.27, 1.6 → 1.62, 2.0 → 2.03). A `base Ø1.00 · h1.25 → Ø1.93mm` note is therefore ~×1.55 of model factor, not height alone (the note prints only `h`; see the two findings in the forest-report section). `MAX_SHAFT_DIAMETER_MM` is not the binder anywhere near the reported sizes: at ×2.0 every harness host reads 2.03 mm and none at ×1.6 does — and that ×2.0 is the user's own `sizeScale`, which is allowed past the cap by design. Retuning those factors is a separate decision.
 
+## Ball tips
+
+Support Studio's Contact Type can be **Sphere**: a contact then ends in a
+break-off ball `tip.ballDiameterMm` across (0.2–1 mm, default 0.4), never
+narrower than the contact, so the neck stays the thinnest point and the support
+breaks there, leaving a bump to sand off rather than a pit. `getContactBall` in
+`src/supports/SupportPrimitives/ContactCone/contactConeUtils.ts` is the one
+definition of the ball: slicing (`rasterLayerZipExport.ts`), the STL export
+(`SupportGeometryGenerator.ts`), both renderers, the lowest-Z bound and the
+resin estimate (`supportResinVolume.ts`) read it.
+
+Manual placement gets the ball from the builders (`withTipType`, used by the
+trunk, branch and leaf builders); editing a selected support switches it between
+disk and ball (`applySettingsToSupportTarget`). An automatic run builds with the
+live tip settings, so when the tip type is a sphere `applyBallTips`
+(`src/supports/autoSupport/ballTips.ts`) rewrites every trunk, branch and leaf
+contact once the forest resize and the contact-cone sync have given it its final
+size. Sticks, stumps and twigs keep their disks. The per-support settings code
+carries the tip type (flag bit 4) and the ball diameter (a 21st value appended
+after the original 20), so a rebuild keeps the ball, a code written before
+decodes as a disk, and an older decoder still reads a new code.
+
 ## Rules worth knowing before you change placement
 
 - **A mesh patch is grounded only when its top is at the plate, not when its contact is.**

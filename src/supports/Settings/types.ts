@@ -12,6 +12,7 @@ import {
     DEFAULT_TIP_PENETRATION_MM,
     DEFAULT_TIP_CONE_ANGLE_DEG,
     DEFAULT_TIP_BREAKPOINT_MM,
+    DEFAULT_TIP_BALL_DIAMETER_MM,
     DEFAULT_SHAFT_DIAMETER_MM,
     DEFAULT_SHAFT_MAX_ANGLE_DEG,
     DEFAULT_ROOTS_DIAMETER_MM,
@@ -62,6 +63,8 @@ export interface TipProfile {
 
     // Contact Sphere Props
     sphereRadiusRatio?: number;
+    /** Contact Sphere: diameter of the break-off ball (`withTipType`). */
+    ballDiameterMm?: number;
 }
 
 export interface ShaftProfile {
@@ -172,6 +175,7 @@ export function createDefaultSettings(): SupportSettings {
             diskThicknessMm: 0.1,
             maxStandoffMm: 1.5,
             standoffAngleThreshold: Math.PI / 4,
+            ballDiameterMm: DEFAULT_TIP_BALL_DIAMETER_MM,
         },
         shaft: {
             shape: 'cylinder',

@@ -16,7 +16,8 @@ import { typesMissingExportGroupBuilder } from './exportGeometry/seam';
 import { migrateLegacySupportPayload } from './importMigrations';
 import type { SupportCollectionKey } from './supportTypeRegistry';
 import type { ContactCone, SupportTipProfile } from './SupportPrimitives/ContactCone/types';
-import { getFinalSocketPosition } from './SupportPrimitives/ContactCone/contactConeUtils';
+import { BALL_TIP_SUPPORT_TYPES, getFinalSocketPosition, withTipType } from './SupportPrimitives/ContactCone/contactConeUtils';
+import { DEFAULT_TIP_PROFILE } from './SupportPrimitives/ContactCone/types';
 import { resolveSegmentEndpoints, type ShaftEntity } from './SupportPrimitives/Knot/segmentEndpoints';
 import { calculateDiskThickness } from './SupportPrimitives/ContactDisk/contactDiskUtils';
 import { emitSupportInteractionReset } from './interaction/supportInteractionReset';
@@ -3987,8 +3988,19 @@ function seatStumpCone(cone: ContactCone, socketZ: number): ContactCone {
 function applyTipSettingsToConeProfile(
     profile: SupportTipProfile,
     tip: SupportSettings['tip'],
-    options?: { includeBodyAndLength?: boolean },
+    options?: { includeBodyAndLength?: boolean; ballTips?: boolean },
 ): SupportTipProfile {
+    // The tip type decides the contact for a type that can carry a ball: a
+    // sphere tip becomes (or stays) a break-off ball of the current size, a disk
+    // tip turns a ball back into the disk the builders place.
+    if (options?.ballTips) {
+        const asDisk = applyTipSettingsToConeProfile(
+            profile.type === 'sphere' ? { ...DEFAULT_TIP_PROFILE, ...profile, type: 'disk' } as SupportTipProfile : profile,
+            tip,
+            { includeBodyAndLength: options.includeBodyAndLength },
+        );
+        return withTipType(asDisk, tip);
+    }
     const includeBodyAndLength = options?.includeBodyAndLength ?? true;
     const baseProfile = includeBodyAndLength
         ? {
@@ -4058,7 +4070,10 @@ export function applySettingsToSupportTarget(target: EditableSupportTarget, sett
             profile: applyTipSettingsToConeProfile(
                 entity.contactCone.profile,
                 settings.tip,
-                { includeBodyAndLength: descriptor.hasSegments },
+                {
+                    includeBodyAndLength: descriptor.hasSegments,
+                    ballTips: (BALL_TIP_SUPPORT_TYPES as readonly string[]).includes(target.kind),
+                },
             ),
         }
         : entity.contactCone;

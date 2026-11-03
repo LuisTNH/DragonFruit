@@ -98,3 +98,26 @@ test('a solid raft adds resin under the roots', () => {
     const withRaft = computeSupportAndRaftResinMl({ ...args, raftSettings: DEFAULT_RAFT_SETTINGS });
     assert.ok(withRaft > without, `raft ${withRaft} vs ${without}`);
 });
+
+test('a sphere contact adds its break-off ball', () => {
+    const withCone = (profile: Record<string, unknown>) => {
+        const trunk = createTrunk('t', 'm', 'r', 0, 10);
+        trunk.contactCone = {
+            id: 'c',
+            pos: { x: 0, y: 0, z: 12 },
+            normal: { x: 0, y: 0, z: -1 },
+            surfaceNormal: { x: 0, y: 0, z: -1 },
+            profile: { contactDiameterMm: 0.3, bodyDiameterMm: 1, lengthMm: 2, penetrationMm: 0, ...profile },
+        } as Trunk['contactCone'];
+        return computeSupportAndRaftResinMl({
+            supportState: supportsWith([createRoot('r', 'm', 0)], [trunk]),
+            raftSettings: RAFT_OFF,
+            visibleModelIds: new Set(['m']),
+            plateModels: [],
+        });
+    };
+    const bare = withCone({ type: undefined });
+    const ball = withCone({ type: 'sphere', sphereRadiusRatio: 0.5 / 0.3 });
+    // A 0.5 mm ball: (4/3)·π·0.25³ mm³.
+    assert.ok(Math.abs(ball - bare - (4 / 3) * Math.PI * 0.25 ** 3 / 1000) < 1e-12, `ball adds ${ball - bare}`);
+});

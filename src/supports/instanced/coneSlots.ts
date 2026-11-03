@@ -5,6 +5,7 @@ import {
   getProfileType,
   type InstancedContactCone,
 } from '../SupportPrimitives/ContactCone/InstancedContactConeGroup';
+import { getContactBall } from '@/supports/SupportPrimitives/ContactCone/contactConeUtils';
 import type { Vec3 } from '../types';
 import { quantizeToScale } from '@/utils/math';
 
@@ -73,6 +74,8 @@ export type ConeBatchSlot = {
   contactRadius: number;
   /** Nib thickness along `surfaceNormal`; 0 for non-disk profiles. */
   diskThickness: number;
+  /** A `sphere` contact's break-off ball (`getContactBall`); absent otherwise. */
+  ball?: { center: Vec3; radius: number };
   /**
    * The cone's authored embed depth, which is the fallback a nib is sunk by when
    * the active material does not compute one. The *computed* depth is a writer
@@ -213,6 +216,8 @@ export function buildConeSlotIndex(
         penetrationMm: cone.profile.penetrationMm ?? 0,
         ...(cone.modelId !== undefined ? { modelId: cone.modelId } : {}),
       };
+      const ball = getContactBall(cone);
+      if (ball) slot.ball = ball;
 
       const id = slots.length;
       const base = {

@@ -828,6 +828,45 @@ export function SupportSidebar({ activeModelId = null }: { activeModelId?: strin
         <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold" style={{ color: 'var(--text-muted)' }}>{unit}</span>
     );
 
+    // Contact type: the disk the builders place, or a sphere that ends each
+    // trunk, branch and leaf contact in a break-off ball (`withTipType`).
+    const isSphereTip = settings.tip.type === 'sphere';
+    const tipTypeFields = (
+        <div className="grid grid-cols-2 gap-1.5">
+            <div className="space-y-1 min-w-0" {...makeRowFocusHandlers('tip.type')}>
+                <div className={compactFieldLabelClass} style={{ color: 'var(--text-muted)' }} title={_(msg`Contact Type`)}>{_(msg`Contact Type`)}</div>
+                <SelectDropdown
+                    value={isSphereTip ? 'sphere' : 'disk'}
+                    onChange={(value) => updateTipProfile({ type: value === 'sphere' ? 'sphere' : 'disk' })}
+                    options={[
+                        { value: 'disk', label: _(msg`Disk`) },
+                        { value: 'sphere', label: _(msg`Sphere`) },
+                    ]}
+                    ariaLabel={_(msg`Contact Type`)}
+                    title={_(msg`A flat disk, or a sphere that leaves a break-off ball on the model to sand off instead of a pit`)}
+                    className="w-full min-w-0 space-y-0 h-8"
+                    selectClassName="w-full min-w-0 h-8 px-2.5 pr-10 text-xs sm:text-sm truncate"
+                />
+            </div>
+            {isSphereTip && (
+                <div className="space-y-1 min-w-0" {...makeRowFocusHandlers('tip.ballDiameterMm')}>
+                    <div className={compactFieldLabelClass} style={{ color: 'var(--text-muted)' }} title={_(msg`Ball Diameter`)}>{_(msg`Ball Diameter`)}</div>
+                    <div className="relative">
+                        <NumberInput
+                            value={settings.tip.ballDiameterMm ?? 0.4}
+                            onChange={(val) => updateTipProfile({ ballDiameterMm: val })}
+                            step={0.05}
+                            showStepper={false}
+                            {...SUPPORT_PROFILE_LIMITS.tip.ballDiameterMm}
+                            {...getInputProps('tip.ballDiameterMm', compactInputClass)}
+                        />
+                        {unitHint('mm')}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+
     const supportGeometryFieldsDefault = (
         <div className="space-y-2.5">
             <div className="space-y-1 min-w-0" {...makeRowFocusHandlers('tip.contactDiameterMm')}>
@@ -920,6 +959,8 @@ export function SupportSidebar({ activeModelId = null }: { activeModelId?: strin
                     </div>
                 </div>
             )}
+
+            {panelHas(activePanel, 'tip') && tipTypeFields}
 
             {panelHas(activePanel, 'shaft') && (
                 <div className="space-y-1 min-w-0" {...makeRowFocusHandlers('shaft.diameterMm')}>
@@ -1082,6 +1123,8 @@ export function SupportSidebar({ activeModelId = null }: { activeModelId?: strin
                     )}
                 </div>
             </div>
+
+            {tipTypeFields}
 
             <div className={compactTrunkPairClass}>
                 <div className="space-y-1 min-w-0" {...makeRowFocusHandlers('shaft.diameterMm')}>

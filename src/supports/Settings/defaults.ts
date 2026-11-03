@@ -12,6 +12,8 @@ export const DEFAULT_TIP_LENGTH_MM = 2.5;
 export const DEFAULT_TIP_PENETRATION_MM = 0.1;
 export const DEFAULT_TIP_CONE_ANGLE_DEG = 100;
 export const DEFAULT_TIP_BREAKPOINT_MM = 0;
+/** Break-off ball of a sphere contact. */
+export const DEFAULT_TIP_BALL_DIAMETER_MM = 0.4;
 
 // --- Shaft ---
 export const DEFAULT_SHAFT_DIAMETER_MM = 1.0;
@@ -61,6 +63,7 @@ export const SUPPORT_PROFILE_LIMITS = {
         contactDiameterMm: { min: 0.05, max: 5 },
         lengthMm: { min: 0.1, max: 50 },
         adaptiveConeAngleOffsetDeg: { min: 0, max: 90 },
+        ballDiameterMm: { min: 0.2, max: 1 },
     },
     shaft: {
         diameterMm: { min: 0.05, max: 20 },

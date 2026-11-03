@@ -196,6 +196,18 @@ function lengthScale(batch: SupportInstanceBatch, instance: number): number {
   return new THREE.Vector3().setFromMatrixColumn(matrixAt(batch, instance), 1).length();
 }
 
+/** Where a slot's tip ball is drawn: the nib top for a disk, the break-off
+ *  ball's centre for a sphere contact (`getContactBall`), else the contact. */
+function expectedTipCentre(slot: { kind: string; pos: { x: number; y: number; z: number }; surfaceNormal: { x: number; y: number; z: number }; diskThickness: number; ball?: { center: { x: number; y: number; z: number } } }) {
+  if (slot.ball) return slot.ball.center;
+  const offset = slot.kind === 'disk' ? slot.diskThickness : 0;
+  return {
+    x: slot.pos.x + slot.surfaceNormal.x * offset,
+    y: slot.pos.y + slot.surfaceNormal.y * offset,
+    z: slot.pos.z + slot.surfaceNormal.z * offset,
+  };
+}
+
 test('writeAllConeSlots fills one body bucket, the tip batch and the disk batch in producer order', () => {
   const index = buildConeSlotIndex(groups());
   const batches = batchesFor(index);
@@ -215,13 +227,8 @@ test('writeAllConeSlots fills one body bucket, the tip batch and the disk batch 
   // primitive it owns.
   assert.deepEqual(new Set(index.slots.map((record) => record.bodyInstance)).size, 3);
   for (const record of index.slots) {
-    const offset = record.slot.kind === 'disk' ? record.slot.diskThickness : 0;
-    assertPoint(new THREE.Vector3().setFromMatrixPosition(matrixAt(tips, record.tipInstance)), {
-      x: record.slot.pos.x + record.slot.surfaceNormal.x * offset,
-      y: record.slot.pos.y + record.slot.surfaceNormal.y * offset,
-      z: record.slot.pos.z + record.slot.surfaceNormal.z * offset,
-    });
-    assert.ok(closeTo(radialScale(tips, record.tipInstance), record.slot.contactRadius));
+    assertPoint(new THREE.Vector3().setFromMatrixPosition(matrixAt(tips, record.tipInstance)), expectedTipCentre(record.slot));
+    assert.ok(closeTo(radialScale(tips, record.tipInstance), record.slot.ball?.radius ?? record.slot.contactRadius));
   }
 });
 
@@ -279,7 +286,7 @@ test('the body rotation is exactly the legacy cone quaternion', () => {
   }
 });
 
-test('the tip is the contact point, unrotated, at the contact radius', () => {
+test('the tip is the contact point, unrotated, at the contact radius (a sphere contact: its ball)', () => {
   const index = buildConeSlotIndex(groups());
   const batches = batchesFor(index);
   writeAllConeSlots(index, batches, penetrationOf);
@@ -287,14 +294,9 @@ test('the tip is the contact point, unrotated, at the contact radius', () => {
 
   for (const record of index.tips) {
     const { slot } = record;
-    const offset = slot.kind === 'disk' ? slot.diskThickness : 0;
     const matrix = matrixAt(tips, record.tipInstance);
 
-    assertPoint(new THREE.Vector3().setFromMatrixPosition(matrix), {
-      x: slot.pos.x + slot.surfaceNormal.x * offset,
-      y: slot.pos.y + slot.surfaceNormal.y * offset,
-      z: slot.pos.z + slot.surfaceNormal.z * offset,
-    });
+    assertPoint(new THREE.Vector3().setFromMatrixPosition(matrix), expectedTipCentre(slot));
     assert.ok(
       closeTo(
         decomposed(tips, record.tipInstance).quaternion.angleTo(new THREE.Quaternion()),
@@ -302,7 +304,7 @@ test('the tip is the contact point, unrotated, at the contact radius', () => {
         1e-6,
       ),
     );
-    assert.ok(closeTo(radialScale(tips, record.tipInstance), slot.contactRadius));
+    assert.ok(closeTo(radialScale(tips, record.tipInstance), slot.ball?.radius ?? slot.contactRadius));
     assert.equal(ratioOf(tips, record.tipInstance), 1);
   }
 });

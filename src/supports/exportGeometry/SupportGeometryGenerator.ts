@@ -3,6 +3,7 @@ import { Roots, Segment, Joint, Vec3 } from '@/supports/types';
 import { bezierToLineSegments } from '@/supports/Curves/BezierUtils';
 import { SupportData } from '@/supports/rendering/SupportBuilder';
 import { getFinalSocketPosition } from '@/supports/SupportPrimitives/ContactCone';
+import { getContactBall } from '@/supports/SupportPrimitives/ContactCone/contactConeUtils';
 import { getConeQuaternion } from '@/supports/SupportPrimitives/ContactCone/contactConeUtils';
 import { calculateDiskThickness, getDiskCenter, getDiskRotation } from '@/supports/SupportPrimitives/ContactDisk/contactDiskUtils';
 import { RaftSettings } from '@/supports/Rafts/Crenelated/RaftTypes';
@@ -307,10 +308,13 @@ export class SupportGeometryGenerator {
     coneMesh.setRotationFromQuaternion(quaternion);
     group.add(coneMesh);
 
-    // 3. Cone-start sphere (matches the live ContactConeRenderer)
-    const sphereGeom = new THREE.SphereGeometry(contactRadius, 16, 12);
+    // 3. Cone-start sphere (matches the live ContactConeRenderer); a `sphere`
+    // contact draws its break-off ball instead (getContactBall).
+    const ball = getContactBall(coneData, penetrationMm);
+    const sphereGeom = new THREE.SphereGeometry(ball ? ball.radius : contactRadius, 16, 12);
     const sphereMesh = new THREE.Mesh(sphereGeom);
-    sphereMesh.position.set(coneStartPos.x, coneStartPos.y, coneStartPos.z);
+    const sphereAt = ball ? ball.center : coneStartPos;
+    sphereMesh.position.set(sphereAt.x, sphereAt.y, sphereAt.z);
     group.add(sphereMesh);
 
     return group;

@@ -78,6 +78,8 @@ import { buildCavityBridge } from '../SupportTypes/Trunk/useTrunkPlacement';
 import { createCavityTester } from '../interiorSupportGeometry';
 import { closestSurfaceNormal } from './closestSurfaceNormal';
 import { computeForestDiameterProfile, memberDiameterOf } from '../SupportTypes/Trunk/TrunkReplacement/maxConnectedDiameter';
+import { applyBallTips } from './ballTips';
+import { DEFAULT_TIP_BALL_DIAMETER_MM } from '../Settings/defaults';
 import { buildBranchData } from '../SupportTypes/Branch/branchBuilder';
 import type { BranchBuildInput, BranchBuildResult } from '../SupportTypes/Branch/branchBuilder';
 import { buildLeafData } from '../SupportTypes/Leaf/leafBuilder';
@@ -4065,6 +4067,16 @@ export function computeAutoSupportPlan(
             if (coneSynced !== draft) {
                 draft = coneSynced;
                 console.log(LOG_PREFIX, 'Contact cone sync: matched cone bodies to their host shafts.');
+            }
+
+            // Ball tips (ballTips.ts): the run's tip type is a sphere. Every
+            // contact has its final size here, so each ball is sized against it.
+            const runTip = getSettings().tip;
+            if (runTip.type === 'sphere') {
+                const ballMm = runTip.ballDiameterMm ?? DEFAULT_TIP_BALL_DIAMETER_MM;
+                const balled = applyBallTips(draft, ballMm);
+                draft = balled.draft;
+                console.log(LOG_PREFIX, `Ball tips: ${balled.converted} contacts end in a ${ballMm} mm ball.`);
             }
 
             timingEnd('resize');

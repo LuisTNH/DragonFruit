@@ -582,6 +582,8 @@ function doesPresetMatchSettings(presetSettings: SupportSettings, current: Suppo
         && current.tip.lengthMm === presetSettings.tip.lengthMm
         && current.tip.penetrationMm === presetSettings.tip.penetrationMm
         && (current.tip.breakpointMm ?? 0) === (presetSettings.tip.breakpointMm ?? 0)
+        && (current.tip.type ?? 'disk') === (presetSettings.tip.type ?? 'disk')
+        && (current.tip.ballDiameterMm ?? 0.4) === (presetSettings.tip.ballDiameterMm ?? 0.4)
         && JSON.stringify(current.shaft) === JSON.stringify(presetSettings.shaft)
         && JSON.stringify(current.roots) === JSON.stringify(presetSettings.roots)
         && JSON.stringify(current.baseFlare) === JSON.stringify(presetSettings.baseFlare)

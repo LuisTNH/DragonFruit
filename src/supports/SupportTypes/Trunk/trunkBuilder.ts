@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import { v4 as uuidv4 } from 'uuid';
 import { Vec3, Roots, Trunk, Segment, Joint } from '../../types';
 import type { ContactCone, SupportTipProfile } from '../../SupportPrimitives/ContactCone/types';
-import { getContactConeLowestZ, getFinalSocketPosition, getSocketPosition } from '../../SupportPrimitives/ContactCone/contactConeUtils';
+import { getContactConeLowestZ, getFinalSocketPosition, getSocketPosition, withTipType } from '../../SupportPrimitives/ContactCone/contactConeUtils';
 import { calculateDiskThickness } from '../../SupportPrimitives/ContactDisk/contactDiskUtils';
 // Direct, not through the barrel: the barrel re-exports renderers and their
 // React hooks, which a server route cannot import.
@@ -103,7 +103,7 @@ function buildTipProfile(
     settings: ReturnType<typeof getSettings>,
     overrides: TrunkBuildInput['overrides'],
 ): SupportTipProfile {
-    return {
+    return withTipType({
         type: 'disk',
         contactDiameterMm: overrides?.tipContactDiameterMm ?? settings.tip.contactDiameterMm,
         bodyDiameterMm: overrides?.tipBodyDiameterMm ?? settings.tip.bodyDiameterMm,
@@ -112,7 +112,7 @@ function buildTipProfile(
         diskThicknessMm: settings.tip.diskThicknessMm ?? 0.1,
         maxStandoffMm: settings.tip.maxStandoffMm ?? 1.5,
         standoffAngleThreshold: settings.tip.standoffAngleThreshold ?? (Math.PI / 4),
-    };
+    }, settings.tip);
 }
 export interface TrunkBuildInput {
     tipPos: Vec3;

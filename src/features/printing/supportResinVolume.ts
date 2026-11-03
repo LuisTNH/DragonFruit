@@ -76,6 +76,7 @@ export function computeSupportAndRaftResinMl({
       bodyDiameterMm: number;
       lengthMm: number;
       type?: 'disk' | 'sphere';
+      sphereRadiusRatio?: number;
     };
     normal: { x: number; y: number; z: number };
     surfaceNormal?: { x: number; y: number; z: number };
@@ -99,7 +100,13 @@ export function computeSupportAndRaftResinMl({
       diskMm3 = cylinderVolumeMm3(contactRadius, Math.max(0, diskThickness));
     }
 
-    return mm3ToMl(coneMm3 + diskMm3);
+    // A `sphere` contact ends in its break-off ball (getContactBall): the whole
+    // ball, a slight overestimate for the part sunk into the model.
+    const ballMm3 = cone.profile.type === 'sphere'
+      ? sphereVolumeMm3(contactRadius * Math.max(0, cone.profile.sphereRadiusRatio ?? 1))
+      : 0;
+
+    return mm3ToMl(coneMm3 + diskMm3 + ballMm3);
   };
 
   const contactDiskVolumeMl = (disk: {

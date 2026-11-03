@@ -75,7 +75,8 @@ export function encodeSupportSettingsHex(settings: SupportSettings): string {
     const flags =
         (coneModeBits & 0b11)
         | ((normalized.shaft.isStraight ? 1 : 0) << 2)
-        | ((normalized.baseFlare.enabled ? 1 : 0) << 3);
+        | ((normalized.baseFlare.enabled ? 1 : 0) << 3)
+        | ((normalized.tip.type === 'sphere' ? 1 : 0) << 4);
 
     const values: number[] = [
         encodeScaled(normalized.tip.contactDiameterMm, 1000),
@@ -98,6 +99,9 @@ export function encodeSupportSettingsHex(settings: SupportSettings): string {
         encodeScaled(normalized.roots.neckBlend, 10000),
         encodeScaled(normalized.baseFlare.diameterMm, 1000),
         encodeScaled(normalized.baseFlare.heightMm, 1000),
+        // Appended after the original 20 values, so a code written before it
+        // decodes as it did and an older decoder still reads this one.
+        encodeScaled(normalized.tip.ballDiameterMm ?? 0.4, 1000),
     ];
 
     const bytes: number[] = [CODEC_VERSION, flags];
@@ -116,6 +120,8 @@ export function decodeSupportSettingsHex(hex: string, base?: SupportSettings): S
     const coneModeBits = flags & 0b11;
     const isStraight = ((flags >> 2) & 0b1) === 1;
     const flareEnabled = ((flags >> 3) & 0b1) === 1;
+    // A code from before the bit is a disk contact: no builder placed a ball then.
+    const sphereTip = ((flags >> 4) & 0b1) === 1;
 
     let offset = 2;
     const read = () => {
@@ -140,6 +146,7 @@ export function decodeSupportSettingsHex(hex: string, base?: SupportSettings): S
             diskThicknessMm: decodeScaled(read(), 1000),
             maxStandoffMm: decodeScaled(read(), 1000),
             standoffAngleThreshold: decodeScaled(read(), 10000),
+            type: sphereTip ? 'sphere' : 'disk',
         },
         shaft: {
             ...mergedBase.shaft,
@@ -163,6 +170,7 @@ export function decodeSupportSettingsHex(hex: string, base?: SupportSettings): S
             heightMm: decodeScaled(read(), 1000),
         },
     };
+    if (bytes.length >= offset + 2) decoded.tip.ballDiameterMm = decodeScaled(read(), 1000);
 
     return decoded;
 }
@@ -180,6 +188,8 @@ export function areSupportGeometrySettingsEqual(a: SupportSettings, b: SupportSe
         && (a.tip.diskThicknessMm ?? 0.1) === (b.tip.diskThicknessMm ?? 0.1)
         && (a.tip.maxStandoffMm ?? 1.5) === (b.tip.maxStandoffMm ?? 1.5)
         && (a.tip.standoffAngleThreshold ?? (Math.PI / 4)) === (b.tip.standoffAngleThreshold ?? (Math.PI / 4))
+        && (a.tip.type ?? 'disk') === (b.tip.type ?? 'disk')
+        && (a.tip.ballDiameterMm ?? 0.4) === (b.tip.ballDiameterMm ?? 0.4)
         && a.shaft.diameterMm === b.shaft.diameterMm
         && (a.shaft.secondaryDiameterMm ?? a.shaft.diameterMm) === (b.shaft.secondaryDiameterMm ?? b.shaft.diameterMm)
         && a.shaft.isStraight === b.shaft.isStraight

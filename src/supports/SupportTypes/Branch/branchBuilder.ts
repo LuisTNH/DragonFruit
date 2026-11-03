@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { v4 as uuidv4 } from 'uuid';
 import { Branch, Joint, Knot, Segment, Vec3 } from '../../types';
 import type { ContactCone, SupportTipProfile } from '../../SupportPrimitives/ContactCone/types';
-import { getFinalSocketPosition } from '../../SupportPrimitives/ContactCone/contactConeUtils';
+import { getFinalSocketPosition, withTipType } from '../../SupportPrimitives/ContactCone/contactConeUtils';
 import { calculateDiskThickness } from '../../SupportPrimitives/ContactDisk/contactDiskUtils';
 // Direct, not through the barrel: the barrel re-exports renderers and their
 // React hooks, which a server route cannot import.
@@ -332,7 +332,7 @@ export function buildBranchData(input: BranchBuildInput): BranchBuildResult {
     });
 
     const effectiveConeAxis = coneAxis ?? tipNormal;
-    const tipProfile: SupportTipProfile = input.tipProfile ?? {
+    const tipProfile: SupportTipProfile = input.tipProfile ?? withTipType({
         type: 'disk',
         contactDiameterMm: input.tipContactDiameterMm ?? settings.tip.contactDiameterMm,
         bodyDiameterMm: settings.tip.bodyDiameterMm,
@@ -341,7 +341,7 @@ export function buildBranchData(input: BranchBuildInput): BranchBuildResult {
         diskThicknessMm: 0.1,
         maxStandoffMm: 1.5,
         standoffAngleThreshold: Math.PI / 4,
-    };
+    }, settings.tip);
 
     const shaftDiameter = input.shaftDiameterMm ?? settings.shaft.diameterMm;
     const jointDiameter = getJointDiameter(shaftDiameter);
