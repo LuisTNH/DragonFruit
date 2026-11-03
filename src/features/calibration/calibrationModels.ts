@@ -39,7 +39,7 @@ export const CALIBRATION_MODELS: readonly CalibrationModel[] = [
     name: 'AmeraLabs Town',
     maker: 'AmeraLabs',
     file: 'ameralabs-town.stl',
-    sourceUrl: 'https://ameralabs.com/blog/town-calibration-part/',
+    sourceUrl: 'https://www.printables.com/model/237684-ameralabs-town-calibration-for-sla-3d-printers',
   },
   {
     id: 'xp2-validation-matrix',
@@ -53,7 +53,7 @@ export const CALIBRATION_MODELS: readonly CalibrationModel[] = [
     name: 'Phrozen XP Finder',
     maker: 'Phrozen',
     file: 'phrozen-xp-finder.stl',
-    sourceUrl: 'https://pixup3d.com/posts/427',
+    sourceUrl: 'https://pixup3d.com/en/posts/427',
   },
   {
     id: 'siraya-tech-test-model',
