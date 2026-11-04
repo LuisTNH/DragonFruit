@@ -39,7 +39,7 @@
 import { footprintX, footprintY } from '@/volumeAnalysis/Islands/voxelFootprint';
 import type { DetectedIsland } from '@/volumeAnalysis/Islands/types';
 import type { Vec3 } from '../types';
-import { resolveSizingBand } from './parameterSizing';
+import { analyticTierBand } from './parameterSizing';
 import type { SizingPreset } from './settings';
 import type { LoadBudgetIsland, LoadBudgetReport } from './types';
 
@@ -96,11 +96,12 @@ function overlapFraction(cells: Set<number>, other: Set<number>): number {
  *  the cross-section of the tier its island falls in. This is a RELATIVE weight
  *  for the report, not the band the run sized with — that one is resolved from
  *  the Support Studio preset the settings name, the same for every support of a
- *  run. Both bands resolve through the same path, so an edited manual preset
- *  moves the weighting with the sizing. */
+ *  run. A borrowing run resolves both through the Support Studio presets, so an
+ *  edited manual preset moves the weighting with the sizing; a run with its own
+ *  profile weighs against the factory table (`analyticTierBand`). */
 function capacityFor(tier: SizingPreset, areaPerSupportMm2: number): number {
-    const baseline = resolveSizingBand('structure').shaftDiameterMm;
-    const band = resolveSizingBand(tier).shaftDiameterMm;
+    const baseline = analyticTierBand('structure').shaftDiameterMm;
+    const band = analyticTierBand(tier).shaftDiameterMm;
     return areaPerSupportMm2 * (band / baseline) ** 2;
 }
 

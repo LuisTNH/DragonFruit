@@ -2,8 +2,8 @@
 
 An auto-support preset file holds one named set of automatic support settings —
 the run policy a Generate Supports pass follows: support density, self-support
-angle, merge radius, fan limits and the sizing tier every shaft, tip and root is
-built from. Exporting a preset writes
+angle, merge radius, fan limits and the support profile every shaft, tip and
+root is built from (the preset's own, or the sizing tier it borrows). Exporting a preset writes
 one of these files; importing one adds the preset to your list and selects it.
 
 Files are plain JSON and safe to read, edit or hand to someone else.
@@ -20,7 +20,10 @@ Files are plain JSON and safe to read, edit or hand to someone else.
     "settings": {
       "areaPerSupportMm2": 5,
       "overhangSelfSupportAngleDeg": 45,
-      "sizingPreset": "anchor"
+      "ownGeometry": true,
+      "tipContactDiameterMm": 0.4,
+      "shaftDiameterMm": 1.4,
+      "rootDiameterMm": 2.3
     }
   }
 }
@@ -35,7 +38,9 @@ Files are plain JSON and safe to read, edit or hand to someone else.
 | `preset.settings` | The auto-support settings, as a JSON object |
 
 Only the fields shown are written. Nothing about the model is: a preset is a
-policy, not geometry.
+policy and a support profile, not model geometry. A file without `ownGeometry`
+(written before own profiles existed) borrows its profile from the Support Studio
+preset `sizingPreset` names, as it did.
 
 ## The version rule
 

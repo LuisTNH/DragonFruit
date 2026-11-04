@@ -674,6 +674,15 @@ swaps the live settings for the call without notifying the panel. Grid, the
 that names no preset leaves the live sections in place. Manual placement and
 editing a selected support read the live settings as before.
 
+**Own profiles end the coupling for a preset that wants out.** An auto-support
+block with `ownGeometry` carries its own tip, shaft, roots and base flare as flat
+keys and never reads a Support Studio preset; the built-ins ship that way. A block
+without it (every one written before the keys existed) still borrows, so the cost
+above now applies only to presets that choose it. The run's reference tiers
+(small-island tips, the load report's weights) follow the same rule through
+`analyticTierBand`: an own-profile run reads the factory `SIZING_BANDS`, a
+borrowing run the Support Studio presets.
+
 Known gap: the per-support settings code (`supportSettingsCodec.ts`) does not
 carry the shaft shape or joint, so a later rebuild of any support, manual or
 automatic, fills those two from the live settings.

@@ -8,7 +8,8 @@ placement pipeline is built:
 | --- | --- |
 | **Detection** | What counts as a surface needing support, and how close two detections may be before they merge |
 | **Distribution** | Where contacts land on a region, and how far a leaf may fan out from its trunk |
-| **Density & Sizing** | How many supports, how thick, and which Support Studio preset sizes them |
+| **Density & Sizing** | How many supports, and how thick overall |
+| **Support Profile** | The shape every support of the preset is built with: its own profile, or one borrowed from a Support Studio preset |
 | **Stability** | How the part is held against toppling and peel |
 | **Post-processing** | What happens after placement: how much one trunk may carry, and how completely gaps are filled |
 | **Diagnostics** | The debug switches and the last run's diagnostics, always on screen |
@@ -19,11 +20,18 @@ switch to, and the whole policy fits without one. Every field has a label, a ⓘ
 with its help text, and its own tooltip on hover. Numbers are typed or stepped
 with the field's own carets rather than dragged on a slider, and each one carries
 its unit in the label (`Min Island Size (mm²)`, `Fan Angle (°)`, `Coverage Target
-(%)`). A switch is a pill. **Sizing Tier** at the top of **Density & Sizing** is a
-dropdown of your Support Studio presets — the run builds with the one you pick:
-its tip, shaft, roots, base flare and joint. What you set in Support Studio for
-hand-placed supports does not change an automatic run, but editing that preset
-does.
+(%)`). A switch is a pill. **Support Profile** holds the shape of the supports.
+With **Own Profile** on, the preset carries its own tip contact, length
+and penetration, shaft diameter, root pad and base flare, set right there like a
+Support Studio preset, and nothing in Support Studio changes it. Light, Medium and
+Heavy ship with their own profiles, the numbers of the Detail, Structure and Anchor
+Support Studio presets. With **Own Profile** off, the card shows **Sizing Tier**
+instead, a dropdown of your Support Studio presets: the run then builds with the
+one you pick (its tip, shaft, roots, base flare and joint), so editing that preset
+changes what auto-support prints. Either way, what you set in Support Studio for
+hand-placed supports does not change an automatic run. The run still scales the
+profile (Support Size, height and load factors), so the profile is the starting
+point, not every support's exact size.
 
 **Edits are staged.** Changing a field or a switch in the dialog does nothing
 until you press **Apply**; **Cancel** discards the edits. Selecting a *preset* is

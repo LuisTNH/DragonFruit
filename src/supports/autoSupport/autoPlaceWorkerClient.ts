@@ -17,7 +17,7 @@ import { commitAutoPlacePlan, logAutoPlaceTimings, runAutoPlace } from './autoPl
 import * as THREE from 'three';
 import { getModelMesh } from './meshStore';
 import { autoSupportProfileSettings, resolvedSizingBandsForRun } from './parameterSizing';
-import type { AutoSupportSettings } from './settings';
+import { normalizeAutoSupportSettings, type AutoSupportSettings } from './settings';
 import type { AutoPlaceResult, AutoSupportPlan } from './types';
 import {
     modelMeshKey,
@@ -239,9 +239,12 @@ export async function runAutoPlaceInWorker(
             // the user made: every band the run can name is resolved here, where the
             // preset table is, and handed over with the request.
             sizingBands: resolvedSizingBandsForRun(sizingPresetId),
-            // Resolved here for the same reason: the run builds with its tier's
-            // whole Support Studio profile, not the live manual-placement sections.
-            appSettings: autoSupportProfileSettings(getSettings(), sizingPresetId),
+            // Resolved here for the same reason: the run builds with its own or its
+            // tier's support profile, not the live manual-placement sections.
+            appSettings: autoSupportProfileSettings(
+                getSettings(),
+                normalizeAutoSupportSettings({ ...getSettings().autoSupport, ...settingsOverride }),
+            ),
             baseState: getSnapshot(),
             ...serializeMeshForModel(modelId),
             ...serializeCavityForModel(modelId, cavityGeometry),

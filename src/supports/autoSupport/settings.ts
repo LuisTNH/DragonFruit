@@ -1,13 +1,18 @@
 import { MIN_LEAF_FAN_RADIUS_MM } from './constants';
+import {
+    DEFAULT_BASE_FLARE_DIAMETER_MM,
+    DEFAULT_BASE_FLARE_ENABLED,
+    DEFAULT_BASE_FLARE_HEIGHT_MM,
+} from '../Settings/defaults';
 
 /**
  * The seven numbers a run sizes every shaft, tip and root from — a Support
  * Studio preset's tip, shaft and roots, read as one band.
  *
- * They are not the auto-support block's own data: `autoSupport.sizingPreset`
- * names the Support Studio preset the run borrows them from, and the engine
- * resolves that id on every run. The coupling is deliberate — see the backlog
- * entry — so editing a manual preset changes what auto-support prints.
+ * A block with `ownGeometry` carries them itself (`tipContactDiameterMm` …).
+ * Otherwise `autoSupport.sizingPreset` names the Support Studio preset the run
+ * borrows them from, and the engine resolves that id on every run — see the
+ * backlog entry for that coupling and its cost.
  */
 export interface SizingBand {
     shaftDiameterMm: number;
@@ -115,6 +120,33 @@ export interface AutoSupportSettings {
      * structure band rather than failing the run.
      */
     sizingPreset: string;
+    /**
+     * The preset carries its own support profile (the `tip*`, `shaft*`, `root*`
+     * and `baseFlare*` keys below) instead of borrowing one from the Support
+     * Studio preset `sizingPreset` names. Off for a block written before the
+     * keys existed, so such a block keeps sizing as it did.
+     */
+    ownGeometry: boolean;
+    /** Own profile: contact diameter at the model (mm). */
+    tipContactDiameterMm: number;
+    /** Own profile: contact cone length (mm). */
+    tipLengthMm: number;
+    /** Own profile: how far the contact sinks into the model (mm). */
+    tipPenetrationMm: number;
+    /** Own profile: trunk shaft diameter (mm). */
+    shaftDiameterMm: number;
+    /** Own profile: root pad diameter (mm). */
+    rootDiameterMm: number;
+    /** Own profile: root pad disk height (mm). */
+    rootDiskHeightMm: number;
+    /** Own profile: root pad cone height (mm). */
+    rootConeHeightMm: number;
+    /** Own profile: flare where the trunk meets the root. */
+    baseFlareEnabled: boolean;
+    /** Own profile: base flare diameter (mm). */
+    baseFlareDiameterMm: number;
+    /** Own profile: base flare height (mm). */
+    baseFlareHeightMm: number;
     /** Leaf fanning: max horizontal reach from a trunk shaft (mm). */
     leafFanRadiusMm: number;
     /** Leaf fanning: max angle from vertical for a fan leaf (deg). */
@@ -186,6 +218,21 @@ export const DIAGNOSTIC_AUTO_SUPPORT_KEYS = [
 /** A key from {@link DIAGNOSTIC_AUTO_SUPPORT_KEYS}. */
 export type AutoSupportDiagnosticKey = (typeof DIAGNOSTIC_AUTO_SUPPORT_KEYS)[number];
 
+/** The keys of a block's own support profile, `ownGeometry` first. */
+export const OWN_PROFILE_KEYS = [
+    'ownGeometry',
+    'tipContactDiameterMm',
+    'tipLengthMm',
+    'tipPenetrationMm',
+    'shaftDiameterMm',
+    'rootDiameterMm',
+    'rootDiskHeightMm',
+    'rootConeHeightMm',
+    'baseFlareEnabled',
+    'baseFlareDiameterMm',
+    'baseFlareHeightMm',
+] as const satisfies readonly (keyof AutoSupportSettings)[];
+
 export type NumericConstraint = {
     min: number;
     max: number;
@@ -212,7 +259,16 @@ export type NumericAutoSupportSettingKey =
     | 'memberHostShaftRatio'
     | 'modelSizeFactorCap'
     | 'modelLoadFactorCap'
-    | 'heightFactorCap';
+    | 'heightFactorCap'
+    | 'tipContactDiameterMm'
+    | 'tipLengthMm'
+    | 'tipPenetrationMm'
+    | 'shaftDiameterMm'
+    | 'rootDiameterMm'
+    | 'rootDiskHeightMm'
+    | 'rootConeHeightMm'
+    | 'baseFlareDiameterMm'
+    | 'baseFlareHeightMm';
 
 export const AUTO_SUPPORT_CONSTRAINTS = {
     minIslandAreaMm2: { min: 0.01, max: 10, step: 0.01, defaultValue: 0.02 },
@@ -233,6 +289,17 @@ export const AUTO_SUPPORT_CONSTRAINTS = {
     modelSizeFactorCap: { min: 1, max: 2, step: 0.05, defaultValue: 1.45 },
     modelLoadFactorCap: { min: 1, max: 2, step: 0.05, defaultValue: 1.3 },
     heightFactorCap: { min: 1, max: 2, step: 0.05, defaultValue: 1.35 },
+    // Own profile. Defaults are the factory `structure` profile, so switching a
+    // block's own profile on starts from what Medium printed.
+    tipContactDiameterMm: { min: MIN_CONTACT_TIP_DIAMETER_MM, max: 2, step: 0.01, defaultValue: SIZING_BANDS.structure.tipContactDiameterMm },
+    tipLengthMm: { min: 0.5, max: 10, step: 0.1, defaultValue: SIZING_BANDS.structure.tipLengthMm },
+    tipPenetrationMm: { min: 0, max: 1, step: 0.01, defaultValue: SIZING_BANDS.structure.tipPenetrationMm },
+    shaftDiameterMm: { min: 0.2, max: 5, step: 0.05, defaultValue: SIZING_BANDS.structure.shaftDiameterMm },
+    rootDiameterMm: { min: 0.5, max: 10, step: 0.1, defaultValue: SIZING_BANDS.structure.rootDiameterMm },
+    rootDiskHeightMm: { min: 0, max: 5, step: 0.1, defaultValue: SIZING_BANDS.structure.rootDiskHeightMm },
+    rootConeHeightMm: { min: 0, max: 10, step: 0.1, defaultValue: SIZING_BANDS.structure.rootConeHeightMm },
+    baseFlareDiameterMm: { min: 0.5, max: 10, step: 0.1, defaultValue: DEFAULT_BASE_FLARE_DIAMETER_MM },
+    baseFlareHeightMm: { min: 0, max: 10, step: 0.1, defaultValue: DEFAULT_BASE_FLARE_HEIGHT_MM },
 } satisfies Record<NumericAutoSupportSettingKey, NumericConstraint>;
 
 function precisionFromStep(step: number): number {
@@ -280,6 +347,17 @@ export function createDefaultAutoSupportSettings(): AutoSupportSettings {
         suctionAreaExponent: AUTO_SUPPORT_CONSTRAINTS.suctionAreaExponent.defaultValue,
         coverageTargetPercent: AUTO_SUPPORT_CONSTRAINTS.coverageTargetPercent.defaultValue,
         sizingPreset: 'structure',
+        ownGeometry: false,
+        tipContactDiameterMm: AUTO_SUPPORT_CONSTRAINTS.tipContactDiameterMm.defaultValue,
+        tipLengthMm: AUTO_SUPPORT_CONSTRAINTS.tipLengthMm.defaultValue,
+        tipPenetrationMm: AUTO_SUPPORT_CONSTRAINTS.tipPenetrationMm.defaultValue,
+        shaftDiameterMm: AUTO_SUPPORT_CONSTRAINTS.shaftDiameterMm.defaultValue,
+        rootDiameterMm: AUTO_SUPPORT_CONSTRAINTS.rootDiameterMm.defaultValue,
+        rootDiskHeightMm: AUTO_SUPPORT_CONSTRAINTS.rootDiskHeightMm.defaultValue,
+        rootConeHeightMm: AUTO_SUPPORT_CONSTRAINTS.rootConeHeightMm.defaultValue,
+        baseFlareEnabled: DEFAULT_BASE_FLARE_ENABLED,
+        baseFlareDiameterMm: AUTO_SUPPORT_CONSTRAINTS.baseFlareDiameterMm.defaultValue,
+        baseFlareHeightMm: AUTO_SUPPORT_CONSTRAINTS.baseFlareHeightMm.defaultValue,
         leafFanRadiusMm: AUTO_SUPPORT_CONSTRAINTS.leafFanRadiusMm.defaultValue,
         leafFanMaxAngleDeg: AUTO_SUPPORT_CONSTRAINTS.leafFanMaxAngleDeg.defaultValue,
         tipContactMarginScale: AUTO_SUPPORT_CONSTRAINTS.tipContactMarginScale.defaultValue,
@@ -317,6 +395,17 @@ export function normalizeAutoSupportSettings(input?: Partial<AutoSupportSettings
         suctionAreaExponent: clampNumeric(source.suctionAreaExponent, AUTO_SUPPORT_CONSTRAINTS.suctionAreaExponent),
         coverageTargetPercent: clampNumeric(source.coverageTargetPercent, AUTO_SUPPORT_CONSTRAINTS.coverageTargetPercent),
         sizingPreset: normalizeSizingPreset(source.sizingPreset, defaults.sizingPreset),
+        ownGeometry: normalizeBoolean(source.ownGeometry, defaults.ownGeometry),
+        tipContactDiameterMm: clampNumeric(source.tipContactDiameterMm, AUTO_SUPPORT_CONSTRAINTS.tipContactDiameterMm),
+        tipLengthMm: clampNumeric(source.tipLengthMm, AUTO_SUPPORT_CONSTRAINTS.tipLengthMm),
+        tipPenetrationMm: clampNumeric(source.tipPenetrationMm, AUTO_SUPPORT_CONSTRAINTS.tipPenetrationMm),
+        shaftDiameterMm: clampNumeric(source.shaftDiameterMm, AUTO_SUPPORT_CONSTRAINTS.shaftDiameterMm),
+        rootDiameterMm: clampNumeric(source.rootDiameterMm, AUTO_SUPPORT_CONSTRAINTS.rootDiameterMm),
+        rootDiskHeightMm: clampNumeric(source.rootDiskHeightMm, AUTO_SUPPORT_CONSTRAINTS.rootDiskHeightMm),
+        rootConeHeightMm: clampNumeric(source.rootConeHeightMm, AUTO_SUPPORT_CONSTRAINTS.rootConeHeightMm),
+        baseFlareEnabled: normalizeBoolean(source.baseFlareEnabled, defaults.baseFlareEnabled),
+        baseFlareDiameterMm: clampNumeric(source.baseFlareDiameterMm, AUTO_SUPPORT_CONSTRAINTS.baseFlareDiameterMm),
+        baseFlareHeightMm: clampNumeric(source.baseFlareHeightMm, AUTO_SUPPORT_CONSTRAINTS.baseFlareHeightMm),
         leafFanRadiusMm: clampNumeric(source.leafFanRadiusMm, AUTO_SUPPORT_CONSTRAINTS.leafFanRadiusMm),
         leafFanMaxAngleDeg: clampNumeric(source.leafFanMaxAngleDeg, AUTO_SUPPORT_CONSTRAINTS.leafFanMaxAngleDeg),
         tipContactMarginScale: clampNumeric(source.tipContactMarginScale, AUTO_SUPPORT_CONSTRAINTS.tipContactMarginScale),

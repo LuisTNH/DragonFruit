@@ -23,12 +23,24 @@ These are **two systems**, and neither store knows the other exists:
 | UX | pinned slots, hotkeys, reordering, one selection driving the whole settings panel | pick per run, save / revert, import / export |
 
 They have no shared storage, state, ids or functions. Support Studio's presets
-keep excluding `autoSupport`, and an auto-support preset carries no geometry: its
-`sizingPreset` is the id of the Support Studio preset the run borrows its tip,
-shaft and roots from, resolved at run time, and the run builds with the rest of
-that preset's geometry too (base flare, joint and cone mode), never with
-the live sections manual placement uses (`autoSupportProfileSettings`). That one
-read is the coupling the user chose — see [backlog.md](backlog.md) for the decision and its cost. A payload
+keep excluding `autoSupport`. An auto-support preset carries its support profile
+in its own block when `ownGeometry` is on (`tipContactDiameterMm`,
+`tipLengthMm`, `tipPenetrationMm`, `shaftDiameterMm`, `root*`, `baseFlare*`,
+flat keys like every other, so draft, save, dirtiness and export need nothing
+new); the three built-ins ship that way with the factory Detail / Structure /
+Anchor numbers (`OWN_PROFILE_KEYS` lists them).
+Applying a preset writes its **whole** normalized block (the diagnostics excepted),
+so a key the payload lacks takes its default instead of the previous preset's
+value; a pre-profile preset applied after a built-in therefore borrows again
+rather than keeping the built-in's profile. A stored built-in block without
+`ownGeometry` (an install that ran an older build) is given the factory built-in's
+profile keys on load. With `ownGeometry` off (the default, and every block written
+before the keys existed) its `sizingPreset` is the id of the Support Studio preset
+the run borrows its tip, shaft and roots from, resolved at run time, and the run
+builds with the rest of that preset's geometry too (base flare, joint and
+cone mode). Either way the run never builds with the live sections manual placement
+uses (`autoSupportProfileSettings`). The borrowing read is the coupling the user
+chose — see [backlog.md](backlog.md) for the decision and its cost. A payload
 written by the band-as-data build carries a `sizingBand` object instead; the store
 runs `migrateLegacySizingPreset` (from `src/supports/autoSupport/settings.ts`) over
 a payload as it adopts it and over an imported file, so the band maps back to the

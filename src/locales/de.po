@@ -595,15 +595,15 @@ msgstr ""
 msgid "3MF Mesh (.3mf)"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:639
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:640
 msgid "A built-in preset cannot be saved over — Duplicate it to make it yours"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:374
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:375
 msgid "A built-in's name is translated and cannot be renamed"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:146
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:155
 msgid "A candidate within this 3D distance of an existing support merges into it instead of starting a new trunk"
 msgstr ""
 
@@ -706,7 +706,7 @@ msgctxt "Undo history entry"
 msgid "Add branch"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:196
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:217
 msgid "Add contacts along the edge or corner a pose bears on, so a leaning part is held against toppling and peel (default on)"
 msgstr ""
 
@@ -821,7 +821,7 @@ msgctxt "Undo history entry"
 msgid "Adjust curve tension"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:92
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:99
 msgid "Advanced (calibration)"
 msgstr ""
 
@@ -1232,16 +1232,16 @@ msgstr ""
 msgid "Auto-Repairing Meshes…"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:346
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:347
 #: src/components/controls/autoSupport/AutoSupportPresetSelect.tsx:85
 msgid "Auto-support preset"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:433
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:434
 msgid "Auto-support preset file"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:346
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:347
 msgid "Auto-support preset, modified"
 msgstr ""
 
@@ -1442,7 +1442,7 @@ msgstr ""
 msgid "Balanced"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:247
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:268
 msgid "Balanced supports — the structure sizing band"
 msgstr ""
 
@@ -1450,6 +1450,7 @@ msgstr ""
 msgid "Balanced supports for general use"
 msgstr ""
 
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:216
 #: src/supports/Settings/components/BaseFlareSettingsCard.tsx:19
 msgid "Base Flare"
 msgstr ""
@@ -1548,7 +1549,7 @@ msgstr ""
 msgid "Bracing supports"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:160
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:179
 msgid "Branches per Column"
 msgstr ""
 
@@ -1623,7 +1624,7 @@ msgstr ""
 msgid "Built for Multi-Material"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:285
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:286
 #: src/components/controls/autoSupport/AutoSupportPresetSelect.tsx:57
 #: src/components/controls/autoSupport/AutoSupportSizingTierField.tsx:110
 #: src/components/settings/PluginsSettingsTab.tsx:1395
@@ -1634,7 +1635,7 @@ msgstr ""
 msgid "Built-in plugin"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:608
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:609
 msgid "Built-in presets cannot be deleted"
 msgstr ""
 
@@ -1670,8 +1671,8 @@ msgstr ""
 
 #: src/app/page.tsx:11971
 #: src/app/page.tsx:12020
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:470
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:666
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:471
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:667
 #: src/components/controls/AutoSupportPanel.tsx:563
 #: src/components/controls/IslandScanCard.tsx:184
 #: src/components/controls/IslandsPanel.tsx:304
@@ -1789,15 +1790,15 @@ msgctxt "Undo history entry"
 msgid "Cavity hollowing"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:178
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:197
 msgid "Ceiling of the height factor for a tall column, whose buckling load falls with height. The default, 1.35, bounds how much a tall support thickens."
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:177
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:196
 msgid "Ceiling of the load factor derived from resin mass per support. The default, 1.3, bounds how much a heavy part's shafts thicken."
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:176
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:195
 msgid "Ceiling of the size factor derived from the model's bounding-box diagonal. The default, 1.45, bounds how much a large part's shafts thicken."
 msgstr ""
 
@@ -2510,6 +2511,10 @@ msgstr ""
 msgid "Contact Diameter"
 msgstr ""
 
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:167
+msgid "Contact diameter where the tip touches the model, before the run's angle and size factors"
+msgstr ""
+
 #: src/supports/Settings/components/TipSettingsCard.tsx:43
 msgid "Contact Disk"
 msgstr ""
@@ -2591,7 +2596,7 @@ msgstr ""
 msgid "Copy the Client ID and Client Secret into your local <0>.env</0>."
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:390
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:391
 msgid "Copy the selected preset under a new name"
 msgstr ""
 
@@ -2616,7 +2621,7 @@ msgstr ""
 msgid "Could not reopen this file from cache."
 msgstr "Diese Datei konnte nicht aus dem Cache erneut geöffnet werden."
 
-#: src/features/scene/useSceneCollectionManager.ts:8163
+#: src/features/scene/useSceneCollectionManager.ts:8171
 msgid "Could not restore the model."
 msgstr ""
 
@@ -2642,7 +2647,7 @@ msgstr ""
 msgid "Coverage"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:161
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:180
 msgid "Coverage Target"
 msgstr ""
 
@@ -2650,7 +2655,7 @@ msgstr ""
 msgid "Crash Recovery"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:483
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:484
 #: src/features/slicing/components/LutCurveEditor.tsx:1509
 msgid "Create"
 msgstr ""
@@ -2679,11 +2684,11 @@ msgstr ""
 msgid "Create new LUT curve profile"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:453
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:454
 msgid "Create preset"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:479
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:480
 msgid "Create the preset and select it"
 msgstr ""
 
@@ -2752,7 +2757,7 @@ msgstr ""
 msgid "Curves"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:285
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:286
 #: src/components/controls/autoSupport/AutoSupportPresetSelect.tsx:57
 #: src/components/controls/autoSupport/AutoSupportSizingTierField.tsx:110
 #: src/features/slicing/components/LutCurveEditor.tsx:1564
@@ -2829,23 +2834,23 @@ msgstr ""
 msgid "Dashboard View"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:219
+#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:255
 msgid "Debug Mode"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:198
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:219
 msgid "Debug: color supports by origin — stump (red), overhang (orange), island (blue), standalone (purple), reinforcement (teal)"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:189
+#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:225
 msgid "Debug: show the last run's sizing factors and forest report in the panel"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:188
+#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:224
 msgid "Debug: simplified support render — contact disks/cones plus line vectors instead of full shafts"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:199
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:220
 msgid "Debug: skip automatic bracing for this run"
 msgstr ""
 
@@ -2901,8 +2906,8 @@ msgctxt "Mesh analysis row"
 msgid "Degenerate tris"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:612
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:681
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:613
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:682
 #: src/components/settings/LocalBackupsSettingsTab.tsx:999
 #: src/components/ui/EditorContextMenu.tsx:116
 #: src/features/slicing/components/LutCurveEditor.tsx:1746
@@ -2916,7 +2921,7 @@ msgstr "Löschen"
 msgid "Delete “{name}”?"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:132
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:133
 #: src/supports/Settings/presetMessages.ts:46
 msgid "Delete \"{presetName}\"?"
 msgstr ""
@@ -2986,8 +2991,8 @@ msgstr ""
 msgid "Delete plate #{plateId}"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:652
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:679
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:653
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:680
 #: src/supports/Settings/components/PresetSelector.tsx:857
 msgid "Delete preset"
 msgstr ""
@@ -3019,7 +3024,7 @@ msgctxt "Undo history entry"
 msgid "Delete supports of {modelName}"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:609
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:610
 msgid "Delete the selected preset"
 msgstr ""
 
@@ -3057,11 +3062,11 @@ msgstr ""
 msgid "Deleted files cannot be restored from this monitor."
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:248
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:269
 msgid "Dense supports — the anchor sizing band"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:67
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:68
 msgid "Density & Sizing"
 msgstr ""
 
@@ -3113,7 +3118,7 @@ msgstr ""
 msgid "Detecting model…"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:55
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:56
 msgid "Detection"
 msgstr ""
 
@@ -3121,7 +3126,7 @@ msgstr ""
 msgid "Device still processing"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:242
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:263
 msgid "Diagnostics"
 msgstr ""
 
@@ -3133,6 +3138,14 @@ msgstr ""
 #: src/supports/Settings/components/RootsSettingsCard.tsx:24
 #: src/supports/Settings/components/ShaftSettingsCard.tsx:25
 msgid "Diameter"
+msgstr ""
+
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:174
+msgid "Diameter of the flare where the trunk meets the root"
+msgstr ""
+
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:171
+msgid "Diameter of the pad on the build plate"
 msgstr ""
 
 #: src/components/settings/profileFormAtoms.tsx:941
@@ -3168,7 +3181,7 @@ msgstr ""
 msgid "Discard every loop in this cut, not just the active one."
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:625
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:626
 msgid "Discard the edits made in this dialog and reload the selected preset"
 msgstr ""
 
@@ -3214,7 +3227,7 @@ msgstr ""
 msgid "Display: {0} × {1}{2}"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:61
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:62
 msgid "Distribution"
 msgstr ""
 
@@ -3367,7 +3380,7 @@ msgstr ""
 msgid "Drop supported files to import"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:393
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:394
 #: src/components/controls/toolRailEntries.ts:59
 msgid "Duplicate"
 msgstr ""
@@ -3536,7 +3549,7 @@ msgstr ""
 msgid "Enable Visuals"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:194
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:213
 msgid "Enabled"
 msgstr ""
 
@@ -3674,7 +3687,7 @@ msgstr ""
 msgid "Expert"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:409
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:410
 #: src/components/layout/TopBar.tsx:606
 #: src/features/export/components/ExportPanel.tsx:532
 #: src/features/export/components/ExportPanel.tsx:554
@@ -3728,7 +3741,7 @@ msgstr ""
 msgid "Export selected curve"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:406
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:407
 msgid "Export the selected preset as a JSON file"
 msgstr ""
 
@@ -3851,11 +3864,11 @@ msgstr ""
 msgid "Failed to start OAuth."
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:149
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:158
 msgid "Fan Angle"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:148
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:157
 msgid "Fan Reach"
 msgstr ""
 
@@ -3963,15 +3976,27 @@ msgstr ""
 msgid "Fixing geometry issues."
 msgstr ""
 
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:174
+msgid "Flare Diameter"
+msgstr ""
+
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:175
+msgid "Flare Height"
+msgstr ""
+
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:216
+msgid "Flare the trunk where it meets the root"
+msgstr ""
+
 #: src/features/organicCut/OrganicCutPanel.tsx:468
 msgid "Flat"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:154
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:163
 msgid "Flat Boost"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:153
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:162
 msgid "Flat regions at/above this area get a full grid; smaller regions get a single support"
 msgstr ""
 
@@ -4091,7 +4116,7 @@ msgstr ""
 msgid "Generate Supports"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:194
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:213
 msgid "Generate supports automatically on scan"
 msgstr ""
 
@@ -4165,15 +4190,15 @@ msgstr ""
 msgid "Grid infill trunks"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:154
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:163
 msgid "Grid spacing on flat ceilings — lower = denser supports on anchor surfaces (0.7 = ~2× the supports)"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:155
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:164
 msgid "Grid spacing on slopes at the self-support angle — higher = sparser"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:153
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:162
 msgid "Grid Threshold"
 msgstr ""
 
@@ -4230,7 +4255,7 @@ msgstr ""
 msgid "Height"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:178
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:197
 msgid "Height Factor Cap"
 msgstr ""
 
@@ -4243,11 +4268,23 @@ msgstr ""
 msgid "Height mm"
 msgstr ""
 
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:173
+msgid "Height of the cone from the root pad up to the shaft"
+msgstr ""
+
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:175
+msgid "Height of the flare where the trunk meets the root"
+msgstr ""
+
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:172
+msgid "Height of the flat disk of the root pad"
+msgstr ""
+
 #: src/components/controls/ModelStatsCard.tsx:601
 msgid "Height:"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:74
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:81
 msgid "Held against toppling and peel"
 msgstr ""
 
@@ -4396,23 +4433,27 @@ msgctxt "Preview state"
 msgid "hovered"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:63
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:64
 msgid "How a region's contacts scatter across it, and how far leaves fan out from a trunk"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:69
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:70
 msgid "How dense and how thick the supports are"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:68
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:169
+msgid "How far the contact sinks into the model"
+msgstr ""
+
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:69
 msgid "How many supports, and how thick"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:161
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:180
 msgid "How much of each region's footprint the grid must cover before gap-filling stops"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:174
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:193
 msgid "How much of the free width a contact tip may occupy. The default, 0.9, keeps the disc just inside the feature it lands on; lower values shrink every tip on a feature narrower than the band tip."
 msgstr ""
 
@@ -4424,11 +4465,11 @@ msgstr ""
 msgid "How smooth/taut the curved cutter surface is — contour cut only."
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:156
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:165
 msgid "How strongly flat density grows with region area — large shallow ceilings carry more peel. 0 = off"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:75
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:82
 msgid "How the part is held against toppling and peel — self-support angle, stabilization anchors and minima reinforcement"
 msgstr ""
 
@@ -4512,7 +4553,7 @@ msgstr ""
 msgid "If you want them, a few follow-up notes are tucked below."
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:425
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:426
 #: src/features/slicing/components/LutCurveEditor.tsx:1335
 msgid "Import"
 msgstr ""
@@ -4522,7 +4563,7 @@ msgctxt "plugin capability"
 msgid "Import"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:422
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:423
 msgid "Import a preset from a JSON file, and apply it"
 msgstr ""
 
@@ -4840,7 +4881,7 @@ msgstr ""
 msgid "Islands"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:195
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:214
 msgid "Islands found by BOTH the slice and mesh scans are placed first (they are the most certain)"
 msgstr ""
 
@@ -4964,7 +5005,7 @@ msgstr ""
 msgid "Keep the Multi-Tank printer"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:664
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:665
 msgid "Keep the preset"
 msgstr ""
 
@@ -5131,7 +5172,7 @@ msgstr ""
 msgid "Leaf Fanning: Click a support shaft to lock anchor knot"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:175
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:194
 msgid "Least diameter a branch or leaf takes as a fraction of the trunk it grows from. The default, 0.7, keeps a hosted member a step below its host instead of a needle beside it."
 msgstr ""
 
@@ -5139,7 +5180,7 @@ msgstr ""
 msgid "Least Scarring"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:468
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:469
 msgid "Leave the collection as it is"
 msgstr ""
 
@@ -5155,6 +5196,10 @@ msgstr ""
 
 #: src/supports/Settings/components/TipSettingsCard.tsx:114
 msgid "Length"
+msgstr ""
+
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:168
+msgid "Length of the contact cone between the model and the shaft"
 msgstr ""
 
 #: src/components/settings/PluginsSettingsTab.tsx:1461
@@ -5527,11 +5572,11 @@ msgstr ""
 msgid "Mark Recovery Clean"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:152
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:161
 msgid "Master multiplier over the preset sizing bands — thicker or thinner everywhere"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:211
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:232
 msgid "Master switch for the run-level size, load and height factors. Off pins all three to ×1, so sizing is the active band plus the local terms alone (default: on)."
 msgstr ""
 
@@ -5576,7 +5621,7 @@ msgstr ""
 msgid "Max Angle"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:149
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:158
 msgid "Max angle from vertical for fan-out leaves"
 msgstr ""
 
@@ -5589,11 +5634,11 @@ msgstr ""
 msgid "Max Brace Distance"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:160
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:179
 msgid "Max branches + leaves one trunk may carry before new trunks are started — the cap on chunk consolidation"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:148
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:157
 msgid "Max horizontal distance a fan-out leaf may span from a trunk shaft"
 msgstr ""
 
@@ -5623,11 +5668,11 @@ msgctxt "auto-support preset"
 msgid "Medium"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:175
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:194
 msgid "Member / Host Ratio"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:146
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:155
 msgid "Merge Radius"
 msgstr ""
 
@@ -5717,7 +5762,7 @@ msgstr ""
 msgid "Min Area: 0"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:145
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:154
 msgid "Min Island Size"
 msgstr ""
 
@@ -5739,7 +5784,7 @@ msgstr ""
 msgid "Minima"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:197
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:218
 msgid "Minima Reinforcement"
 msgstr ""
 
@@ -5806,7 +5851,7 @@ msgstr ""
 msgid "Model details"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:177
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:196
 msgid "Model Load Cap"
 msgstr ""
 
@@ -5814,7 +5859,7 @@ msgstr ""
 msgid "Model size"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:176
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:195
 msgid "Model Size Cap"
 msgstr ""
 
@@ -5831,7 +5876,7 @@ msgstr ""
 msgid "Model volume"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:210
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:231
 msgid "Model-Scale Sizing"
 msgstr ""
 
@@ -6033,14 +6078,14 @@ msgstr ""
 msgid "New LUT Curve"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:95
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:454
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:96
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:455
 #: src/supports/Settings/components/PresetSelector.tsx:597
 #: src/supports/Settings/components/PresetSelector.tsx:803
 msgid "New Preset"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:98
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:99
 msgid "New preset…"
 msgstr ""
 
@@ -6098,7 +6143,7 @@ msgstr ""
 msgid "No autosave manifest found"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:199
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:220
 msgid "No Brace"
 msgstr ""
 
@@ -6263,7 +6308,7 @@ msgstr ""
 msgid "No snapshots yet. Run \"Backup Now\" to create your first local snapshot."
 msgstr ""
 
-#: src/features/scene/useSceneCollectionManager.ts:8136
+#: src/features/scene/useSceneCollectionManager.ts:8144
 msgid "No source file to restore this model from."
 msgstr ""
 
@@ -6495,6 +6540,10 @@ msgstr "Auf Fläche"
 msgid "On, the selected models are lifted to this distance and keep it through moves, rotations and scaling. Off, they return to the height they were lifted from; Drop puts them on the plate."
 msgstr ""
 
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:215
+msgid "On: this preset carries its own tip, shaft, roots and flare. Off: it borrows them from the Support Studio preset chosen under Sizing Tier"
+msgstr ""
+
 #: src/components/settings/BackupsSettingsTab.tsx:962
 msgid "Onboarding"
 msgstr ""
@@ -6692,7 +6741,7 @@ msgstr ""
 msgid "Origin"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:198
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:219
 msgid "Origin Colors"
 msgstr ""
 
@@ -6779,6 +6828,14 @@ msgstr ""
 msgid "Overwrite the preset <0>{0}</0> with the current scene settings?"
 msgstr ""
 
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:273
+msgid "Own profile"
+msgstr ""
+
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:215
+msgid "Own Profile"
+msgstr ""
+
 #: src/components/settings/ProfileSettingsModal.tsx:138
 msgid "Owned by {ownerName}"
 msgstr ""
@@ -6828,7 +6885,7 @@ msgstr ""
 msgid "Parts of this mesh are not closed — edges are left open, faces cross through each other, or surfaces do not quite meet. Slicing and support placement expect a sealed solid, so defects can reach the print without showing up here first."
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:81
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:88
 msgid "Passes that run after placement — how much one trunk may carry, and the coverage the gap-filler must reach"
 msgstr ""
 
@@ -7094,7 +7151,7 @@ msgstr ""
 msgid "Positioning models and validating placement."
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:79
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:86
 msgid "Post-processing"
 msgstr ""
 
@@ -7159,8 +7216,8 @@ msgstr ""
 msgid "Preset has unsaved changes"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:493
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:507
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:494
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:508
 msgid "Preset name"
 msgstr ""
 
@@ -7333,7 +7390,7 @@ msgctxt "Title of the panel with the sliced file and its print actions"
 msgid "Printing"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:195
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:214
 msgid "Prioritize Dual"
 msgstr ""
 
@@ -7400,7 +7457,7 @@ msgstr ""
 msgid "Progress"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:151
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:160
 msgid "Projected area each support carries — smaller = more, tighter supports (grid spacing ≈ √value)"
 msgstr ""
 
@@ -7670,11 +7727,11 @@ msgstr ""
 msgid "Remesh confirmation"
 msgstr ""
 
-#: src/features/scene/useSceneCollectionManager.ts:8327
+#: src/features/scene/useSceneCollectionManager.ts:8335
 msgid "Remesh failed: {message}"
 msgstr ""
 
-#: src/features/scene/useSceneCollectionManager.ts:8300
+#: src/features/scene/useSceneCollectionManager.ts:8308
 msgid "Remesh needs the desktop app."
 msgstr ""
 
@@ -7834,7 +7891,7 @@ msgstr ""
 msgid "Removing faces inside the model"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:378
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:379
 #: src/features/slicing/components/LutCurveEditor.tsx:1314
 #: src/supports/Settings/components/PresetSelector.tsx:598
 msgid "Rename"
@@ -7875,13 +7932,13 @@ msgstr ""
 msgid "Rename plate"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:453
 #: src/components/controls/autoSupport/AutoSupportPresets.tsx:454
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:455
 msgid "Rename Preset"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:375
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:480
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:376
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:481
 msgid "Rename the selected preset"
 msgstr ""
 
@@ -8031,7 +8088,7 @@ msgstr ""
 msgid "Requires connected printer with supported upload capability and a generated print file"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:628
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:629
 #: src/features/hole-punching/HolePunchPanel.tsx:242
 #: src/features/hollowing/HollowingPanel.tsx:332
 #: src/features/organicCut/OrganicCutPanel.tsx:759
@@ -8224,7 +8281,7 @@ msgstr ""
 msgid "Right-click to add · Drag to move · Use inspector to remove"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:197
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:218
 msgid "Ring each mesh minima with contacts on its own flank, so a section starts on a base instead of a needle (default on)"
 msgstr ""
 
@@ -8233,11 +8290,20 @@ msgstr ""
 msgid "Roads? Where we're printing, we don't need roads."
 msgstr "Straßen? Dort, wo wir drucken, brauchen wir keine Straßen."
 
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:173
+msgid "Root Cone Height"
+msgstr ""
+
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:171
+msgid "Root Diameter"
+msgstr ""
+
 #. Abbreviated label for the root disk height, in a three-column grid of narrow number inputs. Keep it short.
 #: src/supports/Settings/components/RootsSettingsCard.tsx:32
 msgid "Root Disk H"
 msgstr ""
 
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:172
 #: src/supports/Settings/SupportSidebar.tsx:962
 #: src/supports/Settings/SupportSidebar.tsx:1120
 #: src/supports/Settings/SupportSidebar.tsx:1120
@@ -8339,7 +8405,7 @@ msgstr ""
 msgid "Samples"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:645
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:646
 #: src/features/slicing/components/LutCurveEditor.tsx:1475
 #: src/supports/Settings/components/PresetSelector.tsx:844
 msgid "Save"
@@ -8377,7 +8443,7 @@ msgstr ""
 msgid "Save Material"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:483
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:484
 #: src/features/slicing/components/LutCurveEditor.tsx:1653
 msgid "Save Name"
 msgstr ""
@@ -8411,7 +8477,7 @@ msgstr ""
 msgid "Save webcam snapshot"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:637
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:638
 #: src/supports/Settings/SupportSidebar.tsx:1176
 msgid "Saved"
 msgstr ""
@@ -8429,7 +8495,7 @@ msgstr ""
 msgid "Saved to: {path}"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:645
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:646
 msgid "Saved!"
 msgstr ""
 
@@ -8829,7 +8895,7 @@ msgctxt "Mesh analysis row"
 msgid "Self-intersections"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:158
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:177
 msgid "Self-Support Angle"
 msgstr ""
 
@@ -8948,6 +9014,10 @@ msgstr ""
 
 #: src/supports/Settings/components/ShaftSettingsCard.tsx:20
 msgid "Shaft"
+msgstr ""
+
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:170
+msgid "Shaft Diameter"
 msgstr ""
 
 #: src/components/controls/autoSupport/AutoSupportRunDiagnostics.tsx:73
@@ -9116,11 +9186,11 @@ msgstr ""
 msgid "Shrink-Wrap confirmation"
 msgstr ""
 
-#: src/features/scene/useSceneCollectionManager.ts:8381
+#: src/features/scene/useSceneCollectionManager.ts:8389
 msgid "Shrink-Wrap failed: {message}"
 msgstr ""
 
-#: src/features/scene/useSceneCollectionManager.ts:8354
+#: src/features/scene/useSceneCollectionManager.ts:8362
 msgid "Shrink-Wrap needs the desktop app."
 msgstr ""
 
@@ -9166,7 +9236,7 @@ msgstr ""
 msgid "Signing key"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:208
+#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:244
 msgid "Simplified"
 msgstr ""
 
@@ -9186,11 +9256,11 @@ msgstr ""
 msgid "Sizing factors"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:253
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:277
 msgid "Sizing Tier"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:145
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:154
 msgid "Skip detected areas smaller than this — tiny specks rarely need supports"
 msgstr ""
 
@@ -9281,7 +9351,7 @@ msgstr ""
 msgid "Slicing…"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:155
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:164
 msgid "Slope Relax"
 msgstr ""
 
@@ -9370,7 +9440,7 @@ msgstr ""
 msgid "Source"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:246
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:267
 msgid "Sparse supports — the detail sizing band"
 msgstr ""
 
@@ -9435,7 +9505,7 @@ msgstr ""
 msgid "Sponsors"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:73
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:80
 msgid "Stability"
 msgstr ""
 
@@ -9443,7 +9513,7 @@ msgstr ""
 msgid "Stability Warning"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:196
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:217
 msgid "Stabilization Anchors"
 msgstr ""
 
@@ -9582,7 +9652,7 @@ msgstr ""
 msgid "Successfully oriented {modelName}"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:156
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:165
 msgid "Suction Scale"
 msgstr ""
 
@@ -9606,7 +9676,7 @@ msgstr ""
 msgid "Support buffer"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:151
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:160
 msgid "Support Density"
 msgstr ""
 
@@ -9626,12 +9696,16 @@ msgstr ""
 msgid "Support placement is outside the build volume."
 msgstr ""
 
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:74
+msgid "Support Profile"
+msgstr ""
+
 #. Tool rail entry in Support mode. Selecting it shows the support parameter sidebar (tip, shaft, roots, bracing).
 #: src/components/controls/toolRailEntries.ts:174
 msgid "Support settings and presets"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:152
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:161
 msgid "Support Size"
 msgstr ""
 
@@ -9680,7 +9754,7 @@ msgstr ""
 msgid "Surface Priority Mode"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:158
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:177
 msgid "Surfaces flatter than this angle get supports (resin standard: 45°). Higher = fewer, mostly on the steepest parts."
 msgstr ""
 
@@ -9868,7 +9942,7 @@ msgstr "Das Druckvolumen vermisst dich."
 msgid "The contour membrane and the flat cut plane."
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:456
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:457
 msgid "The current settings are saved under this name, and it becomes the selected preset."
 msgstr ""
 
@@ -9933,7 +10007,7 @@ msgstr ""
 msgid "The package, its extracted payload and its stored key are deleted. Re-importing needs the passphrase again."
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:80
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:87
 msgid "The passes after placement"
 msgstr ""
 
@@ -9953,7 +10027,7 @@ msgstr ""
 msgid "The point you clicked."
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:687
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:688
 msgid "The preset is removed from the list. The current settings are left as they are."
 msgstr ""
 
@@ -10009,7 +10083,7 @@ msgstr ""
 msgid "The resin is ready. Are you?"
 msgstr "Das Harz ist bereit. Sind Sie es auch?"
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:349
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:350
 msgid "The saved run policy the settings below are. Selecting one applies it immediately; the rest of the dialog stays staged until you save."
 msgstr ""
 
@@ -10029,7 +10103,7 @@ msgstr ""
 msgid "The selected plate will begin printing immediately on this machine."
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:457
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:458
 msgid "The selected preset is renamed; its settings are not touched."
 msgstr ""
 
@@ -10037,11 +10111,15 @@ msgstr ""
 msgid "The selected printer is missing the scene's materials"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:348
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:349
 msgid "The settings no longer match this preset. Save overwrites it; Reset reloads it."
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:93
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:75
+msgid "The shape every support of this preset is built with"
+msgstr ""
+
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:100
 msgid "The sizing constants the engine ships with. They are stored per preset."
 msgstr ""
 
@@ -10050,7 +10128,7 @@ msgstr ""
 msgid "The spice must flow. The resin must cure."
 msgstr "Das Spice muss fließen. Das Harz muss aushärten."
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:254
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:278
 msgid "The Support Studio preset this run builds with: its tip, shaft, roots, base flare and joint. What you set in Support Studio for hand-placed supports does not change the run, but editing that preset does — Duplicate it first if you only want to change the run."
 msgstr ""
 
@@ -10093,7 +10171,7 @@ msgstr ""
 msgid "This backup snapshot will be permanently removed from disk."
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:654
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:655
 msgid "This cannot be undone."
 msgstr ""
 
@@ -10113,7 +10191,7 @@ msgstr ""
 msgid "This file is a VOXL V1 JSON scene."
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:266
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:290
 msgid "This is a built-in profile, so its fields are fixed. Duplicate it and edit the copy — custom settings belong in a custom profile."
 msgstr ""
 
@@ -10264,12 +10342,28 @@ msgstr ""
 msgid "Tip"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:174
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:167
+msgid "Tip Contact"
+msgstr ""
+
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:193
 msgid "Tip Fit Margin"
+msgstr ""
+
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:168
+msgid "Tip Length"
 msgstr ""
 
 #: src/components/controls/autoSupport/AutoSupportRunDiagnostics.tsx:75
 msgid "Tip Ø range"
+msgstr ""
+
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:169
+msgid "Tip Penetration"
+msgstr ""
+
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:76
+msgid "Tip, shaft, roots and base flare of the supports this preset places. Its own profile, or one borrowed from a Support Studio preset"
 msgstr ""
 
 #: src/components/modals/ObsoleteVoxlVersionModal.tsx:67
@@ -10379,6 +10473,10 @@ msgstr ""
 #: src/supports/Settings/SupportSidebar.tsx:1088
 #: src/supports/Settings/SupportSidebar.tsx:1088
 msgid "Trunk Diameter"
+msgstr ""
+
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:170
+msgid "Trunk diameter before the run's height, load and Support Size factors"
 msgstr ""
 
 #: src/components/settings/PluginsSettingsTab.tsx:900
@@ -10997,7 +11095,7 @@ msgstr ""
 msgid "What are we printing today?"
 msgstr "Was drucken wir heute?"
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:57
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:58
 msgid "What counts as a support-needing surface, and how tightly neighbouring detections merge"
 msgstr ""
 
@@ -11005,11 +11103,11 @@ msgstr ""
 msgid "What DragonFruit repaired"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:56
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:57
 msgid "What needs support, and how close is too close"
 msgstr ""
 
-#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:62
+#: src/components/controls/autoSupport/autoSupportPanelTabs.ts:63
 msgid "Where contacts land, and how far members fan"
 msgstr ""
 
@@ -11059,11 +11157,11 @@ msgstr ""
 msgid "Workspace behavior and panel layout"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:642
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:643
 msgid "Write these settings to the auto-support settings"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportPresets.tsx:641
+#: src/components/controls/autoSupport/AutoSupportPresets.tsx:642
 msgid "Write these settings, and overwrite the selected preset with them"
 msgstr ""
 

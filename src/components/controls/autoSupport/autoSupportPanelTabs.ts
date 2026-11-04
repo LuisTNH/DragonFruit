@@ -34,6 +34,7 @@ export type AutoSupportSectionKey =
   | 'detection'
   | 'distribution'
   | 'density'
+  | 'profile'
   | 'stability'
   | 'postProcessing'
   | 'debug';
@@ -67,6 +68,12 @@ const POLICY_SECTIONS: ReadonlyArray<AutoSupportSectionDef> = [
     label: msg`Density & Sizing`,
     subtitle: msg`How many supports, and how thick`,
     hint: msg`How dense and how thick the supports are`,
+  },
+  {
+    key: 'profile',
+    label: msg`Support Profile`,
+    subtitle: msg`The shape every support of this preset is built with`,
+    hint: msg`Tip, shaft, roots and base flare of the supports this preset places. Its own profile, or one borrowed from a Support Studio preset`,
   },
   {
     key: 'stability',
@@ -129,7 +136,9 @@ export type BooleanAutoSupportSettingKey =
   | 'minimaReinforcementEnabled'
   | 'debugSupportOriginColors'
   | 'debugSkipAutoBracing'
-  | 'modelScaleEnabled';
+  | 'modelScaleEnabled'
+  | 'ownGeometry'
+  | 'baseFlareEnabled';
 
 /** The numeric half of the six Advanced calibration keys. */
 export const ADVANCED_CALIBRATION_NUMERIC_KEYS = [
@@ -154,6 +163,16 @@ const KNOBS: readonly KnobDef[] = [
   { key: 'flatDensityBoost', section: 'density', label: msg`Flat Boost`, min: 0.5, max: 1, step: 0.05, unit: '×', hint: msg`Grid spacing on flat ceilings — lower = denser supports on anchor surfaces (0.7 = ~2× the supports)` },
   { key: 'slopeRelaxFactor', section: 'density', label: msg`Slope Relax`, min: 1, max: 2, step: 0.1, unit: '×', hint: msg`Grid spacing on slopes at the self-support angle — higher = sparser` },
   { key: 'suctionAreaExponent', section: 'density', label: msg`Suction Scale`, min: 0, max: 0.4, step: 0.05, unit: '', hint: msg`How strongly flat density grows with region area — large shallow ceilings carry more peel. 0 = off` },
+  // Support Profile — the preset's own shape (shown while Own Profile is on).
+  { key: 'tipContactDiameterMm', section: 'profile', label: msg`Tip Contact`, min: 0.22, max: 2, step: 0.01, unit: 'mm', hint: msg`Contact diameter where the tip touches the model, before the run's angle and size factors` },
+  { key: 'tipLengthMm', section: 'profile', label: msg`Tip Length`, min: 0.5, max: 10, step: 0.1, unit: 'mm', hint: msg`Length of the contact cone between the model and the shaft` },
+  { key: 'tipPenetrationMm', section: 'profile', label: msg`Tip Penetration`, min: 0, max: 1, step: 0.01, unit: 'mm', hint: msg`How far the contact sinks into the model` },
+  { key: 'shaftDiameterMm', section: 'profile', label: msg`Shaft Diameter`, min: 0.2, max: 5, step: 0.05, unit: 'mm', hint: msg`Trunk diameter before the run's height, load and Support Size factors` },
+  { key: 'rootDiameterMm', section: 'profile', label: msg`Root Diameter`, min: 0.5, max: 10, step: 0.1, unit: 'mm', hint: msg`Diameter of the pad on the build plate` },
+  { key: 'rootDiskHeightMm', section: 'profile', label: msg`Root Disk Height`, min: 0, max: 5, step: 0.1, unit: 'mm', hint: msg`Height of the flat disk of the root pad` },
+  { key: 'rootConeHeightMm', section: 'profile', label: msg`Root Cone Height`, min: 0, max: 10, step: 0.1, unit: 'mm', hint: msg`Height of the cone from the root pad up to the shaft` },
+  { key: 'baseFlareDiameterMm', section: 'profile', label: msg`Flare Diameter`, min: 0.5, max: 10, step: 0.1, unit: 'mm', hint: msg`Diameter of the flare where the trunk meets the root` },
+  { key: 'baseFlareHeightMm', section: 'profile', label: msg`Flare Height`, min: 0, max: 10, step: 0.1, unit: 'mm', hint: msg`Height of the flare where the trunk meets the root` },
   // Stability — will it stay put, and stay straight.
   { key: 'overhangSelfSupportAngleDeg', section: 'stability', label: msg`Self-Support Angle`, min: 20, max: 75, step: 5, unit: '°', hint: msg`Surfaces flatter than this angle get supports (resin standard: 45°). Higher = fewer, mostly on the steepest parts.` },
   // Post-processing — the passes after placement.
@@ -193,6 +212,8 @@ export const ADVANCED_CALIBRATION_KNOBS: readonly KnobDef[] = CALIBRATION_KNOB_S
 const TOGGLES: readonly ToggleDef[] = [
   { key: 'enabled', section: 'detection', label: msg`Enabled`, hint: msg`Generate supports automatically on scan` },
   { key: 'prioritizeIntersection', section: 'detection', label: msg`Prioritize Dual`, hint: msg`Islands found by BOTH the slice and mesh scans are placed first (they are the most certain)` },
+  { key: 'ownGeometry', section: 'profile', label: msg`Own Profile`, hint: msg`On: this preset carries its own tip, shaft, roots and flare. Off: it borrows them from the Support Studio preset chosen under Sizing Tier` },
+  { key: 'baseFlareEnabled', section: 'profile', label: msg`Base Flare`, hint: msg`Flare the trunk where it meets the root` },
   { key: 'stabilizationEnabled', section: 'stability', label: msg`Stabilization Anchors`, hint: msg`Add contacts along the edge or corner a pose bears on, so a leaning part is held against toppling and peel (default on)` },
   { key: 'minimaReinforcementEnabled', section: 'stability', label: msg`Minima Reinforcement`, hint: msg`Ring each mesh minima with contacts on its own flank, so a section starts on a base instead of a needle (default on)` },
   { key: 'debugSupportOriginColors', section: 'debug', label: msg`Origin Colors`, hint: msg`Debug: color supports by origin — stump (red), overhang (orange), island (blue), standalone (purple), reinforcement (teal)` },
@@ -247,6 +268,9 @@ export const TIER_HINTS: Record<string, MessageDescriptor> = {
   medium: msg`Balanced supports — the structure sizing band`,
   heavy: msg`Dense supports — the anchor sizing band`,
 };
+
+/** What a preset row shows for a preset with its own profile, where a tier name would be. */
+export const OWN_PROFILE_ROW_LABEL = msg`Own profile`;
 
 /** The Sizing Tier control's own label and tooltip. */
 export const SIZING_TIER_FIELD = {

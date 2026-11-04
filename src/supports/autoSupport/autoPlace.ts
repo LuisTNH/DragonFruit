@@ -4246,7 +4246,7 @@ export function runAutoPlace(
     // the settings it hands over).
     const profile = autoSupportProfileSettings(
         getSettings(),
-        settingsOverride?.sizingPreset ?? getSettings().autoSupport.sizingPreset,
+        normalizeAutoSupportSettings({ ...getSettings().autoSupport, ...settingsOverride }),
     );
     const plan = runWithSettings(profile, () =>
         computeAutoSupportPlan(islands, modelId, settingsOverride, undefined, undefined, undefined, cavityMesh));

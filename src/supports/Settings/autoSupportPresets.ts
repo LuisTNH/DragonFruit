@@ -20,7 +20,10 @@ import {
     migrateLegacySizingPreset,
     normalizeAutoSupportSettings,
     DIAGNOSTIC_AUTO_SUPPORT_KEYS,
+    OWN_PROFILE_KEYS,
+    SIZING_BANDS,
     type AutoSupportSettings,
+    type SizingBand,
 } from '../autoSupport/settings';
 import {
     getAutoSupportSettings,
@@ -86,6 +89,30 @@ const DEFAULT_AUTO_SUPPORT_PRESET_NAME = 'Auto-Support Preset';
  * its default instead of arriving as `undefined`. The names here are English
  * placeholders: a built-in's display name is translated by id at render.
  */
+/**
+ * A built-in's own support profile: the numbers of the factory Support Studio
+ * preset its tier used to borrow (Detail / Structure / Anchor), written here so a
+ * user editing that manual preset no longer changes what a built-in prints.
+ */
+function ownProfile(
+    band: SizingBand,
+    baseFlare: { enabled: boolean; diameterMm: number; heightMm: number },
+): Partial<AutoSupportSettings> {
+    return {
+        ownGeometry: true,
+        tipContactDiameterMm: band.tipContactDiameterMm,
+        tipLengthMm: band.tipLengthMm,
+        tipPenetrationMm: band.tipPenetrationMm,
+        shaftDiameterMm: band.shaftDiameterMm,
+        rootDiameterMm: band.rootDiameterMm,
+        rootDiskHeightMm: band.rootDiskHeightMm,
+        rootConeHeightMm: band.rootConeHeightMm,
+        baseFlareEnabled: baseFlare.enabled,
+        baseFlareDiameterMm: baseFlare.diameterMm,
+        baseFlareHeightMm: baseFlare.heightMm,
+    };
+}
+
 const BUILT_IN_PRESETS: readonly AutoSupportPreset[] = [
     {
         id: 'light',
@@ -95,13 +122,17 @@ const BUILT_IN_PRESETS: readonly AutoSupportPreset[] = [
             ...createDefaultAutoSupportSettings(),
             areaPerSupportMm2: 16,
             sizingPreset: 'detail',
+            ...ownProfile(SIZING_BANDS.detail, { enabled: true, diameterMm: 2.5, heightMm: 1.2 }),
         },
     },
     {
         id: 'medium',
         name: 'Medium',
         isBuiltIn: true,
-        settings: snapshotPresetSettings(createDefaultAutoSupportSettings()),
+        settings: snapshotPresetSettings({
+            ...createDefaultAutoSupportSettings(),
+            ...ownProfile(SIZING_BANDS.structure, { enabled: true, diameterMm: 3.0, heightMm: 1.5 }),
+        }),
     },
     {
         id: 'heavy',
@@ -111,6 +142,7 @@ const BUILT_IN_PRESETS: readonly AutoSupportPreset[] = [
             ...createDefaultAutoSupportSettings(),
             areaPerSupportMm2: 5,
             sizingPreset: 'anchor',
+            ...ownProfile(SIZING_BANDS.anchor, { enabled: true, diameterMm: 4.5, heightMm: 2.0 }),
         },
     },
 ];
@@ -156,6 +188,20 @@ function snapshotPresetSettings(settings: AutoSupportSettings): AutoSupportPrese
     return structuredClone(migrateLegacySizingPreset(settings)) as AutoSupportPresetSettings;
 }
 
+/**
+ * A stored built-in block from before own support profiles carries no
+ * `ownGeometry` key: it gets the factory built-in's profile keys, so an existing
+ * install's Light / Medium / Heavy stop borrowing from a Support Studio preset
+ * like a fresh install's. A block that states `ownGeometry` is kept as stored.
+ */
+function withBuiltInProfile(stored: AutoSupportPresetSettings, builtIn: AutoSupportPreset): AutoSupportPresetSettings {
+    if (Object.hasOwn(stored, 'ownGeometry')) return stored;
+    const profile = Object.fromEntries(
+        OWN_PROFILE_KEYS.map((key) => [key, builtIn.settings[key]]),
+    );
+    return { ...stored, ...profile } as AutoSupportPresetSettings;
+}
+
 function sanitizePresetName(value: unknown): string {
     const trimmed = typeof value === 'string' ? value.trim() : '';
     return trimmed.length > 0 ? trimmed : DEFAULT_AUTO_SUPPORT_PRESET_NAME;
@@ -192,7 +238,9 @@ function readStoredState(): AutoSupportPresetState {
                 if (isPlainObject(record) && isPlainObject(record.settings)) {
                     byId[id] = {
                         ...builtIn,
-                        settings: snapshotPresetSettings(record.settings as AutoSupportPresetSettings),
+                        settings: snapshotPresetSettings(
+                            withBuiltInProfile(record.settings as AutoSupportPresetSettings, builtIn),
+                        ),
                         updatedAt: typeof record.updatedAt === 'number' && Number.isFinite(record.updatedAt)
                             ? record.updatedAt
                             : builtIn.updatedAt,
@@ -399,7 +447,16 @@ export function isAutoSupportPresetDirty(): boolean {
  * selecting the same preset twice always lands on the same state.
  */
 function applyPresetSettings(preset: AutoSupportPreset): void {
-    updateAutoSupportSettings(preset.settings);
+    // The whole block, normalized: a key the payload lacks (a preset written
+    // before the key existed) takes its default rather than the previous
+    // preset's value. Without this a pre-profile preset applied after a built-in
+    // kept the built-in's own support profile. The diagnostics are view switches,
+    // not part of a preset, so they stay as the user left them.
+    const live = getAutoSupportSettings();
+    const diagnostics = Object.fromEntries(
+        DIAGNOSTIC_AUTO_SUPPORT_KEYS.map((key) => [key, live[key]]),
+    ) as Partial<AutoSupportSettings>;
+    updateAutoSupportSettings({ ...normalizeAutoSupportSettings(preset.settings), ...diagnostics });
     // Keep the persisted settings and the active id in step: without this, a
     // restart would show one preset as active over the settings of another and
     // read as dirty before the user touched anything.

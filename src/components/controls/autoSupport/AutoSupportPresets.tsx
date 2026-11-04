@@ -87,6 +87,7 @@ import {
   savePrintArtifactWithNativeDialog,
 } from '@/features/slicing/tauri/nativeSlicerBridge';
 import { sizingTierName, useSupportStudioPresets } from './AutoSupportSizingTierField';
+import { OWN_PROFILE_ROW_LABEL } from './autoSupportPanelTabs';
 import { NO_ACTIVE_PRESET_LABEL } from '@/supports/Settings/autoSupportPresetMessages';
 
 type Translate = (descriptor: MessageDescriptor) => string;
@@ -282,7 +283,7 @@ export function AutoSupportPresetSelector({ draft, setDraft }: AutoSupportPreset
     icon: preset.id === activeId ? <Check className="h-3.5 w-3.5" /> : undefined,
     // The references label the type on the right (`Built-in` / `Custom`); the tier
     // the preset sizes with is the other fact a user picks by, so both ride there.
-    rightContent: `${sizingTierName(preset.settings.sizingPreset, supportStudioPresets)} · ${preset.isBuiltIn ? _(msg`Built-in`) : _(msg`Custom`)}`,
+    rightContent: `${preset.settings.ownGeometry ? _(OWN_PROFILE_ROW_LABEL) : sizingTierName(preset.settings.sizingPreset, supportStudioPresets)} · ${preset.isBuiltIn ? _(msg`Built-in`) : _(msg`Custom`)}`,
   }));
 
   const applyImportedText = (text: string) => {

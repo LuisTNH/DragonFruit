@@ -3,8 +3,8 @@ import type { CandidatePoint } from './types';
 import { getSettings } from '../Settings/state';
 import { getPresetById } from '../Settings/presets';
 import { AUTO_SUPPORT_CONSTRAINTS, MIN_CONTACT_TIP_DIAMETER_MM, SIZING_BANDS } from './settings';
-import type { SizingBand, SizingPreset } from './settings';
-import type { SupportSettings } from '../Settings/types';
+import type { AutoSupportSettings, SizingBand, SizingPreset } from './settings';
+import { createDefaultSettings, type SupportSettings } from '../Settings/types';
 
 // ---------------------------------------------------------------------------
 // Empirical sizing (locked: no physics pretense)
@@ -81,30 +81,84 @@ function sizingBandOfPreset(id: string | null | undefined): SizingBand | null {
 
 /**
  * The settings an auto-support run builds with: the live settings, with every
- * section a Support Studio preset owns (tip, shaft, roots, base flare, joint,
- * mesh-to-mesh) taken from the preset the run's tier names. Manual placement
- * keeps reading the live Support Studio sections, so what the user dials in for
- * hand-placed supports no longer leaks into an automatic run through the
- * sections the band does not cover (cone angle mode, flare, joint).
- * An id that names no preset leaves the live sections in place, as before.
+ * section a support profile owns (tip, shaft, roots, base flare, joint,
+ * mesh-to-mesh) replaced. Manual placement keeps reading the live Support Studio
+ * sections, so what the user dials in for hand-placed supports never reaches an
+ * automatic run.
+ *
+ * - A block with `ownGeometry` builds with its own profile keys over the factory
+ *   defaults for everything the block does not carry (cone mode, joint, neck).
+ * - Otherwise the sections come from the Support Studio preset `sizingPreset`
+ *   names; an id that names no preset leaves the live sections in place.
+ *
+ * The result carries `auto` as its `autoSupport` block, so everything the run
+ * reads through `getSettings()` (the band included) sees the run's own block.
  * The live shaft keeps its routing algorithm: that is a dev-tools switch, not
- * part of a profile. Pure read — neither store is written here.
+ * part of a profile. Pure read — no store is written here.
  */
 export function autoSupportProfileSettings(
     live: SupportSettings,
-    presetId: string | null | undefined,
+    auto: AutoSupportSettings,
 ): SupportSettings {
-    const preset = presetId ? getPresetById(presetId) : undefined;
-    if (!preset) return live;
+    if (auto.ownGeometry) {
+        const defaults = createDefaultSettings();
+        return {
+            ...live,
+            autoSupport: auto,
+            tip: {
+                ...defaults.tip,
+                contactDiameterMm: auto.tipContactDiameterMm,
+                bodyDiameterMm: auto.shaftDiameterMm,
+                lengthMm: auto.tipLengthMm,
+                penetrationMm: auto.tipPenetrationMm,
+            },
+            shaft: {
+                ...defaults.shaft,
+                diameterMm: auto.shaftDiameterMm,
+                secondaryDiameterMm: auto.shaftDiameterMm,
+                routingAlgorithm: live.shaft.routingAlgorithm,
+            },
+            roots: {
+                ...defaults.roots,
+                diameterMm: auto.rootDiameterMm,
+                diskHeightMm: auto.rootDiskHeightMm,
+                coneHeightMm: auto.rootConeHeightMm,
+            },
+            baseFlare: {
+                enabled: auto.baseFlareEnabled,
+                diameterMm: auto.baseFlareDiameterMm,
+                heightMm: auto.baseFlareHeightMm,
+            },
+            joint: defaults.joint,
+            meshToMesh: defaults.meshToMesh,
+        };
+    }
+
+    const preset = getPresetById(auto.sizingPreset);
+    if (!preset) return { ...live, autoSupport: auto };
     const profile = preset.settings;
     return {
         ...live,
+        autoSupport: auto,
         tip: { ...profile.tip },
         shaft: { ...profile.shaft, routingAlgorithm: live.shaft.routingAlgorithm },
         roots: { ...profile.roots },
         baseFlare: { ...profile.baseFlare },
         joint: { ...profile.joint },
         meshToMesh: { ...profile.meshToMesh },
+    };
+}
+
+/** The band a block with its own profile carries: its own seven numbers. */
+function ownGeometryBand(auto: AutoSupportSettings): SizingBand {
+    return {
+        shaftDiameterMm: auto.shaftDiameterMm,
+        tipContactDiameterMm: Math.max(auto.tipContactDiameterMm, MIN_CONTACT_TIP_DIAMETER_MM),
+        tipLengthMm: auto.tipLengthMm,
+        tipPenetrationMm: auto.tipPenetrationMm,
+        rootDiameterMm: auto.rootDiameterMm,
+        rootDiskHeightMm: auto.rootDiskHeightMm,
+        rootConeHeightMm: auto.rootConeHeightMm,
     };
 }
 
@@ -149,16 +203,28 @@ export function resolveSizingBand(id: string | null | undefined): SizingBand {
         : { ...band, tipContactDiameterMm: MIN_CONTACT_TIP_DIAMETER_MM };
 }
 
-/** The band the run sizes with: the Support Studio preset the live settings name. */
+/** The band the run sizes with: the block's own profile, else the Support Studio
+ *  preset the live settings name. */
 export function activeSizingBand(): SizingBand {
-    return resolveSizingBand(getSettings().autoSupport?.sizingPreset);
+    const auto = getSettings().autoSupport;
+    return auto?.ownGeometry ? ownGeometryBand(auto) : resolveSizingBand(auto?.sizingPreset);
 }
 
-/** Tip contact for small-island candidates: the factory `detail` tier's tip,
- *  resolved the same way, so fine detail gets a shrunk tip without dragging the
- *  shaft down to the detail band. */
+/**
+ * A reference tier the run weighs against (small-island tips, the load report),
+ * not the band it sizes with. A block with its own profile reads the factory
+ * table, so no Support Studio preset reaches its run; a borrowing block resolves
+ * the Support Studio preset as before.
+ */
+export function analyticTierBand(tier: SizingPreset): SizingBand {
+    return getSettings().autoSupport?.ownGeometry ? SIZING_BANDS[tier] : resolveSizingBand(tier);
+}
+
+/** Tip contact for small-island candidates: the `detail` reference tier's tip,
+ *  so fine detail gets a shrunk tip without dragging the shaft down to the
+ *  detail band. */
 export function smallIslandTipDiameterMm(): number {
-    return resolveSizingBand('detail').tipContactDiameterMm;
+    return analyticTierBand('detail').tipContactDiameterMm;
 }
 
 /** Area a merged cluster must exceed before the shaft tail engages (mm²).

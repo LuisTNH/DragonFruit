@@ -3,7 +3,7 @@ import test from 'node:test';
 import { createRequire } from 'node:module';
 
 import { ANCHOR_PRESET, DETAIL_PRESET, STRUCTURE_PRESET } from '../Settings/presets';
-import { createDefaultAutoSupportSettings, SIZING_BANDS } from '../autoSupport/settings';
+import { createDefaultAutoSupportSettings, OWN_PROFILE_KEYS, SIZING_BANDS } from '../autoSupport/settings';
 import { getAutoSupportSettings, updateAutoSupportDiagnostic, updateAutoSupportSettings } from '../Settings/state';
 import type * as AutoSupportPresetStore from '../Settings/autoSupportPresets';
 
@@ -69,16 +69,29 @@ function loadStoreWithNoStorage(): Store {
     return require(STORE_PATH) as Store;
 }
 
+/** The own-profile keys a built-in adds over its trunk preset's policy block. */
+
+/** A block's run policy: everything but the own profile. */
+function policyOf(block: object): Record<string, unknown> {
+    const rest = { ...block } as Record<string, unknown>;
+    for (const key of OWN_PROFILE_KEYS) delete rest[key];
+    return rest;
+}
+
 test('built-in presets are the Auto Support panel light/medium/heavy tiers, settings included', () => {
     const { store } = loadStoreWith();
 
-    // The panel's quick-select writes these same blocks through the settings
-    // store, so the two must stay equal or the panel and the preset list would
-    // describe different densities under the same names.
+    // The panel's quick-select writes these same policy blocks through the
+    // settings store, so the two must stay equal or the panel and the preset list
+    // would describe different densities under the same names. The built-ins add
+    // their own support profile on top (the trunk preset's numbers, written into
+    // the built-in), which the trunk presets' blocks do not carry.
     assert.deepEqual(store.getAutoSupportPresets().map((preset) => preset.id), ['light', 'medium', 'heavy']);
-    assert.deepEqual(store.getAutoSupportPreset('light')!.settings, DETAIL_PRESET.settings.autoSupport);
-    assert.deepEqual(store.getAutoSupportPreset('medium')!.settings, STRUCTURE_PRESET.settings.autoSupport);
-    assert.deepEqual(store.getAutoSupportPreset('heavy')!.settings, ANCHOR_PRESET.settings.autoSupport);
+    assert.deepEqual(policyOf(store.getAutoSupportPreset('light')!.settings), policyOf(DETAIL_PRESET.settings.autoSupport));
+    assert.deepEqual(policyOf(store.getAutoSupportPreset('medium')!.settings), policyOf(STRUCTURE_PRESET.settings.autoSupport));
+    assert.deepEqual(policyOf(store.getAutoSupportPreset('heavy')!.settings), policyOf(ANCHOR_PRESET.settings.autoSupport));
+    assert.ok(store.getAutoSupportPresets().every((preset) => preset.settings.ownGeometry));
+    assert.equal(store.getAutoSupportPreset('heavy')!.settings.shaftDiameterMm, ANCHOR_PRESET.settings.shaft.diameterMm);
     assert.ok(store.getAutoSupportPresets().every((preset) => preset.isBuiltIn));
 
     // Loading the store must not rearrange anybody's settings: no preset is
@@ -345,7 +358,7 @@ test('export and import round-trip a preset document', () => {
     assert.equal(doc.kind, DOCUMENT_KIND);
     assert.equal(doc.formatVersion, 1);
     assert.equal(doc.preset.name, 'Heavy');
-    assert.deepEqual(doc.preset.settings, ANCHOR_PRESET.settings.autoSupport);
+    assert.deepEqual(doc.preset.settings, store.getAutoSupportPreset('heavy')!.settings);
     assert.equal(Object.keys(doc).sort().join(','), 'exportedAt,formatVersion,kind,preset');
     assert.ok(!Number.isNaN(Date.parse(doc.exportedAt)), 'exportedAt is an ISO timestamp');
 
@@ -353,7 +366,7 @@ test('export and import round-trip a preset document', () => {
     assert.notEqual(imported.id, 'heavy');
     assert.equal(imported.isBuiltIn, false);
     assert.equal(imported.name, 'Heavy (2)');
-    assert.deepEqual(imported.settings, ANCHOR_PRESET.settings.autoSupport);
+    assert.deepEqual(imported.settings, doc.preset.settings);
     // The user asked for this policy, so it is the one now in effect.
     assert.equal(store.getActiveAutoSupportPresetId(), imported.id);
     assert.equal(getAutoSupportSettings().areaPerSupportMm2, 5);

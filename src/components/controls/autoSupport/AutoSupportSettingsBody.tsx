@@ -146,6 +146,42 @@ function ToggleField({
   return <Tooltip content={help} fullWidth wrapperClassName="w-full [&>*]:w-full">{field}</Tooltip>;
 }
 
+/**
+ * The Support Profile card's fields. With Own Profile off the preset borrows its
+ * shape from a Support Studio preset, so the card shows the Sizing Tier and
+ * nothing else; with it on, the preset's own fields replace the tier.
+ */
+function ProfileFields({
+  draft,
+  setDraft,
+  locked,
+}: {
+  draft: AutoSupportSettings;
+  setDraft: React.Dispatch<React.SetStateAction<AutoSupportSettings>>;
+  locked?: boolean;
+}) {
+  const [ownToggle, flareToggle] = [
+    TOGGLES_BY_SECTION.profile.find((toggle) => toggle.key === 'ownGeometry')!,
+    TOGGLES_BY_SECTION.profile.find((toggle) => toggle.key === 'baseFlareEnabled')!,
+  ];
+
+  return (
+    <>
+      <ToggleField toggle={ownToggle} draft={draft} setDraft={setDraft} locked={locked} />
+      {draft.ownGeometry ? (
+        <>
+          {KNOBS_BY_SECTION.profile.map((knob) => (
+            <NumberField key={knob.key} knob={knob} draft={draft} setDraft={setDraft} locked={locked} />
+          ))}
+          <ToggleField toggle={flareToggle} draft={draft} setDraft={setDraft} locked={locked} />
+        </>
+      ) : (
+        <AutoSupportSizingTierField draft={draft} setDraft={setDraft} disabled={locked} />
+      )}
+    </>
+  );
+}
+
 /** A card of fields: the section's uppercase header, its one-liner, and a 2-column grid. */
 function FieldCard({ section, children }: { section: AutoSupportSectionDef; children: React.ReactNode }) {
   const { _ } = useLingui();
@@ -293,19 +329,23 @@ export function AutoSupportSettingsBody({
         {/* The cards stretch to their row's height — the anti-aliasing section's
             idiom (`profileFormAtoms.tsx`): a plain grid, whose items stretch by
             default, so a short card leaves no dead space beside a tall one. Six
-            cards fill three rows exactly; the disclosure below spans both columns. */}
+            policy cards and Diagnostics fill four rows with the last cell empty;
+            the disclosure below spans both columns. */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {AUTO_SUPPORT_POLICY_SECTIONS.map((section) => (
             <FieldCard key={section.key} section={section}>
-              {TOGGLES_BY_SECTION[section.key].map((toggle) => (
-                <ToggleField key={toggle.key} toggle={toggle} draft={draft} setDraft={setDraft} locked={presetLocked} />
-              ))}
-              {section.key === 'density' && (
-                <AutoSupportSizingTierField draft={draft} setDraft={setDraft} disabled={presetLocked} />
+              {section.key === 'profile' ? (
+                <ProfileFields draft={draft} setDraft={setDraft} locked={presetLocked} />
+              ) : (
+                <>
+                  {TOGGLES_BY_SECTION[section.key].map((toggle) => (
+                    <ToggleField key={toggle.key} toggle={toggle} draft={draft} setDraft={setDraft} locked={presetLocked} />
+                  ))}
+                  {KNOBS_BY_SECTION[section.key].map((knob) => (
+                    <NumberField key={knob.key} knob={knob} draft={draft} setDraft={setDraft} locked={presetLocked} />
+                  ))}
+                </>
               )}
-              {KNOBS_BY_SECTION[section.key].map((knob) => (
-                <NumberField key={knob.key} knob={knob} draft={draft} setDraft={setDraft} locked={presetLocked} />
-              ))}
             </FieldCard>
           ))}
 
