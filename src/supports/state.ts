@@ -2010,17 +2010,18 @@ export function resetKickstandsInState() {
  * support that moved. Roots and host knots are the main walk's, which already
  * moves them.
  */
-function transformKickstandsForModelInState(
+function transformedKickstandsForModel(
+    kickstands: Record<string, Kickstand>,
     modelId: string,
     delta: SupportDeltaTransform,
     touchedRootIds?: Set<string>,
     touchedKnotIds?: Set<string>,
     touchedSegmentIds?: Set<string>,
-): boolean {
+): Record<string, Kickstand> | null {
     let changed = false;
-    let nextKickstands = state.kickstands;
+    let nextKickstands = kickstands;
 
-    for (const kickstand of Object.values(state.kickstands)) {
+    for (const kickstand of Object.values(kickstands)) {
         const isConnectedToTouchedGraph = !!(
             (touchedRootIds && touchedRootIds.has(kickstand.rootId))
             || (touchedKnotIds && touchedKnotIds.has(kickstand.hostKnotId))
@@ -2030,7 +2031,7 @@ function transformKickstandsForModelInState(
         if (kickstand.modelId !== modelId && !isConnectedToTouchedGraph) continue;
 
         if (!changed) {
-            nextKickstands = { ...state.kickstands };
+            nextKickstands = { ...kickstands };
             changed = true;
         }
 
@@ -2041,11 +2042,7 @@ function transformKickstandsForModelInState(
         ) as unknown as Kickstand;
     }
 
-    if (!changed) return false;
-
-    setState({ ...state, kickstands: nextKickstands });
-    notify();
-    return true;
+    return changed ? nextKickstands : null;
 }
 
 function reassignAllKickstandModelIdsInState(modelId: string): boolean {
@@ -2084,32 +2081,38 @@ export type SupportTransformCommitResult = {
     kickstandsChanged: boolean;
 };
 
-export function transformSupportsForModel(
-    modelId: string,
-    beforeTransform: { position: THREE.Vector3; rotation: THREE.Euler; scale: THREE.Vector3 },
-    afterTransform: { position: THREE.Vector3; rotation: THREE.Euler; scale: THREE.Vector3 },
-): SupportTransformCommitResult {
-    if (!modelId) {
-        return {
-            supportsChanged: false,
-            kickstandsChanged: false,
-        };
-    }
+/** The parts of a model transform a support move reads. */
+export type SupportModelTransform = { position: THREE.Vector3; rotation: THREE.Euler; scale: THREE.Vector3 };
+
+/**
+ * Where a model's supports end up when it moves from `beforeTransform` to
+ * `afterTransform`, and anything hanging off them. Reads only `collections` and
+ * writes nothing, so a caller with no store can use it (ADR-0045); a record that
+ * did not move comes back by reference.
+ */
+export function transformedSupportsForModel<T extends Pick<SupportState, SupportCollectionKey>>({
+    collections: current,
+    modelId,
+    beforeTransform,
+    afterTransform,
+}: {
+    collections: T;
+    modelId: string;
+    beforeTransform: SupportModelTransform;
+    afterTransform: SupportModelTransform;
+}): SupportTransformCommitResult & { collections: T } {
+    const unchanged = { collections: current, supportsChanged: false, kickstandsChanged: false };
+    if (!modelId) return unchanged;
 
     const delta = buildSupportDeltaTransform(beforeTransform, afterTransform);
-    if (!delta) {
-        return {
-            supportsChanged: false,
-            kickstandsChanged: false,
-        };
-    }
+    if (!delta) return unchanged;
 
     let changed = false;
     // Computed here; the rest come from `nextByCollection`. Each copies on its
     // own first write, so a caller holding the earlier snapshot keeps it.
-    let nextRoots = state.roots;
-    let nextTrunks = state.trunks;
-    let nextKnots = state.knots;
+    let nextRoots = current.roots;
+    let nextTrunks = current.trunks;
+    let nextKnots = current.knots;
 
     const touchedRootIds = new Set<string>();
     const touchedSegmentIds = new Set<string>();
@@ -2125,7 +2128,7 @@ export function transformSupportsForModel(
     const segmentModelIdById = new Map<string, string | undefined>();
     for (const descriptor of SUPPORT_TYPES) {
         if (!descriptor.hasSegments) continue;
-        const collection = state[descriptor.location.key] as Record<string, { modelId: string; segments?: Segment[] }>;
+        const collection = current[descriptor.location.key] as Record<string, { modelId: string; segments?: Segment[] }>;
         for (const entity of Object.values(collection)) {
             for (const segment of entity.segments ?? []) segmentModelIdById.set(segment.id, entity.modelId);
         }
@@ -2137,14 +2140,14 @@ export function transformSupportsForModel(
         const host = parseKnotHostId(parentShaftId);
 
         if (host && isConeKnotHost(host.typeId)) {
-            const leaf = state.leaves[host.entityId];
+            const leaf = current.leaves[host.entityId];
             if (!leaf) return undefined;
             return leaf.modelId ?? resolveModelIdFromKnot(leaf.parentKnotId, visitedBraceIds);
         }
 
         if (host && isSpanKnotHost(host.typeId)) {
             const braceId = host.entityId;
-            const brace = state.braces[braceId];
+            const brace = current.braces[braceId];
             if (!brace) return undefined;
 
             const nextVisited = visitedBraceIds ?? new Set<string>();
@@ -2161,14 +2164,14 @@ export function transformSupportsForModel(
 
     const resolveModelIdFromKnot = (knotId: string | undefined, visitedBraceIds?: Set<string>): string | undefined => {
         if (!knotId) return undefined;
-        const knot = state.knots[knotId];
+        const knot = current.knots[knotId];
         if (!knot) return undefined;
         return resolveModelIdFromParentShaft(knot.parentShaftId, visitedBraceIds);
     };
 
-    for (const root of Object.values(state.roots)) {
+    for (const root of Object.values(current.roots)) {
         if (root.modelId !== modelId) continue;
-        if (nextRoots === state.roots) nextRoots = { ...state.roots };
+        if (nextRoots === current.roots) nextRoots = { ...current.roots };
         changed = true;
         touchedRootIds.add(root.id);
         nextRoots[root.id] = transformSupportRecord(
@@ -2178,9 +2181,9 @@ export function transformSupportsForModel(
         ) as unknown as Roots;
     }
 
-    for (const trunk of Object.values(state.trunks)) {
+    for (const trunk of Object.values(current.trunks)) {
         if (trunk.modelId !== modelId) continue;
-        if (nextTrunks === state.trunks) nextTrunks = { ...state.trunks };
+        if (nextTrunks === current.trunks) nextTrunks = { ...current.trunks };
         changed = true;
 
         const nextTrunk = transformSupportRecord(
@@ -2218,7 +2221,7 @@ export function transformSupportsForModel(
     // here or the knots riding them stay put when the model moves.
     for (const descriptor of SUPPORT_TYPES) {
         if (!descriptor.ownsRoot) continue;
-        const collection = state[descriptor.location.key] as unknown as Record<string, Record<string, unknown>>;
+        const collection = current[descriptor.location.key] as unknown as Record<string, Record<string, unknown>>;
         for (const entity of Object.values(collection)) {
             if (entity.modelId === modelId) claimShaft(descriptor, entity);
         }
@@ -2237,7 +2240,7 @@ export function transformSupportsForModel(
                 .filter((edge) => edge.to === 'knots' && edge.ownership === 'hostedBy')
                 .map((edge) => edge.field);
 
-            const collection = state[descriptor.location.key] as unknown as Record<string, Record<string, unknown>>;
+            const collection = current[descriptor.location.key] as unknown as Record<string, Record<string, unknown>>;
             for (const entity of Object.values(collection)) {
                 const id = entity.id as string;
                 if (affected.has(id)) continue;
@@ -2249,7 +2252,7 @@ export function transformSupportsForModel(
                     const knotId = entity[field];
                     if (typeof knotId !== 'string') continue;
                     if (touchedKnotIds.has(knotId)) { connected = true; break; }
-                    const hostShaftId = state.knots[knotId]?.parentShaftId;
+                    const hostShaftId = current.knots[knotId]?.parentShaftId;
                     if (hostShaftId && touchedSegmentIds.has(hostShaftId)) { connected = true; break; }
                 }
 
@@ -2299,7 +2302,7 @@ export function transformSupportsForModel(
         if (descriptor.ownsRoot) continue;
 
         const collection = descriptor.location.key;
-        const source = state[collection] as unknown as Record<string, Record<string, unknown>>;
+        const source = current[collection] as unknown as Record<string, Record<string, unknown>>;
         const ids = affectedByType.get(descriptor.id) ?? new Set<string>();
 
         for (const id of ids) {
@@ -2331,7 +2334,7 @@ export function transformSupportsForModel(
     }
 
 
-    for (const knot of Object.values(state.knots)) {
+    for (const knot of Object.values(current.knots)) {
         const parentShaftId = knot.parentShaftId;
         let ridesTouchedHost = false;
         for (const [prefix, touchedHostIds] of touchedKnotHostIdsByPrefix) {
@@ -2345,7 +2348,7 @@ export function transformSupportsForModel(
 
         if (!shouldTransform) continue;
 
-        if (nextKnots === state.knots) nextKnots = { ...state.knots };
+        if (nextKnots === current.knots) nextKnots = { ...current.knots };
         changed = true;
 
         nextKnots[knot.id] = transformSupportRecord(
@@ -2355,12 +2358,13 @@ export function transformSupportsForModel(
         ) as unknown as Knot;
     }
 
+    let next = current;
     if (changed) {
         // One entry per collection the loop touched; the rest carry through.
         const nextCollections: Record<string, unknown> = {};
         for (const descriptor of SUPPORT_TYPES) {
             const key = descriptor.location.key;
-            nextCollections[key] = nextByCollection[key] ?? state[key];
+            nextCollections[key] = nextByCollection[key] ?? current[key];
         }
         // The three this function computes itself win over the generic pass.
         nextCollections.roots = nextRoots;
@@ -2372,22 +2376,43 @@ export function transformSupportsForModel(
             convertSupportsAcrossStumpBand(nextCollections, nextKnots, modelId);
         }
 
-        setState({ ...state, ...nextCollections } as SupportState);
-        notify();
+        next = { ...current, ...nextCollections } as T;
     }
 
-    const kickstandsChanged = transformKickstandsForModelInState(
+    const nextKickstands = transformedKickstandsForModel(
+        next.kickstands,
         modelId,
         delta,
         touchedRootIds,
         touchedKnotIds,
         touchedSegmentIds,
     );
+    if (nextKickstands) next = { ...next, kickstands: nextKickstands };
 
     return {
+        collections: next,
         supportsChanged: changed,
-        kickstandsChanged,
+        kickstandsChanged: nextKickstands !== null,
     };
+}
+
+/** Moves a model's supports with it, as one store write. */
+export function transformSupportsForModel(
+    modelId: string,
+    beforeTransform: SupportModelTransform,
+    afterTransform: SupportModelTransform,
+): SupportTransformCommitResult {
+    const { collections, supportsChanged, kickstandsChanged } = transformedSupportsForModel({
+        collections: state,
+        modelId,
+        beforeTransform,
+        afterTransform,
+    });
+    if (supportsChanged || kickstandsChanged) {
+        setState(collections);
+        notify();
+    }
+    return { supportsChanged, kickstandsChanged };
 }
 
 export function transformAllSupportsForSingleModel(
