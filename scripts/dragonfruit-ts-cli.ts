@@ -34,6 +34,8 @@ import {
   readPlateOrdering,
 } from '../src/features/scene/plates/plateCascade';
 import { computePlateFrames, plateSliceScope, resolveModelPlateId, type PlateSliceScope } from '../src/features/scene/plates/plateLayout';
+import { linkedPeerTransform } from '../src/features/scene/linkedPeerTransform';
+import { withModelSupportsTransformed } from '../src/supports/modelSupportPayload';
 import { withoutModelSupports } from '../src/supports/PlacementLogic/SupportModelLinker';
 import type {
   BuildVoxlDocumentInput,
@@ -328,6 +330,15 @@ async function sceneListModels(args: ReturnType<typeof parseArgs>): Promise<void
   }
 }
 
+/** A file's model transform as the math objects the support rule reads. */
+function threeTransform(t: Pick<VoxlModelEntry['transform'], 'position' | 'rotation' | 'scale'>) {
+  return {
+    position: new THREE.Vector3(t.position.x, t.position.y, t.position.z),
+    rotation: eulerFromGlobalEuler(t.rotation),
+    scale: new THREE.Vector3(t.scale.x, t.scale.y, t.scale.z),
+  };
+}
+
 async function sceneTransformModel(args: ReturnType<typeof parseArgs>): Promise<void> {
   const voxlPath = args.positional[0];
   if (!voxlPath) throw new Error('Usage: scene transform-model <scene.voxl> --id <id>');
@@ -341,9 +352,44 @@ async function sceneTransformModel(args: ReturnType<typeof parseArgs>): Promise<
   const rotStr = optionalFlag(args.flags, 'rotate');
   const scaleStr = optionalFlag(args.flags, 'scale');
 
-  if (posStr) model.transform.position = parseVec3(posStr);
-  if (rotStr) model.transform.rotation = parseVec3(rotStr);
-  if (scaleStr) model.transform.scale = parseVec3(scaleStr);
+  const target = {
+    position: posStr ? parseVec3(posStr) : model.transform.position,
+    rotation: rotStr ? parseVec3(rotStr) : model.transform.rotation,
+    scale: scaleStr ? parseVec3(scaleStr) : model.transform.scale,
+  };
+  const numbers = [target.position, target.rotation, target.scale].flatMap(({ x, y, z }) => [x, y, z]);
+  if (!numbers.every(Number.isFinite)) throw new Error('--position, --rotate and --scale take three numbers: x,y,z');
+  if (target.scale.x === 0 || target.scale.y === 0 || target.scale.z === 0) {
+    throw new Error('--scale cannot be 0: the supports could not follow it back');
+  }
+
+  // Supports follow, and a link group moves together, as in the app. A plate
+  // lock lives in the session rather than the file, so there is none to honour.
+  const before = threeTransform(model.transform);
+  const after = threeTransform(target);
+  const moves = [
+    { entry: model, before, after },
+    ...doc.models
+      .filter((peer) => model.linkGroupId && peer.linkGroupId === model.linkGroupId && peer.id !== id)
+      .map((peer) => {
+        const peerBefore = threeTransform(peer.transform);
+        return { entry: peer, before: peerBefore, after: linkedPeerTransform({ peerBefore, before, after }) };
+      }),
+  ];
+  for (const { entry, before: from, after: to } of moves) {
+    doc.supports = withModelSupportsTransformed({
+      payload: doc.supports,
+      modelId: entry.id,
+      beforeTransform: from,
+      afterTransform: to,
+    }).payload;
+    entry.transform = {
+      ...entry.transform,
+      position: { x: to.position.x, y: to.position.y, z: to.position.z },
+      rotation: { ...entry.transform.rotation, x: to.rotation.x, y: to.rotation.y, z: to.rotation.z },
+      scale: { x: to.scale.x, y: to.scale.y, z: to.scale.z },
+    };
+  }
 
   await saveVoxl(voxlPath, doc);
 
@@ -1130,7 +1176,7 @@ async function sceneExportStl(args: ReturnType<typeof parseArgs>): Promise<void>
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
-import { quaternionFromGlobalEuler } from '../src/utils/rotation';
+import { eulerFromGlobalEuler, quaternionFromGlobalEuler } from '../src/utils/rotation';
 import {
   computeHighPrecisionArrangeUpdates,
   type ArrangeModel,

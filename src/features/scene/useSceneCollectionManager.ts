@@ -27,6 +27,7 @@ import {
 } from '@/features/scene/plates/plateLayout';
 import { decodeVoxlBodyChunk, detectObsoleteVoxlVersion, isVoxlBinaryV2, meshChunkStore, parseVoxlBinaryV2, readScenePlates, readSidecarFileBytes, resolveOriginalRefSidecar, VoxlObsoleteVersionError, type VoxlDocumentV1, type VoxlMeshRef, type VoxlMeshRange } from '@/features/scene/voxl';
 import { clearPaintToBase } from '@/components/analysis/MeshPainter';
+import { linkedPeerTransform } from '@/features/scene/linkedPeerTransform';
 import { countSupportEntities, getSnapshot, loadFromImportFormat, mergeFromImportFormat, reassignAllSupportModelIds, removeSupportEntitiesForModels, resetStore, setSnapshot as setSupportSnapshot, transformAllSupportsForSingleModel, transformSupportsForModel } from '@/supports/state';
 import { registerDeleteHandler } from '@/features/delete/deleteRegistry';
 import { peekUndo } from '@/history/historyStore';
@@ -3751,27 +3752,10 @@ export function useSceneCollectionManager(options?: {
 
     if (currentModel.linkGroupId) {
       const linkGroupId = currentModel.linkGroupId;
-      const deltaPos = transform.position.clone().sub(beforeTransform.position);
-      const deltaRotX = transform.rotation.x - beforeTransform.rotation.x;
-      const deltaRotY = transform.rotation.y - beforeTransform.rotation.y;
-      const deltaRotZ = transform.rotation.z - beforeTransform.rotation.z;
-      const deltaScale = transform.scale.clone().sub(beforeTransform.scale);
-
       const peerModels = modelsRef.current.filter((m) => m.linkGroupId === linkGroupId && m.id !== id);
       for (const peer of peerModels) {
         const peerBefore = peer.transform;
-        const peerNextPos = peerBefore.position.clone().add(deltaPos);
-        const peerNextRot = eulerFromGlobalEuler({
-          x: peerBefore.rotation.x + deltaRotX,
-          y: peerBefore.rotation.y + deltaRotY,
-          z: peerBefore.rotation.z + deltaRotZ,
-        });
-        const peerNextScale = peerBefore.scale.clone().add(deltaScale);
-        const peerNextTransform: ModelTransform = {
-          position: peerNextPos,
-          rotation: peerNextRot,
-          scale: peerNextScale,
-        };
+        const peerNextTransform = linkedPeerTransform({ peerBefore, before: beforeTransform, after: transform });
         updateMap.set(peer.id, peerNextTransform);
 
         const peerCommit = transformSupportsForModel(peer.id, peerBefore, peerNextTransform);

@@ -71,7 +71,7 @@ export function modelCascadeSeeds({ collections, modelIds }: {
  * from a file, and `__proto__` is not a key on a plain object. A null entry is
  * skipped: this rule does not repair a file, it only leaves it no worse.
  */
-function payloadCascadeRecords(payload: DragonfruitImportFormat): Pick<SupportState, SupportCollectionKey> {
+export function payloadRecords(payload: DragonfruitImportFormat): Pick<SupportState, SupportCollectionKey> {
     const records: Record<string, Record<string, unknown>> = {};
     for (const key of SUPPORT_COLLECTION_KEYS) records[key] = Object.create(null) as Record<string, unknown>;
 
@@ -102,7 +102,7 @@ export function withoutModelSupports({ payload, modelIds }: {
     modelIds: Iterable<string>;
 }): { payload: DragonfruitImportFormat; removed: number } {
     const current = migrateLegacySupportPayload(payload);
-    const collections = payloadCascadeRecords(current);
+    const collections = payloadRecords(current);
     const seeds = modelCascadeSeeds({ collections, modelIds });
     if (seeds.length === 0) return { payload, removed: 0 };
 
