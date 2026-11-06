@@ -78,3 +78,34 @@ test('a packing that drops a bed model does not add the new ones', async () => {
     const chosen = await chooseBedByHeight([part('tall', 50), part('a', 10), part('b', 9)], { heightOf, pack: picky });
     assert.deepEqual(ids(chosen), ['tall']);
 });
+
+test('a tall model that fits gets a bed even when the calls run out on packings that drop it', async () => {
+  type Part = { id: string; height: number; area: number };
+  const tall: Part = { id: 'tall', height: 60, area: 90 };
+  const small: Part[] = Array.from({ length: 30 }, (_, i) => ({ id: `s${i}`, height: 10, area: 30 }));
+  const smallestFirst = (parts: Part[]) => {
+    let used = 0;
+    return [...parts].sort((a, b) => a.area - b.area).filter((part) => {
+      if (used + part.area > 100) return false;
+      used += part.area;
+      return true;
+    });
+  };
+  const chosen = await chooseBedByHeight([tall, ...small], {
+    heightOf: (part) => part.height,
+    pack: smallestFirst,
+    maxPacks: 2,
+    maxOffer: 8,
+  });
+  assert.deepEqual(chosen, [tall]);
+});
+
+test('a model larger than the bed still comes back empty when the calls run out', async () => {
+  const parts = [{ h: 9, wide: true }, { h: 1, wide: false }, { h: 1, wide: false }];
+  const chosen = await chooseBedByHeight(parts, {
+    heightOf: (part) => part.h,
+    pack: (offered) => offered.filter((part) => !part.wide),
+    maxPacks: 1,
+  });
+  assert.deepEqual(chosen, []);
+});

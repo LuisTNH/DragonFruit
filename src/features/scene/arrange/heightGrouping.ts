@@ -109,5 +109,11 @@ export async function chooseBedByHeight<T>(models: readonly T[], options: Height
         const skipTallest = !placed.has(waiting[0]);
         waiting = waiting.filter((model, index) => !placed.has(model) && !(skipTallest && index === 0));
     }
+    // The calls ran out on packings that dropped the tallest: an empty answer
+    // means "larger than the bed", so it is asked about alone before saying so.
+    if (chosen.length === 0 && waiting.length > 0) {
+        const tallest = waiting[0];
+        if ((await options.pack([tallest])).includes(tallest)) chosen.push(tallest);
+    }
     return chosen;
 }
