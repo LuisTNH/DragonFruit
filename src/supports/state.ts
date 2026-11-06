@@ -16,7 +16,7 @@ import { typesMissingExportGroupBuilder } from './exportGeometry/seam';
 import { migrateLegacySupportPayload } from './importMigrations';
 import type { SupportCollectionKey } from './supportTypeRegistry';
 import type { ContactCone, SupportTipProfile } from './SupportPrimitives/ContactCone/types';
-import { BALL_TIP_SUPPORT_TYPES, getFinalSocketPosition, withTipType } from './SupportPrimitives/ContactCone/contactConeUtils';
+import { BALL_TIP_SUPPORT_TYPES, getContactBall, getFinalSocketPosition, withTipType } from './SupportPrimitives/ContactCone/contactConeUtils';
 import { DEFAULT_TIP_PROFILE } from './SupportPrimitives/ContactCone/types';
 import { resolveSegmentEndpoints, type ShaftEntity } from './SupportPrimitives/Knot/segmentEndpoints';
 import { calculateDiskThickness } from './SupportPrimitives/ContactDisk/contactDiskUtils';
@@ -3923,7 +3923,27 @@ export function getSupportSettingsForTarget(target: EditableSupportTarget, base?
         source: decoded ? 'hex' : 'inferred',
     });
 
-    return decoded ?? inferSupportSettings<SupportSettings>(target.kind, entity, base);
+    if (decoded) return decoded;
+    const inferred = inferSupportSettings<SupportSettings>(target.kind, entity, base);
+    return inferred ? withConeTipType(inferred, (entity as { contactCone?: Trunk['contactCone'] }).contactCone) : inferred;
+}
+
+/**
+ * Inference reads a cone's sizes, not its kind. A support with no settings code
+ * (a file written by another tool) takes the tip type from its own contact, or
+ * the next edit would turn it into whatever the Studio holds.
+ */
+function withConeTipType(settings: SupportSettings, cone: Trunk['contactCone'] | undefined): SupportSettings {
+    if (!cone) return settings;
+    const ball = getContactBall(cone);
+    return {
+        ...settings,
+        tip: {
+            ...settings.tip,
+            type: ball ? 'sphere' : 'disk',
+            ...(ball ? { ballDiameterMm: ball.radius * 2 } : {}),
+        },
+    };
 }
 
 

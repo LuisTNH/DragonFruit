@@ -17,7 +17,7 @@ import {
 import { sphereTipProfile, withTipType } from '../SupportPrimitives/ContactCone/contactConeUtils';
 import type { SupportTipProfile } from '../SupportPrimitives/ContactCone/types';
 import { buildTrunkData } from '../SupportTypes/Trunk/trunkBuilder';
-import { applySettingsToSupportTarget, getSnapshot, resetKickstandsInState, resetStore } from '../state';
+import { applySettingsToSupportTarget, getSnapshot, getSupportSettingsForTarget, resetKickstandsInState, resetStore, setSnapshot } from '../state';
 
 type Profile = { type?: string; contactDiameterMm: number; sphereRadiusRatio?: number };
 type WithCone = { contactCone?: { profile: Profile } };
@@ -185,5 +185,40 @@ test('an auto run with a disk tip places no balls', () => {
         const contacts = placeContacts();
         assert.ok(contacts.length > 0);
         assert.ok(contacts.every((e) => e.contactCone!.profile.type === 'disk'));
+    });
+});
+
+test('a support with no settings code keeps its ball through an edit', () => {
+    preservingLive(() => {
+        updateAutoSupportSettings(normalizeAutoSupportSettings({ sizingPreset: 'structure' }));
+        updateTipProfile({ type: 'sphere', ballDiameterMm: 0.5 });
+        const trunk = placeContacts().find((e) => (e as { typeId?: string }).typeId === 'trunk')!;
+        const snapshot = getSnapshot();
+        const { settingsCodeHex: _code, ...bare } = snapshot.trunks[trunk.id] as unknown as Record<string, unknown>;
+        const id = 'trunk-from-another-tool';
+        setSnapshot({ ...snapshot, trunks: { ...snapshot.trunks, [id]: { ...bare, id } } } as unknown as typeof snapshot);
+        updateTipProfile({ type: 'disk' });
+
+        const hydrated = getSupportSettingsForTarget({ kind: 'trunk', id })!;
+        assert.equal(hydrated.tip.type, 'sphere');
+        assert.ok(Math.abs(hydrated.tip.ballDiameterMm! - 0.5) < 1e-9);
+
+        applySettingsToSupportTarget({ kind: 'trunk', id }, { ...hydrated, shaft: { ...hydrated.shaft, diameterMm: 1.3 } });
+        const profile = (getSnapshot().trunks[id] as unknown as WithCone).contactCone!.profile;
+        assert.equal(profile.type, 'sphere');
+    });
+});
+
+test('a code-less disk support stays a disk while the Studio holds a sphere', () => {
+    preservingLive(() => {
+        updateAutoSupportSettings(normalizeAutoSupportSettings({ sizingPreset: 'structure' }));
+        updateTipProfile({ type: 'disk' });
+        const trunk = placeContacts().find((e) => (e as { typeId?: string }).typeId === 'trunk')!;
+        const snapshot = getSnapshot();
+        const { settingsCodeHex: _code, ...bare } = snapshot.trunks[trunk.id] as unknown as Record<string, unknown>;
+        const id = 'disk-from-another-tool';
+        setSnapshot({ ...snapshot, trunks: { ...snapshot.trunks, [id]: { ...bare, id } } } as unknown as typeof snapshot);
+        updateTipProfile({ type: 'sphere', ballDiameterMm: 0.5 });
+        assert.equal(getSupportSettingsForTarget({ kind: 'trunk', id })!.tip.type, 'disk');
     });
 });
