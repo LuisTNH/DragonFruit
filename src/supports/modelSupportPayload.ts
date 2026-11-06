@@ -19,9 +19,12 @@ function payloadFromRecords(payload: DragonfruitImportFormat, before: Records, n
         const list = (result[key] ?? []) as ({ id: string } | null)[];
         const listed = new Set(list.flatMap((entity) => (entity ? [entity.id] : [])));
 
-        const kept = list.flatMap((entity) => {
+        // Records are read by id, last one wins, so only that entry of a repeated id changes.
+        const lastIndexById = new Map(list.flatMap((entity, index) => (entity ? [[entity.id, index] as const] : [])));
+        const kept = list.flatMap((entity, index) => {
             if (!entity) return [entity];
-            return Object.hasOwn(next[key], entity.id) ? [next[key][entity.id] as { id: string }] : [];
+            if (!Object.hasOwn(next[key], entity.id)) return [];
+            return [lastIndexById.get(entity.id) === index ? next[key][entity.id] as { id: string } : entity];
         });
         const added = Object.values(next[key]).filter((entity) => {
             const { id } = entity as { id: string };
