@@ -214,8 +214,11 @@ export async function computeSupportAuto(input: SupportAutoInput): Promise<Suppo
     if (!plan) throw new Error(`auto supports produced no plan (${islands.length} islands)`);
     const placed: Record<string, number> = {};
     for (const [type, count] of Object.entries(plan.result.placed)) placed[type] = count ?? 0;
+    const supports = buildScopedSupportExportDocument(plan.support, [input.modelId], 'dragonfruit-ts-cli');
+    // Bracing runs after the placement the counters cover, so braces are counted from the result.
+    placed.brace = supports.braces?.length ?? 0;
     return {
-      supports: buildScopedSupportExportDocument(plan.support, [input.modelId], 'dragonfruit-ts-cli'),
+      supports,
       islands: islands.length,
       islandsCovered: plan.analytics.islandsCovered,
       islandsUncovered: plan.analytics.islandsUncovered,
