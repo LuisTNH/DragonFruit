@@ -3337,7 +3337,7 @@ export function SlicingPanel({
               </div>
             ) : (
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                <Trans>The last exposure is above what a printer takes. Lower the start, the step or the number of files.</Trans>
+                <Trans>These exposures cannot be sliced: the last is above what a printer takes, or the step is too fine to keep two apart. Change the start, the step or the number of files.</Trans>
               </p>
             )}
             <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>

@@ -51,3 +51,10 @@ test('the exposure is set on the profile and on every format setting it holds', 
   assert.equal(material.normalExposureSec, 2);
   assert.equal(material.localSettingsByOutput?.ctb?.normalExposureSec, 2);
 });
+
+test('a step too fine for two distinct exposures gives no series', () => {
+  assert.deepEqual(buildExposureSeries({ startSec: 1, stepSec: 0.001, count: 5 }), []);
+  assert.deepEqual(buildExposureSeries({ startSec: 1, stepSec: 0.004, count: 12 }), []);
+  assert.deepEqual(buildExposureSeries({ startSec: 119.996, stepSec: 0.001, count: 2 }), []);
+  assert.deepEqual(buildExposureSeries({ startSec: 1, stepSec: 0.01, count: 3 }), [1, 1.01, 1.02]);
+});

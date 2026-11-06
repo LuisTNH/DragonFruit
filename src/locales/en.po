@@ -9969,8 +9969,8 @@ msgid "The inputs and factors the last run sized the supports with"
 msgstr "The inputs and factors the last run sized the supports with"
 
 #: src/features/slicing/components/SlicingPanel.tsx:3340
-msgid "The last exposure is above what a printer takes. Lower the start, the step or the number of files."
-msgstr "The last exposure is above what a printer takes. Lower the start, the step or the number of files."
+msgid "These exposures cannot be sliced: the last is above what a printer takes, or the step is too fine to keep two apart. Change the start, the step or the number of files."
+msgstr "These exposures cannot be sliced: the last is above what a printer takes, or the step is too fine to keep two apart. Change the start, the step or the number of files."
 
 #: src/app/page.tsx:12103
 msgid "The models on this plate are deleted with it."

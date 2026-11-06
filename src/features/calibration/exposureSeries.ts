@@ -52,8 +52,8 @@ function roundExposureSec(value: number): number {
 
 /**
  * The normal exposures of a series, one per file, or an empty list when the request
- * cannot be printed: too few or too many files, a step that is not positive, or an
- * exposure outside what a printer takes.
+ * cannot be printed: too few or too many files, a step that is not positive, a step
+ * too fine to tell two files apart, or an exposure outside what a printer takes.
  */
 export function buildExposureSeries(request: ExposureSeriesRequest): number[] {
   const { startSec, stepSec, count } = request;
@@ -62,7 +62,9 @@ export function buildExposureSeries(request: ExposureSeriesRequest): number[] {
   if (stepSec <= 0) return [];
   const exposures = Array.from({ length: count }, (_, index) => roundExposureSec(startSec + index * stepSec));
   const inRange = exposures.every((sec) => sec >= EXPOSURE_SERIES_MIN_SEC && sec <= EXPOSURE_SERIES_MAX_SEC);
-  return inRange ? exposures : [];
+  // Two steps rounding to one exposure would write one file over the other.
+  const distinct = new Set(exposures).size === exposures.length;
+  return inRange && distinct ? exposures : [];
 }
 
 /**
