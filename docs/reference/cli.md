@@ -189,7 +189,7 @@ and prints `[command] Xms` to stderr.
 | `scene add-model <voxl> --mesh <stl> [--name N] [--position x,y,z]` | Add model | VOXL model entry |
 | `scene remove-model <voxl> --id <id>` | Remove model (cascades supports) | VOXL mutation |
 | `scene list-models <voxl> [--json]` | List models with transforms | VOXL read |
-| `scene transform-model <voxl> --id <id> [--position x,y,z] [--rotate x,y,z] [--scale x,y,z]` | Set transform; its supports and any link group move with it | VOXL mutation |
+| `scene transform-model <voxl> --id <id> [--position x,y,z] [--rotate x,y,z] [--scale x,y,z]` | Set transform; its supports and any link group move with it. Refuses a position past 1e6 mm, a rotation past 1e6 rad and a scale outside 1e-6 to 1e6 in size, and leaves the file as it was | VOXL mutation |
 | `scene duplicate <voxl> --id <id> [--count N] [--offset x,y,z]` | Duplicate model | VOXL mutation |
 | `scene arrange <voxl> --mesh-dir <dir> [--spacing 2] [--build-width-mm 218] [--build-depth-mm 122] [--anchor center]` | Auto-arrange on plate | `highPrecisionArrange` (SAT nesting) |
 | `scene slice <voxl> --o <out> --mesh-dir <dir> [--plate <id or n>] [--printer <profile.json>] [--material <material.json>] [--aa-preset P] [--aa-settings <aa.json>] [--lut-curves <curves.json>]` | Merge + slice via Rust, with the job the app would build | Loads STLs → applies transforms → `assembleSliceJob` → `dragonfruit-cli slice run` |

@@ -598,3 +598,19 @@ describe('a link group moving together', () => {
         assert.equal(linkedScaleBreaks(v(-1, 1, 1), v(-0.5, 1, 1)), false);
     });
 });
+
+describe('an id the file repeats', () => {
+    it('moves the entry the records read and leaves the other one standing', () => {
+        const payload = payloadOf(supportsOf('m', 5, 6)) as unknown as { roots: Array<Record<string, unknown>> };
+        const first = payload.roots[0];
+        payload.roots.push({ ...first, tag: 'second' });
+
+        const out = move(payload as unknown as DragonfruitImportFormat, 'm', placed(v(1, 0, 0))).payload as unknown as typeof payload;
+
+        assert.equal(out.roots.length, payload.roots.length);
+        assert.equal(out.roots[0], first);
+        const repeat = out.roots.at(-1)!;
+        assert.equal(repeat.tag, 'second');
+        assert.notDeepEqual(repeat.transform, first.transform);
+    });
+});

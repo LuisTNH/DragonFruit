@@ -56,6 +56,7 @@ import type {
 import type { AaPreset } from '../src/features/slicing/autoAaPhysics';
 import type { SceneSliceModelInput } from './cli/sceneSliceMesh';
 import { withoutModelInGroups } from './cli/sceneRemovalGroups';
+import { transformProblem } from './cli/transformLimits';
 import type { RaftSettings } from '../src/supports/Rafts/Crenelated/RaftTypes';
 
 // ---------------------------------------------------------------------------
@@ -244,6 +245,8 @@ async function sceneAddModel(args: ReturnType<typeof parseArgs>): Promise<void> 
   const position = posStr ? parseVec3(posStr) : { x: 0, y: 0, z: 0 };
   const rotation = rotStr ? parseVec3(rotStr) : { x: 0, y: 0, z: 0 };
   const scale = scaleStr ? parseVec3(scaleStr) : { x: 1, y: 1, z: 1 };
+  const problem = transformProblem({ position, rotation, scale });
+  if (problem) throw new Error(`add-model: ${problem}`);
 
   let fileSizeBytes: number | undefined;
   try { fileSizeBytes = statSync(meshPath).size; } catch { /* ignore */ }
@@ -357,11 +360,10 @@ async function sceneTransformModel(args: ReturnType<typeof parseArgs>): Promise<
     rotation: rotStr ? parseVec3(rotStr) : model.transform.rotation,
     scale: scaleStr ? parseVec3(scaleStr) : model.transform.scale,
   };
-  const numbers = [target.position, target.rotation, target.scale].flatMap(({ x, y, z }) => [x, y, z]);
-  if (!numbers.every(Number.isFinite)) throw new Error('--position, --rotate and --scale take three numbers: x,y,z');
-  if (target.scale.x === 0 || target.scale.y === 0 || target.scale.z === 0) {
-    throw new Error('--scale cannot be 0: the supports could not follow it back');
-  }
+  const targetProblem = transformProblem(target);
+  if (targetProblem) throw new Error(`transform-model: ${targetProblem}`);
+  const startProblem = transformProblem(model.transform);
+  if (startProblem) throw new Error(`Model '${id}' cannot move from where the file has it: ${startProblem}`);
 
   // Supports follow, and a link group moves together, as in the app. A plate
   // lock lives in the session rather than the file, so there is none to honour.
@@ -380,6 +382,8 @@ async function sceneTransformModel(args: ReturnType<typeof parseArgs>): Promise<
     if (entry !== model && linkedScaleBreaks(from.scale, to.scale)) {
       throw new Error(`--scale would take linked model '${entry.id}' to 0 or flip it: a link group moves by the same change`);
     }
+    const peerProblem = transformProblem(entry.transform) ?? transformProblem(to);
+    if (entry !== model && peerProblem) throw new Error(`Linked model '${entry.id}' cannot move: ${peerProblem}`);
   }
   const movedRecords = new Set<string>();
   for (const { entry, before: from, after: to } of moves) {
