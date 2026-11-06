@@ -3737,11 +3737,13 @@ export function useSceneCollectionManager(options?: {
       supportsChanged: false,
       kickstandsChanged: false,
     };
+    // Shared by the model and its link group, so a support across two of them moves once.
+    const linkGroupMoved = new Set<string>();
 
     if (previousTransformOverride && modelsRef.current.length === 1) {
       transformCommit = transformAllSupportsForSingleModel(beforeTransform, transform);
     } else {
-      transformCommit = transformSupportsForModel(id, beforeTransform, transform);
+      transformCommit = transformSupportsForModel(id, beforeTransform, transform, linkGroupMoved);
     }
 
     supportsChanged = supportsChanged || transformCommit.supportsChanged;
@@ -3758,7 +3760,7 @@ export function useSceneCollectionManager(options?: {
         const peerNextTransform = linkedPeerTransform({ peerBefore, before: beforeTransform, after: transform });
         updateMap.set(peer.id, peerNextTransform);
 
-        const peerCommit = transformSupportsForModel(peer.id, peerBefore, peerNextTransform);
+        const peerCommit = transformSupportsForModel(peer.id, peerBefore, peerNextTransform, linkGroupMoved);
         supportsChanged = supportsChanged || peerCommit.supportsChanged;
         kickstandsChanged = kickstandsChanged || peerCommit.kickstandsChanged;
       }

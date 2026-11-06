@@ -51,11 +51,13 @@ function payloadFromRecords(payload: DragonfruitImportFormat, before: Records, n
  * `transformSupportsForModel` for a support payload: the same rule over the
  * file's arrays, for callers with no store. Returns the input when nothing moved.
  */
-export function withModelSupportsTransformed({ payload, modelId, beforeTransform, afterTransform }: {
+export function withModelSupportsTransformed({ payload, modelId, beforeTransform, afterTransform, movedRecords }: {
     payload: DragonfruitImportFormat;
     modelId: string;
     beforeTransform: SupportModelTransform;
     afterTransform: SupportModelTransform;
+    /** One set across the models of a link group; see `transformedSupportsForModel`. */
+    movedRecords?: Set<string>;
 }): { payload: DragonfruitImportFormat; changed: boolean } {
     const current = migrateLegacySupportPayload(payload);
     const collections = payloadRecords(current);
@@ -64,6 +66,7 @@ export function withModelSupportsTransformed({ payload, modelId, beforeTransform
         modelId,
         beforeTransform,
         afterTransform,
+        movedRecords,
     });
     if (!supportsChanged && !kickstandsChanged) return { payload, changed: false };
 

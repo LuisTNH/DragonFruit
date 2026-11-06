@@ -28,3 +28,14 @@ export function linkedPeerTransform({ peerBefore, before, after }: {
     scale: peerBefore.scale.clone().add(after.scale.clone().sub(before.scale)),
   };
 }
+
+/**
+ * A link group scales by the same difference, not the same factor, so a smaller
+ * peer can land on 0, which no support can follow back, or come out mirrored.
+ */
+export function linkedScaleBreaks(
+  before: { x: number; y: number; z: number },
+  after: { x: number; y: number; z: number },
+): boolean {
+  return (['x', 'y', 'z'] as const).some((axis) => after[axis] === 0 || Math.sign(after[axis]) !== Math.sign(before[axis]));
+}

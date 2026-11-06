@@ -34,7 +34,7 @@ import {
   readPlateOrdering,
 } from '../src/features/scene/plates/plateCascade';
 import { computePlateFrames, plateSliceScope, resolveModelPlateId, type PlateSliceScope } from '../src/features/scene/plates/plateLayout';
-import { linkedPeerTransform } from '../src/features/scene/linkedPeerTransform';
+import { linkedPeerTransform, linkedScaleBreaks } from '../src/features/scene/linkedPeerTransform';
 import { withModelSupportsTransformed } from '../src/supports/modelSupportPayload';
 import { withoutModelSupports } from '../src/supports/PlacementLogic/SupportModelLinker';
 import type {
@@ -377,11 +377,18 @@ async function sceneTransformModel(args: ReturnType<typeof parseArgs>): Promise<
       }),
   ];
   for (const { entry, before: from, after: to } of moves) {
+    if (entry !== model && linkedScaleBreaks(from.scale, to.scale)) {
+      throw new Error(`--scale would take linked model '${entry.id}' to 0 or flip it: a link group moves by the same change`);
+    }
+  }
+  const movedRecords = new Set<string>();
+  for (const { entry, before: from, after: to } of moves) {
     doc.supports = withModelSupportsTransformed({
       payload: doc.supports,
       modelId: entry.id,
       beforeTransform: from,
       afterTransform: to,
+      movedRecords,
     }).payload;
     entry.transform = {
       ...entry.transform,

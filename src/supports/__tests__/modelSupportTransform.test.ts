@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import * as THREE from 'three';
 
-import { linkedPeerTransform } from '@/features/scene/linkedPeerTransform';
+import { linkedPeerTransform, linkedScaleBreaks } from '@/features/scene/linkedPeerTransform';
 import { DEFAULT_TIP_PROFILE } from '../SupportPrimitives/ContactCone/types';
 import { withModelSupportsTransformed } from '../modelSupportPayload';
 import { payloadRecords } from '../PlacementLogic/SupportModelLinker';
@@ -545,5 +545,56 @@ describe(`${SCENES} random moves`, () => {
             const shaped = (payload: DragonfruitImportFormat) => rounded({ ...payload, stumps: [] });
             assert.deepEqual(shaped(back), shaped(input), `seed ${seed} (${kind})`);
         });
+    });
+});
+
+describe('a link group moving together', () => {
+    const crossed = () => {
+        const payload = payloadOf(supportsOf('a', 0, 0), supportsOf('b', 50, 0)) as unknown as { knots: { id: string; parentShaftId: string; pos: Vec }[] };
+        const hanging = payload.knots.find((entry) => entry.id === 'b-lk')!;
+        hanging.parentShaftId = 'a-seg';
+        hanging.pos = v(0, 0, 13);
+        return payload as unknown as DragonfruitImportFormat;
+    };
+    const after = placed(v(10, 0, 0));
+    const moveBoth = (payload: DragonfruitImportFormat, movedRecords: Set<string>, order: string[]) => order.reduce(
+        (current, modelId) => withModelSupportsTransformed({ payload: current, modelId, beforeTransform: AT_ORIGIN, afterTransform: after, movedRecords }).payload,
+        payload,
+    ) as unknown as { knots: { id: string; pos: Vec }[]; leaves: { id: string; contactCone: { pos: Vec } }[] };
+
+    for (const order of [['a', 'b'], ['b', 'a']]) {
+        it(`moves a support across two of them once, ${order.join(' then ')}`, () => {
+            const before = crossed() as unknown as { leaves: { id: string; contactCone: { pos: Vec } }[] };
+            const moved = moveBoth(crossed(), new Set(), order);
+            assert.equal(moved.knots.find((entry) => entry.id === 'b-lk')!.pos.x, 10);
+            const cone = (leaves: { id: string; contactCone: { pos: Vec } }[]) => leaves.find((entry) => entry.id === 'b-leaf')!.contactCone.pos.x;
+            assert.equal(cone(moved.leaves) - cone(before.leaves), 10);
+        });
+    }
+
+    it('moves everything else as a single move would', () => {
+        const moved = moveBoth(payloadOf(supportsOf('a', 0, 0), supportsOf('b', 50, 0)), new Set(), ['a', 'b']);
+        const alone = moveBoth(payloadOf(supportsOf('a', 0, 0), supportsOf('b', 50, 0)), new Set(), ['b']);
+        assert.deepEqual(
+            rounded(moved.knots.filter((entry) => entry.id.startsWith('b-'))),
+            rounded(alone.knots.filter((entry) => entry.id.startsWith('b-'))),
+        );
+    });
+
+    it('agrees with the store', () => {
+        resetStore();
+        setSnapshot({ ...getSnapshot(), ...payloadRecords(crossed()) } as SupportState);
+        const movedRecords = new Set<string>();
+        for (const id of ['a', 'b']) transformSupportsForModel(id, AT_ORIGIN, after, movedRecords);
+        const state = getSnapshot() as unknown as { knots: Record<string, { pos: Vec }> };
+        assert.equal(state.knots['b-lk'].pos.x, 10);
+    });
+
+    it('refuses a scale a smaller peer cannot take', () => {
+        const unit = v(1, 1, 1);
+        assert.equal(linkedScaleBreaks(v(0.5, 0.5, 0.5), v(1, 1, 1)), false);
+        assert.equal(linkedScaleBreaks(unit, v(0, 1, 1)), true);
+        assert.equal(linkedScaleBreaks(v(0.4, 0.4, 0.4), v(-0.1, -0.1, -0.1)), true);
+        assert.equal(linkedScaleBreaks(v(-1, 1, 1), v(-0.5, 1, 1)), false);
     });
 });
