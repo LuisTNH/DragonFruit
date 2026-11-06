@@ -25,6 +25,7 @@ import { randomUUID } from 'crypto';
 import { tmpdir } from 'os';
 import { fileURLToPath } from 'url';
 import { basename, resolve, dirname } from 'path';
+import { directionFlag, numberFlag } from './cli/numberFlags';
 import { execFileSync } from 'child_process';
 import { createRequire } from 'module';
 import { v4 as uuidv4 } from 'uuid';
@@ -672,9 +673,11 @@ async function supportAuto(args: ReturnType<typeof parseArgs>): Promise<void> {
     throw new Error(`Model '${model.name}' already has ${existing} rooted supports; remove them first (support remove)`);
   }
   const meshDir = optionalFlag(args.flags, 'mesh-dir') ?? dirname(resolve(voxlPath));
-  const liftMm = parseFloat(optionalFlag(args.flags, 'lift-mm') ?? String(SUPPORT_AUTO_LIFT_MM));
-  const pxMm = optionalFlag(args.flags, 'px-mm');
-  const layerHeightMm = optionalFlag(args.flags, 'layer-height-mm');
+  const liftMm = numberFlag('lift-mm', optionalFlag(args.flags, 'lift-mm') ?? String(SUPPORT_AUTO_LIFT_MM), 0);
+  const pxFlag = optionalFlag(args.flags, 'px-mm');
+  const pxMm = pxFlag ? numberFlag('px-mm', pxFlag, 0, true) : undefined;
+  const layerFlag = optionalFlag(args.flags, 'layer-height-mm');
+  const layerHeightMm = layerFlag ? numberFlag('layer-height-mm', layerFlag, 0, true) : undefined;
   // The native island scan (voxel + minima + overhang, as in the app) needs a
   // built dragonfruit-cli; without one only voxel islands are found.
   const builtCli = rustCliPath();
@@ -703,8 +706,8 @@ async function supportAuto(args: ReturnType<typeof parseArgs>): Promise<void> {
     islandsCli,
     blockTriangle: contactBlocker(args.flags, positions),
     detect: {
-      ...(pxMm ? { pxMm: parseFloat(pxMm) } : {}),
-      ...(layerHeightMm ? { layerHeightMm: parseFloat(layerHeightMm) } : {}),
+      ...(pxMm !== undefined ? { pxMm } : {}),
+      ...(layerHeightMm !== undefined ? { layerHeightMm } : {}),
     },
   });
 
@@ -812,7 +815,8 @@ function contactBlocker(
   let side: THREE.Vector3 | null = null;
   let sideFrom = Infinity;
   if (beyond) {
-    const [x, y, z, depth] = beyond.split(',').map(Number);
+    const [x, y, z, depth] = directionFlag('block-beyond', beyond, 1);
+    numberFlag('block-beyond', String(depth), 0, true);
     side = new THREE.Vector3(x, y, z).normalize();
     let far = -Infinity;
     for (let i = 0; i < positions.length; i += 3) {
@@ -823,11 +827,12 @@ function contactBlocker(
   let direction: THREE.Vector3 | null = null;
   let cosLimit = 1;
   if (facing) {
-    const [x, y, z, deg = 60] = facing.split(',').map(Number);
+    const [x, y, z, deg = 60] = directionFlag('block-facing', facing, 1, 1);
+    numberFlag('block-facing', String(deg), 0, true);
     direction = new THREE.Vector3(x, y, z).normalize();
     cosLimit = Math.cos((deg * Math.PI) / 180);
   }
-  const topZ = below ? modelBottomZ + parseFloat(below) : Infinity;
+  const topZ = below ? modelBottomZ + numberFlag('support-only-below-mm', below, 0, true) : Infinity;
   const ab = new THREE.Vector3();
   const ac = new THREE.Vector3();
   return (a, b, c) => {
