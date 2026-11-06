@@ -27,7 +27,7 @@ import {
 } from '@/features/scene/plates/plateLayout';
 import { decodeVoxlBodyChunk, detectObsoleteVoxlVersion, isVoxlBinaryV2, meshChunkStore, parseVoxlBinaryV2, readScenePlates, readSidecarFileBytes, resolveOriginalRefSidecar, VoxlObsoleteVersionError, type VoxlDocumentV1, type VoxlMeshRef, type VoxlMeshRange } from '@/features/scene/voxl';
 import { clearPaintToBase } from '@/components/analysis/MeshPainter';
-import { linkedPeerTransform } from '@/features/scene/linkedPeerTransform';
+import { linkedPeerTransform, linkedUpdatesBreakScale } from '@/features/scene/linkedPeerTransform';
 import { countSupportEntities, getSnapshot, loadFromImportFormat, mergeFromImportFormat, reassignAllSupportModelIds, removeSupportEntitiesForModels, resetStore, setSnapshot as setSupportSnapshot, transformAllSupportsForSingleModel, transformSupportsForModel } from '@/supports/state';
 import { registerDeleteHandler } from '@/features/delete/deleteRegistry';
 import { peekUndo } from '@/history/historyStore';
@@ -1754,6 +1754,8 @@ export function useSceneCollectionManager(options?: {
    * saying "the plate" about the wrong bed is worse than saying nothing.
    */
   onBlockedByLock?: (plateId?: string) => void;
+  /** A resize that would take a linked model to scale 0 or mirror it was refused. */
+  onBlockedByLinkedScale?: () => void;
 }) {
   const { _ } = useLingui();
   const fmt = useLocaleFormat();
@@ -1943,6 +1945,7 @@ export function useSceneCollectionManager(options?: {
   // Told, not shown: the manager has no UI, so a refused gesture reports through this
   // callback and the page decides what that looks like.
   const onBlockedByLockRef = useRef<((plateId?: string) => void) | undefined>(undefined);
+  const onBlockedByLinkedScaleRef = useRef<(() => void) | undefined>(undefined);
 
   /**
    * The plate whose lock refused a gesture about `model`: the bed it would land on
@@ -1976,6 +1979,7 @@ export function useSceneCollectionManager(options?: {
   const lastLoadedVoxlFormatChunkedRef = useRef<boolean>(true);
   modelsRef.current = models;
   onBlockedByLockRef.current = options?.onBlockedByLock;
+  onBlockedByLinkedScaleRef.current = options?.onBlockedByLinkedScale;
   activeModelIdRef.current = activeModelId;
   selectedModelIdsRef.current = selectedModelIds;
 
@@ -3713,6 +3717,17 @@ export function useSceneCollectionManager(options?: {
       };
     }
 
+    // A link group resizes by the same difference, and no support can follow a peer to 0.
+    if (linkedUpdatesBreakScale({ models: modelsRef.current, updates: [{ id, transform, before: beforeTransform }] })) {
+      onBlockedByLinkedScaleRef.current?.();
+      return {
+        updated: false,
+        supportsChanged: false,
+        kickstandsChanged: false,
+        supportLocalFramePreserved: false,
+      };
+    }
+
     const deltaRotationEqual = Math.abs(beforeTransform.rotation.x - transform.rotation.x) <= 1e-8
       && Math.abs(beforeTransform.rotation.y - transform.rotation.y) <= 1e-8
       && Math.abs(beforeTransform.rotation.z - transform.rotation.z) <= 1e-8
@@ -3995,6 +4010,15 @@ export function useSceneCollectionManager(options?: {
     }
 
     const currentModels = modelsRef.current;
+    if (linkedUpdatesBreakScale({ models: currentModels, updates })) {
+      onBlockedByLinkedScaleRef.current?.();
+      return {
+        updated: false,
+        supportsChanged: false,
+        kickstandsChanged: false,
+        supportLocalFramePreserved: false,
+      };
+    }
     const currentActiveModelId = activeModelIdRef.current;
     const currentSelectedModelIds = selectedModelIdsRef.current;
 

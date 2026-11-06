@@ -39,3 +39,35 @@ export function linkedScaleBreaks(
 ): boolean {
   return (['x', 'y', 'z'] as const).some((axis) => after[axis] === 0 || Math.sign(after[axis]) !== Math.sign(before[axis]));
 }
+
+type ScaleVector = { x: number; y: number; z: number };
+type LinkedModel = { id: string; linkGroupId?: string; transform: { scale: ScaleVector } };
+
+/**
+ * Whether these moves would take a linked model that is not among them to a scale
+ * that `linkedScaleBreaks` refuses. A peer follows the first update of its group, as
+ * in the manager. A move that leaves the scale alone never counts, so a peer that
+ * already stands wrong can still be moved. `before` is for a caller that passes its
+ * own starting point instead of the model's stored transform.
+ */
+export function linkedUpdatesBreakScale({ models, updates }: {
+  models: LinkedModel[];
+  updates: Array<{ id: string; transform: { scale: ScaleVector }; before?: { scale: ScaleVector } }>;
+}): boolean {
+  const claimed = new Set(updates.map((update) => update.id));
+  return updates.some((update) => {
+    const model = models.find((candidate) => candidate.id === update.id);
+    if (!model?.linkGroupId) return false;
+    const before = (update.before ?? model.transform).scale;
+    const after = update.transform.scale;
+    const delta = { x: after.x - before.x, y: after.y - before.y, z: after.z - before.z };
+    const peers = models.filter((peer) => peer.linkGroupId === model.linkGroupId && !claimed.has(peer.id));
+    peers.forEach((peer) => claimed.add(peer.id));
+    if (delta.x === 0 && delta.y === 0 && delta.z === 0) return false;
+    return peers.some(({ transform: { scale } }) => linkedScaleBreaks(scale, {
+      x: scale.x + delta.x,
+      y: scale.y + delta.y,
+      z: scale.z + delta.z,
+    }));
+  });
+}

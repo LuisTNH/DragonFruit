@@ -34,10 +34,10 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   return blob ? new Response(await blob.arrayBuffer()) : domFetch(input, init);
 }) as typeof fetch;
 
-async function mountScene() {
+async function mountScene(options?: Parameters<typeof useSceneCollectionManager>[0]) {
   const sceneRef: { current: Scene | null } = { current: null };
   function Probe() {
-    const scene = useSceneCollectionManager();
+    const scene = useSceneCollectionManager(options);
     useEffect(() => {
       sceneRef.current = scene;
     });
@@ -209,4 +209,31 @@ test('moving a model carries its supports through undo and redo', async () => {
   } finally {
     await tree.unmount();
   }
+});
+
+test('a resize a linked model cannot take leaves the whole group where it stood', async () => {
+  let refusals = 0;
+  const { tree, scene } = await mountScene({ onBlockedByLinkedScale: () => { refusals += 1; } });
+  const a = await loadCube(scene, 'a.stl');
+  const b = await loadCube(scene, 'b.stl');
+  scene().updateModelTransform(b.id, { ...b.transform, scale: b.transform.scale.clone().multiplyScalar(0.5) });
+  await settle(20);
+  scene().linkModels([a.id, b.id]);
+  await settle(20);
+
+  const scaledTo = (factor: number) => ({ ...a.transform, scale: a.transform.scale.clone().multiplyScalar(factor) });
+  const scales = () => scene().models.map((model) => model.transform.scale.toArray());
+  const before = scales();
+
+  assert.equal(scene().updateModelTransform(a.id, scaledTo(0.5)).updated, false);
+  assert.equal(scene().updateModelTransforms([{ id: a.id, transform: scaledTo(0.5) }]).updated, false);
+  await settle(20);
+  assert.deepEqual(scales(), before);
+  assert.equal(refusals, 2);
+
+  assert.equal(scene().updateModelTransform(a.id, scaledTo(0.75)).updated, true);
+  await settle(20);
+  assert.deepEqual(scales(), [[0.75, 0.75, 0.75], [0.25, 0.25, 0.25]]);
+  assert.equal(refusals, 2);
+  await tree.unmount();
 });

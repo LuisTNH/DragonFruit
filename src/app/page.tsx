@@ -811,7 +811,11 @@ export default function Home() {
   const [plateTrashIntent, setPlateTrashIntent] = React.useState<'delete' | 'clear' | null>(null);
   const plateLockedNoticeTimerRef = React.useRef<number | null>(null);
   const notifyPlateLockedRef = React.useRef<(plateId?: string) => void>(() => {});
-  const scene = useSceneCollectionManager({ onBlockedByLock: (plateId) => notifyPlateLockedRef.current(plateId) });
+  const notifyLinkedScaleRef = React.useRef<() => void>(() => {});
+  const scene = useSceneCollectionManager({
+    onBlockedByLock: (plateId) => notifyPlateLockedRef.current(plateId),
+    onBlockedByLinkedScale: () => notifyLinkedScaleRef.current(),
+  });
 
   /**
    * The build volume of every plate, in world coordinates. Every plate is a valid
@@ -867,6 +871,14 @@ export default function Home() {
   // The flag hides the toast; this holds the element one transition longer, so the
   // fade-out has something to run on. See `useTrailingMount`.
   const plateLockedNoticeMounted = useTrailingMount(plateLockedNoticeVisible);
+  const [linkedScaleNoticeVisible, setLinkedScaleNoticeVisible] = React.useState(false);
+  const linkedScaleNoticeTimerRef = React.useRef<number | null>(null);
+  notifyLinkedScaleRef.current = () => {
+    setLinkedScaleNoticeVisible(true);
+    if (linkedScaleNoticeTimerRef.current !== null) window.clearTimeout(linkedScaleNoticeTimerRef.current);
+    linkedScaleNoticeTimerRef.current = window.setTimeout(() => setLinkedScaleNoticeVisible(false), 2600);
+  };
+  const linkedScaleNoticeMounted = useTrailingMount(linkedScaleNoticeVisible);
   // Named the way the Models panel names a plate: its own name, else its number. The
   // refusal usually comes from the bed being worked on, but not always, so the id the
   // manager reports wins over the active one.
@@ -12038,6 +12050,24 @@ export default function Home() {
           </p>
         </div>
       </StructuredDialogModal>
+
+      {linkedScaleNoticeMounted && (
+        <ToastViewport zIndex={127} offset="1.25rem">
+          <Toast
+            tone="warning"
+            shape="rounded"
+            animated
+            visible={linkedScaleNoticeVisible}
+            className="flex items-center max-w-sm pointer-events-auto"
+          >
+            <span className="flex-1 text-center leading-snug">
+              {_(msg`A linked model can't scale that far.`)}
+              <br />
+              <span style={{ fontWeight: 400, opacity: 0.8 }}>{_(msg`Linked models resize by the same amount. Unlink them to go further.`)}</span>
+            </span>
+          </Toast>
+        </ToastViewport>
+      )}
 
       {plateLockedNoticeMounted && (
         <ToastViewport zIndex={127} offset="1.25rem">
