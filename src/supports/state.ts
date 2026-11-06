@@ -2017,6 +2017,7 @@ function transformedKickstandsForModel(
     touchedRootIds?: Set<string>,
     touchedKnotIds?: Set<string>,
     touchedSegmentIds?: Set<string>,
+    claimMove: (key: string) => boolean = () => true,
 ): Record<string, Kickstand> | null {
     let changed = false;
     let nextKickstands = kickstands;
@@ -2029,6 +2030,7 @@ function transformedKickstandsForModel(
         );
 
         if (kickstand.modelId !== modelId && !isConnectedToTouchedGraph) continue;
+        if (!claimMove(`kickstands:${kickstand.id}`)) continue;
 
         if (!changed) {
             nextKickstands = { ...kickstands };
@@ -2089,23 +2091,36 @@ export type SupportModelTransform = { position: THREE.Vector3; rotation: THREE.E
  * `afterTransform`, and anything hanging off them. Reads only `collections` and
  * writes nothing, so a caller with no store can use it (ADR-0045); a record that
  * did not move comes back by reference.
+ *
+ * Models that move together (a link group) pass one `movedRecords` set through
+ * all their calls. A support of one model hanging off another's shaft is reached
+ * by both, and the set keeps it to the first move.
  */
 export function transformedSupportsForModel<T extends Pick<SupportState, SupportCollectionKey>>({
     collections: current,
     modelId,
     beforeTransform,
     afterTransform,
+    movedRecords,
 }: {
     collections: T;
     modelId: string;
     beforeTransform: SupportModelTransform;
     afterTransform: SupportModelTransform;
+    movedRecords?: Set<string>;
 }): SupportTransformCommitResult & { collections: T } {
     const unchanged = { collections: current, supportsChanged: false, kickstandsChanged: false };
     if (!modelId) return unchanged;
 
     const delta = buildSupportDeltaTransform(beforeTransform, afterTransform);
     if (!delta) return unchanged;
+
+    /** Whether this move takes the record: false once another move of the group did. */
+    const claimMove = (key: string): boolean => {
+        if (movedRecords?.has(key)) return false;
+        movedRecords?.add(key);
+        return true;
+    };
 
     let changed = false;
     // Computed here; the rest come from `nextByCollection`. Each copies on its
@@ -2308,6 +2323,7 @@ export function transformedSupportsForModel<T extends Pick<SupportState, Support
         for (const id of ids) {
             const entity = source[id];
             if (!entity) continue;
+            if (!claimMove(`${collection}:${id}`)) continue;
 
             if (!changed) changed = true;
             const target = nextByCollection[collection] ?? { ...source };
@@ -2347,6 +2363,7 @@ export function transformedSupportsForModel<T extends Pick<SupportState, Support
             || ridesTouchedHost;
 
         if (!shouldTransform) continue;
+        if (!claimMove(`knots:${knot.id}`)) continue;
 
         if (nextKnots === current.knots) nextKnots = { ...current.knots };
         changed = true;
@@ -2386,6 +2403,7 @@ export function transformedSupportsForModel<T extends Pick<SupportState, Support
         touchedRootIds,
         touchedKnotIds,
         touchedSegmentIds,
+        claimMove,
     );
     if (nextKickstands) next = { ...next, kickstands: nextKickstands };
 
@@ -2401,12 +2419,14 @@ export function transformSupportsForModel(
     modelId: string,
     beforeTransform: SupportModelTransform,
     afterTransform: SupportModelTransform,
+    movedRecords?: Set<string>,
 ): SupportTransformCommitResult {
     const { collections, supportsChanged, kickstandsChanged } = transformedSupportsForModel({
         collections: state,
         modelId,
         beforeTransform,
         afterTransform,
+        movedRecords,
     });
     if (supportsChanged || kickstandsChanged) {
         setState(collections);
