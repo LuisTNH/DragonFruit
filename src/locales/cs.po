@@ -2834,7 +2834,7 @@ msgstr ""
 msgid "Dashboard View"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:255
+#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:264
 msgid "Debug Mode"
 msgstr ""
 
@@ -2842,11 +2842,11 @@ msgstr ""
 msgid "Debug: color supports by origin — stump (red), overhang (orange), island (blue), standalone (purple), reinforcement (teal)"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:225
+#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:234
 msgid "Debug: show the last run's sizing factors and forest report in the panel"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:224
+#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:233
 msgid "Debug: simplified support render — contact disks/cones plus line vectors instead of full shafts"
 msgstr ""
 
@@ -9236,7 +9236,7 @@ msgstr ""
 msgid "Signing key"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:244
+#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:253
 msgid "Simplified"
 msgstr ""
 

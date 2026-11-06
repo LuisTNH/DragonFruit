@@ -14,6 +14,7 @@ import {
     autoSupportProfileSettings,
     resolvedSizingBandsForRun,
     sizeParameters,
+    withOwnProfileFromTier,
     smallIslandTipDiameterMm,
 } from '../autoSupport/parameterSizing';
 import {
@@ -887,5 +888,64 @@ test('E20 a rebuilt own-profile support keeps its own shaft and pad when the man
         const decoded = decodeSupportSettingsHex(trunks[0].settingsCodeHex!, getSettings())!;
         assert.ok(near(decoded.shaft.diameterMm, 1.1));
         assert.ok(near(decoded.roots.diameterMm, 2.5));
+    });
+});
+
+// --- Stresstest 05.11.2026 ---------------------------------------------------
+
+test('A1 a stored built-in moved to another tier keeps borrowing that tier', () => {
+    preservingLive(() => {
+        const old = createDefaultAutoSupportSettings() as unknown as Record<string, unknown>;
+        for (const key of OWN_PROFILE_KEYS) delete old[key];
+        const stored = {
+            byId: {
+                light: { id: 'light', name: 'Light', isBuiltIn: true, settings: { ...old, areaPerSupportMm2: 16, sizingPreset: 'anchor' } },
+                medium: { id: 'medium', name: 'Medium', isBuiltIn: true, settings: { ...old } },
+                heavy: { id: 'heavy', name: 'Heavy', isBuiltIn: true, settings: { ...old, sizingPreset: 'anchor' } },
+            },
+            allIds: ['light', 'medium', 'heavy'],
+        };
+        const { store } = freshStore({ 'auto-support-presets-v1': JSON.stringify(stored) });
+        const [light, medium, heavy] = ['light', 'medium', 'heavy'].map((id) => store.getAutoSupportPreset(id)!.settings);
+        dropStorage();
+        assert.deepEqual([normalizeAutoSupportSettings(light).ownGeometry, light.sizingPreset], [false, 'anchor']);
+        assert.equal(medium.ownGeometry, true);
+        assert.equal(heavy.ownGeometry, true);
+    });
+});
+
+test('A2 the dialog offers no shaft wider than a run builds', () => {
+    preservingLive(() => {
+        const max = AUTO_SUPPORT_CONSTRAINTS.shaftDiameterMm.max;
+        const { trunks } = placeWith({ ownGeometry: true, shaftDiameterMm: max, tipContactDiameterMm: 0.3 });
+        assert.ok(trunks.length > 0);
+        assert.ok(near(trunks[0].baseDiameterMm, max, 0.01));
+        assert.equal(normalizeAutoSupportSettings({ shaftDiameterMm: 5 }).shaftDiameterMm, max);
+    });
+});
+
+for (const tier of ['detail', 'structure', 'anchor'] as const) {
+    test(`A3 switching own profile on from ${tier} starts from that tier`, () => {
+        preservingLive(() => {
+            const block = withOwnProfileFromTier(borrow(tier, { ownGeometry: true }));
+            assert.equal(block.shaftDiameterMm, SIZING_BANDS[tier].shaftDiameterMm);
+            assert.equal(block.tipLengthMm, SIZING_BANDS[tier].tipLengthMm);
+            assert.equal(block.rootDiameterMm, SIZING_BANDS[tier].rootDiameterMm);
+        });
+    });
+}
+
+test('A3 switching own profile on keeps numbers the block already holds', () => {
+    preservingLive(() => {
+        const block = withOwnProfileFromTier(borrow('detail', { ownGeometry: true, shaftDiameterMm: 1.75 }));
+        assert.equal(block.shaftDiameterMm, 1.75);
+    });
+});
+
+test('A3 a tier that names no preset falls back without throwing', () => {
+    preservingLive(() => {
+        const block = withOwnProfileFromTier(borrow('gone', { ownGeometry: true }));
+        assert.equal(block.ownGeometry, true);
+        assert.ok(block.shaftDiameterMm > 0);
     });
 });

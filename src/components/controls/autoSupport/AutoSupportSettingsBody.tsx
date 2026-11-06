@@ -28,6 +28,7 @@ import { LabeledNumberInput, LabeledToggleInput } from '@/components/settings/pr
 import type { AutoSupportSettings, AutoSupportDiagnosticKey } from '@/supports/autoSupport';
 import { AutoSupportPresetSelector, AutoSupportSettingsFooterActions } from './AutoSupportPresets';
 import { AutoSupportSizingTierField } from './AutoSupportSizingTierField';
+import { withOwnProfileFromTier } from '@/supports/autoSupport/parameterSizing';
 import { Tooltip } from '@/components/ui/Tooltip';
 import {
   ADVANCED_CALIBRATION_KNOBS,
@@ -165,9 +166,17 @@ function ProfileFields({
     TOGGLES_BY_SECTION.profile.find((toggle) => toggle.key === 'baseFlareEnabled')!,
   ];
 
+  // Switching on starts from the tier's numbers, so the switch alone prints the same.
+  const setDraftFromTier: React.Dispatch<React.SetStateAction<AutoSupportSettings>> = (update) => {
+    setDraft((current) => {
+      const next = typeof update === 'function' ? update(current) : update;
+      return next.ownGeometry && !current.ownGeometry ? withOwnProfileFromTier(next) : next;
+    });
+  };
+
   return (
     <>
-      <ToggleField toggle={ownToggle} draft={draft} setDraft={setDraft} locked={locked} />
+      <ToggleField toggle={ownToggle} draft={draft} setDraft={setDraftFromTier} locked={locked} />
       {draft.ownGeometry ? (
         <>
           {KNOBS_BY_SECTION.profile.map((knob) => (

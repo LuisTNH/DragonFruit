@@ -25,7 +25,8 @@ With **Own Profile** on, the preset carries its own tip contact, length
 and penetration, shaft diameter, root pad and base flare, set right there like a
 Support Studio preset, and nothing in Support Studio changes it. Light, Medium and
 Heavy ship with their own profiles, the numbers of the Detail, Structure and Anchor
-Support Studio presets. With **Own Profile** off, the card shows **Sizing Tier**
+Support Studio presets. Switching **Own Profile** on starts from the numbers of the
+current tier, so the switch alone changes nothing that prints. With **Own Profile** off, the card shows **Sizing Tier**
 instead, a dropdown of your Support Studio presets: the run then builds with the
 one you pick (its tip, shaft, roots, base flare and joint), so editing that preset
 changes what auto-support prints. Either way, what you set in Support Studio for

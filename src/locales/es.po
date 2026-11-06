@@ -2834,7 +2834,7 @@ msgstr "Oscuro"
 msgid "Dashboard View"
 msgstr "Vista de panel"
 
-#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:255
+#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:264
 msgid "Debug Mode"
 msgstr "Modo de depuración"
 
@@ -2842,11 +2842,11 @@ msgstr "Modo de depuración"
 msgid "Debug: color supports by origin — stump (red), overhang (orange), island (blue), standalone (purple), reinforcement (teal)"
 msgstr "Depuración: colorea los soportes por origen: tocón (rojo), voladizo (naranja), isla (azul), suelto (morado), refuerzo (verde azulado)"
 
-#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:225
+#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:234
 msgid "Debug: show the last run's sizing factors and forest report in the panel"
 msgstr "Depuración: muestra en el panel los factores de dimensionado y el informe del bosque de la última ejecución"
 
-#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:224
+#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:233
 msgid "Debug: simplified support render — contact disks/cones plus line vectors instead of full shafts"
 msgstr "Depuración: render simplificado de soportes: discos y conos de contacto más vectores de línea en vez de vástagos completos"
 
@@ -9238,7 +9238,7 @@ msgstr "Volumen con signo"
 msgid "Signing key"
 msgstr ""
 
-#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:244
+#: src/components/controls/autoSupport/AutoSupportSettingsBody.tsx:253
 msgid "Simplified"
 msgstr "Simplificado"
 

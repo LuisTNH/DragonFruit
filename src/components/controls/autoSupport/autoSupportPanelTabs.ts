@@ -167,7 +167,7 @@ const KNOBS: readonly KnobDef[] = [
   { key: 'tipContactDiameterMm', section: 'profile', label: msg`Tip Contact`, min: 0.22, max: 2, step: 0.01, unit: 'mm', hint: msg`Contact diameter where the tip touches the model, before the run's angle and size factors` },
   { key: 'tipLengthMm', section: 'profile', label: msg`Tip Length`, min: 0.5, max: 10, step: 0.1, unit: 'mm', hint: msg`Length of the contact cone between the model and the shaft` },
   { key: 'tipPenetrationMm', section: 'profile', label: msg`Tip Penetration`, min: 0, max: 1, step: 0.01, unit: 'mm', hint: msg`How far the contact sinks into the model` },
-  { key: 'shaftDiameterMm', section: 'profile', label: msg`Shaft Diameter`, min: 0.2, max: 5, step: 0.05, unit: 'mm', hint: msg`Trunk diameter before the run's height, load and Support Size factors` },
+  { key: 'shaftDiameterMm', section: 'profile', label: msg`Shaft Diameter`, min: 0.2, max: 2, step: 0.05, unit: 'mm', hint: msg`Trunk diameter before the run's height, load and Support Size factors` },
   { key: 'rootDiameterMm', section: 'profile', label: msg`Root Diameter`, min: 0.5, max: 10, step: 0.1, unit: 'mm', hint: msg`Diameter of the pad on the build plate` },
   { key: 'rootDiskHeightMm', section: 'profile', label: msg`Root Disk Height`, min: 0, max: 5, step: 0.1, unit: 'mm', hint: msg`Height of the flat disk of the root pad` },
   { key: 'rootConeHeightMm', section: 'profile', label: msg`Root Cone Height`, min: 0, max: 10, step: 0.1, unit: 'mm', hint: msg`Height of the cone from the root pad up to the shaft` },

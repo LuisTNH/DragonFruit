@@ -192,10 +192,12 @@ function snapshotPresetSettings(settings: AutoSupportSettings): AutoSupportPrese
  * A stored built-in block from before own support profiles carries no
  * `ownGeometry` key: it gets the factory built-in's profile keys, so an existing
  * install's Light / Medium / Heavy stop borrowing from a Support Studio preset
- * like a fresh install's. A block that states `ownGeometry` is kept as stored.
+ * like a fresh install's. A block that states `ownGeometry` is kept as stored,
+ * and so is one the user moved to another tier: that choice still borrows.
  */
 function withBuiltInProfile(stored: AutoSupportPresetSettings, builtIn: AutoSupportPreset): AutoSupportPresetSettings {
     if (Object.hasOwn(stored, 'ownGeometry')) return stored;
+    if (normalizeAutoSupportSettings(stored).sizingPreset !== builtIn.settings.sizingPreset) return stored;
     const profile = Object.fromEntries(
         OWN_PROFILE_KEYS.map((key) => [key, builtIn.settings[key]]),
     );

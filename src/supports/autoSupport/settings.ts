@@ -270,6 +270,9 @@ export type NumericAutoSupportSettingKey =
     | 'baseFlareDiameterMm'
     | 'baseFlareHeightMm';
 
+/** The widest shaft a run sizes (mm); only `sizeScale` goes past it. */
+export const MAX_SHAFT_DIAMETER_MM = 2.0;
+
 export const AUTO_SUPPORT_CONSTRAINTS = {
     minIslandAreaMm2: { min: 0.01, max: 10, step: 0.01, defaultValue: 0.02 },
     tipInfluenceRadiusMm: { min: 0.1, max: 10, step: 0.1, defaultValue: 0.5 },
@@ -294,7 +297,7 @@ export const AUTO_SUPPORT_CONSTRAINTS = {
     tipContactDiameterMm: { min: MIN_CONTACT_TIP_DIAMETER_MM, max: 2, step: 0.01, defaultValue: SIZING_BANDS.structure.tipContactDiameterMm },
     tipLengthMm: { min: 0.5, max: 10, step: 0.1, defaultValue: SIZING_BANDS.structure.tipLengthMm },
     tipPenetrationMm: { min: 0, max: 1, step: 0.01, defaultValue: SIZING_BANDS.structure.tipPenetrationMm },
-    shaftDiameterMm: { min: 0.2, max: 5, step: 0.05, defaultValue: SIZING_BANDS.structure.shaftDiameterMm },
+    shaftDiameterMm: { min: 0.2, max: MAX_SHAFT_DIAMETER_MM, step: 0.05, defaultValue: SIZING_BANDS.structure.shaftDiameterMm },
     rootDiameterMm: { min: 0.5, max: 10, step: 0.1, defaultValue: SIZING_BANDS.structure.rootDiameterMm },
     rootDiskHeightMm: { min: 0, max: 5, step: 0.1, defaultValue: SIZING_BANDS.structure.rootDiskHeightMm },
     rootConeHeightMm: { min: 0, max: 10, step: 0.1, defaultValue: SIZING_BANDS.structure.rootConeHeightMm },

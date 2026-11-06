@@ -2,7 +2,7 @@ import { clamp, round } from '@/utils/math';
 import type { CandidatePoint } from './types';
 import { getSettings } from '../Settings/state';
 import { getPresetById } from '../Settings/presets';
-import { AUTO_SUPPORT_CONSTRAINTS, MIN_CONTACT_TIP_DIAMETER_MM, SIZING_BANDS } from './settings';
+import { AUTO_SUPPORT_CONSTRAINTS, createDefaultAutoSupportSettings, MAX_SHAFT_DIAMETER_MM, MIN_CONTACT_TIP_DIAMETER_MM, normalizeAutoSupportSettings, OWN_PROFILE_KEYS, SIZING_BANDS } from './settings';
 import type { AutoSupportSettings, SizingBand, SizingPreset } from './settings';
 import { createDefaultSettings, type SupportSettings } from '../Settings/types';
 
@@ -149,6 +149,28 @@ export function autoSupportProfileSettings(
     };
 }
 
+/**
+ * A block switching its own profile on starts from what it borrowed: the numbers
+ * of its tier, so the switch alone changes nothing that prints. Own numbers the
+ * block already holds (it was on before, or a file set them) stay.
+ */
+export function withOwnProfileFromTier(auto: AutoSupportSettings): AutoSupportSettings {
+    const defaults = createDefaultAutoSupportSettings();
+    const untouched = OWN_PROFILE_KEYS.every((key) => key === 'ownGeometry' || auto[key] === defaults[key]);
+    if (!untouched) return auto;
+    const band = resolveSizingBand(auto.sizingPreset);
+    const flare = getPresetById(auto.sizingPreset)?.settings.baseFlare;
+    return normalizeAutoSupportSettings({
+        ...auto,
+        ...band,
+        ...(flare ? {
+            baseFlareEnabled: flare.enabled,
+            baseFlareDiameterMm: flare.diameterMm,
+            baseFlareHeightMm: flare.heightMm,
+        } : {}),
+    });
+}
+
 /** The band a block with its own profile carries: its own seven numbers. */
 function ownGeometryBand(auto: AutoSupportSettings): SizingBand {
     return {
@@ -233,7 +255,6 @@ export function smallIslandTipDiameterMm(): number {
 const CELL_REFERENCE_AREA_MM2 = 8;
 
 /** Maximum shaft diameter (mm) for very large single supports. */
-const MAX_SHAFT_DIAMETER_MM = 2.0;
 
 /**
  * Combined ceiling on the three run-level model factors (mm-equivalent).
