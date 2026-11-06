@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import * as THREE from 'three';
 
-import { linkedPeerTransform, linkedScaleBreaks } from '@/features/scene/linkedPeerTransform';
+import { linkedPeerTransform, linkedScaleBreaks, linkedUpdatesBreakScale } from '@/features/scene/linkedPeerTransform';
 import { DEFAULT_TIP_PROFILE } from '../SupportPrimitives/ContactCone/types';
 import { withModelSupportsTransformed } from '../modelSupportPayload';
 import { payloadRecords } from '../PlacementLogic/SupportModelLinker';
@@ -612,5 +612,52 @@ describe('an id the file repeats', () => {
         const repeat = out.roots.at(-1)!;
         assert.equal(repeat.tag, 'second');
         assert.notDeepEqual(repeat.transform, first.transform);
+    });
+});
+
+describe('a resize a linked model cannot take', () => {
+    const model = (id: string, scale: number, linkGroupId?: string) => ({ id, linkGroupId, transform: { scale: v(scale, scale, scale) } });
+    const to = (id: string, scale: number) => ({ id, transform: { scale: v(scale, scale, scale) } });
+
+    it('refuses a peer landing on 0 or crossing it, on any axis', () => {
+        const models = [model('a', 1, 'l'), model('b', 0.5, 'l')];
+        assert.equal(linkedUpdatesBreakScale({ models, updates: [to('a', 0.5)] }), true);
+        assert.equal(linkedUpdatesBreakScale({ models, updates: [to('a', 0.4)] }), true);
+        const oneAxis = { id: 'a', transform: { scale: v(1, 0.5, 1) } };
+        assert.equal(linkedUpdatesBreakScale({ models, updates: [oneAxis] }), true);
+    });
+
+    it('lets a resize through that every peer survives', () => {
+        const models = [model('a', 1, 'l'), model('b', 0.5, 'l')];
+        assert.equal(linkedUpdatesBreakScale({ models, updates: [to('a', 0.6)] }), false);
+        assert.equal(linkedUpdatesBreakScale({ models, updates: [to('a', 3)] }), false);
+    });
+
+    it('leaves an unlinked model and other groups alone', () => {
+        const models = [model('a', 1), model('b', 0.5, 'l'), model('c', 1, 'm'), model('d', 0.5, 'l')];
+        assert.equal(linkedUpdatesBreakScale({ models, updates: [to('a', 0.5)] }), false);
+        assert.equal(linkedUpdatesBreakScale({ models, updates: [to('c', 0.5)] }), false);
+    });
+
+    it('does not judge a peer that is moved in the same batch', () => {
+        const models = [model('a', 1, 'l'), model('b', 0.5, 'l')];
+        assert.equal(linkedUpdatesBreakScale({ models, updates: [to('a', 0.5), to('b', 0.25)] }), false);
+    });
+
+    it('judges a peer by the first update of its group, as the manager moves it', () => {
+        const models = [model('a', 1, 'l'), model('b', 1, 'l'), model('c', 0.5, 'l')];
+        assert.equal(linkedUpdatesBreakScale({ models, updates: [to('a', 0.9), to('b', 0.1)] }), false);
+        assert.equal(linkedUpdatesBreakScale({ models, updates: [to('a', 0.1), to('b', 0.9)] }), true);
+    });
+
+    it('never blocks a move that keeps the scale, even with a peer already at 0', () => {
+        const models = [model('a', 1, 'l'), model('b', 0, 'l')];
+        assert.equal(linkedUpdatesBreakScale({ models, updates: [to('a', 1)] }), false);
+    });
+
+    it('measures from the starting point a caller brings', () => {
+        const models = [model('a', 0.5, 'l'), model('b', 0.5, 'l')];
+        const update = { ...to('a', 0.5), before: { scale: v(1, 1, 1) } };
+        assert.equal(linkedUpdatesBreakScale({ models, updates: [update] }), true);
     });
 });
