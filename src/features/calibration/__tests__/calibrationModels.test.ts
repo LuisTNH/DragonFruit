@@ -43,3 +43,25 @@ test('a missing file rejects instead of importing an error page', async () => {
 
   await assert.rejects(fetchCalibrationModelFile(model, fakeFetch), /cones-of-calibration\.stl: HTTP 404/);
 });
+
+for (const [name, response] of [
+  ['an HTML page with 200', () => new Response('<!DOCTYPE html><html></html>', { headers: { 'content-type': 'text/plain' } })],
+  ['lower-case HTML after blank lines', () => new Response('\n\n <html lang="en"></html>')],
+  ['the HTML content type', () => new Response('solid x', { headers: { 'content-type': 'text/html; charset=utf-8' } })],
+  ['an empty body', () => new Response(new Uint8Array())],
+] as const) {
+  test(`${name} is not taken for an STL`, async () => {
+    const model = findCalibrationModel('cones-of-calibration')!;
+    const fakeFetch = (async () => response()) as unknown as typeof fetch;
+
+    await assert.rejects(fetchCalibrationModelFile(model, fakeFetch), /cones-of-calibration\.stl: not an STL file/);
+  });
+}
+
+test('a text STL with no content type still loads', async () => {
+  const model = findCalibrationModel('cones-of-calibration')!;
+  const body = new Blob(['solid cone\nendsolid cone\n']);
+  const fakeFetch = (async () => new Response(body)) as unknown as typeof fetch;
+
+  assert.equal((await fetchCalibrationModelFile(model, fakeFetch)).size, body.size);
+});

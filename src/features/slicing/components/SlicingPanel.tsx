@@ -2320,7 +2320,8 @@ export function SlicingPanel({
         normalExposureSec: exposureSec,
         baseName: baseNames[index],
       });
-      if (!sliced) break;
+      // The run has already put its cancelled or failed state on screen; leave that up.
+      if (!sliced) return;
     }
 
     setCurrentPhase('Ready');

@@ -83,6 +83,11 @@ export async function fetchCalibrationModelFile(
     throw new Error(`${model.file}: HTTP ${res.status}`);
   }
   const blob = await res.blob();
+  // A server that falls back to its start page answers a missing file with 200 and HTML.
+  const start = await blob.slice(0, 64).text();
+  if (blob.size === 0 || res.headers.get('content-type')?.includes('text/html') || /^\s*<(!doctype|html)/i.test(start)) {
+    throw new Error(`${model.file}: not an STL file`);
+  }
   return new File([blob], model.file, { type: 'model/stl' });
 }
 
